@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit backupGlobals="false"
+         backupStaticAttributes="false"
+         bootstrap="bootstrap/autoload.php"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         processIsolation="false"
+         stopOnFailure="true">
+    <testsuites>
+        <testsuite name="Application Test Suite">
+            <directory suffix="Test.php">./tests</directory>
+        </testsuite>
+    </testsuites>
+    <filter>
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <directory suffix=".php">./app</directory>
+        </whitelist>
+    </filter>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="CACHE_DRIVER" value="array"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="QUEUE_DRIVER" value="sync"/>
+        <env name="JOBS_PATH" value="/home/rvlab2/localtest/jobs2"/>
+        <env name="REMOTE_JOBS_PATH" value="/home/rvlab2/remotetest/jobs2"/>
+        <env name="WORKSPACE_PATH" value="/home/rvlab2/localtest/workspace2"/>
+        <env name="REMOTE_WORKSPACE_PATH" value="/home/rvlab2/rremotetest/workspace2"/>
+        <env name="DB_HOST" value="127.0.0.1"/>
+        <env name="DB_DATABASE" value="rvlab2_testing"/>
+        <env name="DB_USERNAME" value="rvlab2user"/>
+        <env name="DB_PASSWORD" value="travoltaG78-"/>
+    </php>
+</phpunit>

@@ -1,0 +1,9 @@
+/nbproject
+/node_modules
+/public/storage
+/vendor
+/app/Authenticators/PortalAuthenticator.php
+/.idea
+Homestead.json
+Homestead.yaml
+.env

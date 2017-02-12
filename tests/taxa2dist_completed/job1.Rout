@@ -1,0 +1,31 @@
+
+R version 3.2.2 (2015-08-14) -- "Fire Safety"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(vegan);
+Loading required package: permute
+Loading required package: lattice
+This is vegan 2.3-5
+> agg <- read.table("/home/rvlab/jobs/xayate@yahoo.com/job2575/softLagoonAggregation.csv", header = TRUE, sep=",");
+> taxdis <- taxa2dist(agg, varstep=FALSE, check=TRUE);
+> save(taxdis, ascii=TRUE, file = "/home/rvlab/jobs/xayate@yahoo.com/job2575/taxadis.csv");
+> summary(taxdis);
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  16.67   83.33  100.00   90.31  100.00  100.00 
+> 
+> proc.time()
+   user  system elapsed 
+  1.306   0.055   1.386 
