@@ -28,7 +28,8 @@ interface Authenticator
      *      'is_admin'  =>  true|false
      * ];
      *
-     * The user's email is used as the user's ID
+     * The user's email is used as the user's ID. This field is required and
+     * should be empty in case the user has not logged in (is a 'visitor')
      *
      * The 'head', 'body_top' and 'body_bottom' values are expected to be html
      * code that will be included in the relevant positions of the template and

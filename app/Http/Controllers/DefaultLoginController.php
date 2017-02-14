@@ -6,6 +6,7 @@ use Session;
 use Response;
 use Redirect;
 use Illuminate\Http\Request;
+use App\Http\Controllers\CommonController;
 
 /**
  * Provides login/logout functionality for the default/dummy authenticator
@@ -13,7 +14,7 @@ use Illuminate\Http\Request;
  * @license MIT
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
-class DefaultLoginController extends AuthController
+class DefaultLoginController extends CommonController
 {
     /**
      * Loads the login page

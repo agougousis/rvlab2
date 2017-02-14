@@ -32,9 +32,14 @@ class AuthorizationMiddlewareTest extends TesterBase
                     'is_admin' => false
         ]);
 
+        // Test default/web response
         $response = $this->call('GET', '/');
         $this->assertEquals(302, $response->getStatusCode());
         $this->assertRedirectedTo($this->loginUrl);
+
+        // Test mobile response
+        $response = $this->call('GET', '/', [], [], [], ['HTTP_AAAA1'=>'aaa']);
+        $this->assertEquals(403, $response->getStatusCode());
     }
 
     /**
@@ -65,9 +70,14 @@ class AuthorizationMiddlewareTest extends TesterBase
                     'is_admin' => false
         ]);
 
+        // Test default/web response
         $response = $this->call('GET', '/');
         $this->assertEquals(302, $response->getStatusCode());
         $this->assertRedirectedTo('registration');
+
+        // Test mobile response
+        $response = $this->call('GET', '/', [], [], [], ['HTTP_AAAA1'=>'aaa']);
+        $this->assertEquals(403, $response->getStatusCode());
     }
 
     /**
@@ -100,6 +110,53 @@ class AuthorizationMiddlewareTest extends TesterBase
 
         $response = $this->call('GET', '/registration');
         $this->assertEquals(200, $response->getStatusCode());
+    }
+
+    /**
+     * Checks that the registration page cannot be accessed by registered users
+     *
+     * @test
+     * @group aai
+     */
+    public function registered_users_cannot_visit_the_registration_page()
+    {
+        $user_email = 'demo@gmail.com';
+
+        $this->mockedAuthenticator
+                ->method('authenticate')
+                ->willReturn([
+                    'status' => 'identified',
+                    'info' => [
+                        'authorized' => 'yes',
+                        'head' => "",
+                        'body_top' => "",
+                        'body_bottom' => "",
+                        'email' => $user_email,
+                        'mobile_version' => '',
+                        'privileges' => [],
+                        'timezone' => '',
+                    ],
+                    'is_admin' => false
+        ]);
+
+        $yesterday = (new DateTime)->sub(new \DateInterval('P1D'))->format('Y-m-d H:i:s');
+        $tomorrow = (new DateTime)->add(new \DateInterval('P1D'))->format('Y-m-d H:i:s');
+
+        Registration::unguard();
+        Registration::create([
+            'user_email' => $user_email,
+            'starts' => $yesterday,
+            'ends' => $tomorrow
+        ]);
+        Registration::reguard();
+
+        // Test default/web response
+        $response = $this->call('GET', 'registration');
+        $this->assertEquals(302, $response->getStatusCode());
+
+        // Test mobile response
+        $response = $this->call('GET', 'registration', [], [], [], ['HTTP_AAAA1'=>'aaa']);
+        $this->assertEquals(403, $response->getStatusCode());
     }
 
     /**

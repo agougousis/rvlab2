@@ -53,7 +53,7 @@ class RemoveOldJobs extends Command
             try {
                 // Delete job files
                 $job_folder = $jobs_path . '/' . $job->user_email . '/job' . $job->id;
-                if (!delete_folder($job_folder)) {
+                if (!delTree($job_folder)) {
                     $this->save_log('Folder ' . $job_folder . ' could not be deleted!', "error");
                 }
 

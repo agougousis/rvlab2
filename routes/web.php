@@ -55,5 +55,5 @@ Route::get('/registration', 'RegistrationController@registration_page');
 Route::post('/registration', 'RegistrationController@register');
 
 // Mobile
-Route::get('/get_token', 'AuthController@get_token');
+Route::get('/get_token', 'CommonController@get_token');
 Route::get('/mobile/forms/{function}', 'MobileController@forms');

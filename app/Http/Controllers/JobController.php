@@ -11,7 +11,7 @@ use App\Models\Job;
 use App\Models\JobsLog;
 use App\Models\WorkspaceFile;
 use App\Extras\RvlabParser;
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CommonController;
 use Illuminate\Http\Request;
 
 /**
@@ -20,7 +20,7 @@ use Illuminate\Http\Request;
  * @license MIT
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
-class JobController extends AuthController {
+class JobController extends CommonController {
 
     protected $workspace_path;
     protected $jobs_path;
@@ -202,7 +202,7 @@ class JobController extends AuthController {
 
             // Delete job files
             $job_folder = $this->jobs_path.'/'.$user_email.'/job'.$job_id;
-            if(!delete_folder($job_folder)){
+            if(!delTree($job_folder)){
                 $this->log_event('Folder '.$job_folder.' could not be deleted!',"error");
                 return array(
                     'deleted'   =>  false,
@@ -364,7 +364,7 @@ class JobController extends AuthController {
                 $response = array('message',"Trying to retrieve a file that does not belong to a user's job");
                 return Response::json($response,401);
             } else {
-                return $this->unauthorizedAccess();
+                abort(403, 'Unauthorized action.');
             }
         }
 
@@ -710,7 +710,7 @@ class JobController extends AuthController {
 
                  // Delete folder if created
                 if(file_exists($job_folder)){
-                    if(!rmdir_recursive($job_folder)){
+                    if(!delTree($job_folder)){
                         $this->log_event('Folder '.$job_folder.' could not be deleted after failed job submission!',"error");
                     }
                 }
@@ -753,7 +753,7 @@ class JobController extends AuthController {
             }
             // Delete folder if created
             if(file_exists($job_folder)){
-                if(!rmdir_recursive($job_folder)){
+                if(!delTree($job_folder)){
                     $this->log_event('Folder '.$job_folder.' could not be deleted!',"error");
                 }
             }

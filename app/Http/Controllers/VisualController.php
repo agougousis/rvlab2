@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Session;
 use App\Http\Controllers\JobController;
-use Illuminate\Foundation\Application;
 
 /**
  * ....

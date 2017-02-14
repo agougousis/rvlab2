@@ -90,7 +90,7 @@ class StoragePolicy extends Command
 
                             // Delete job files
                             $job_folder = $jobs_path . '/' . $user_email . '/job' . $job_id;
-                            if (!delete_folder($job_folder)) {
+                            if (!delTree($job_folder)) {
                                 $this->save_log('Folder ' . $job_folder . ' could not be deleted!', "error");
                             }
                             $this->save_log('Folder deleted - Job ID: ' . $job_id . ' - User: ' . $user_email, "info");

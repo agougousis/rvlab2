@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use DB;
-use Input;
 use DateTime;
 use Redirect;
 use App\Models\Job;
@@ -12,10 +11,8 @@ use App\Models\Setting;
 use App\Models\SystemLog;
 use App\Models\Registration;
 use App\Models\WorkspaceFile;
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CommonController;
 use Illuminate\Http\Request;
-use Illuminate\Foundation\Application;
-use phpseclib\Net\SSH2;
 
 /**
  * Handles the administration functionality of R vLab
@@ -23,7 +20,7 @@ use phpseclib\Net\SSH2;
  * @license MIT
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
-class AdminController extends AuthController {
+class AdminController extends CommonController {
 
     /**
      * Loads the administration control panel

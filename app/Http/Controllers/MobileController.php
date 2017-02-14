@@ -3,8 +3,7 @@
 namespace App\Http\Controllers;
 
 use Response;
-use App\Http\Controllers\AuthController;
-use Illuminate\Foundation\Application;
+use App\Http\Controllers\CommonController;
 
 /**
  * Provides some functionality useful to mobile version of R vLab
@@ -12,7 +11,7 @@ use Illuminate\Foundation\Application;
  * @license MIT
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
-class MobileController extends AuthController {
+class MobileController extends CommonController {
 
     public function __construct() {
         parent::__construct();

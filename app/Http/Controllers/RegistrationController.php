@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Input;
 use Response;
 use Redirect;
 use DateTime;
 use DateInterval;
 use App\Models\Registration;
-use App\Authenticators\PortalAuthenticator;
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CommonController;
 use Illuminate\Http\Request;
-use Illuminate\Foundation\Application;
 
 /**
  * Implements functionality that allows a user to register for R vLab.
@@ -21,18 +18,18 @@ use Illuminate\Foundation\Application;
  * @license MIT
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
-class RegistrationController extends AuthController {
-
+class RegistrationController extends CommonController
+{
     public function __construct() {
         parent::__construct();
 
         // Check if cluster storage has been mounted to web server
-        if(!$this->check_storage()){
-            if($this->is_mobile){
-                $response = array('message','Storage not found');
-                return Response::json($response,500);
+        if (!$this->check_storage()) {
+            if ($this->is_mobile) {
+                $response = array('message', 'Storage not found');
+                return Response::json($response, 500);
             } else {
-                echo $this->load_view('errors/unmounted','Storage not found');
+                echo $this->load_view('errors/unmounted', 'Storage not found');
                 die();
             }
         }
@@ -43,21 +40,16 @@ class RegistrationController extends AuthController {
      *
      * @return View
      */
-    public function registration_page(){
+    public function registration_page()
+    {
+        $max_users_suported = $this->system_settings['max_users_supported'];
+        $count_current_users = Registration::where('ends', '>', date('Y-m-d H:i:s'))->count();
 
-        if($this->isRegistered()){
-            return Redirect::to('/');
+        if ($count_current_users >= $max_users_suported) {
+            return $this->load_view('run_out_of_users', 'Registration Impossible');
         } else {
-            $max_users_suported = $this->system_settings['max_users_supported'];
-            $count_current_users = Registration::where('ends','>',date('Y-m-d H:i:s'))->count();
-
-            if($count_current_users >= $max_users_suported){
-                return $this->load_view('run_out_of_users','Registration Impossible');
-            } else {
-                return $this->load_view('registration','Registration');
-            }
+            return $this->load_view('registration', 'Registration');
         }
-
     }
 
     /**
@@ -65,32 +57,20 @@ class RegistrationController extends AuthController {
      *
      * @return RedirectResponse|JSON
      */
-    public function register(Request $response){
+    public function register(Request $response)
+    {
         $userInfo = session('user_info');
-
-        // Make sure the user is not already registered
-        if($this->isRegistered()){
-            if($this->is_mobile){
-                $response = array(
-                    'registered' => 'failed',
-                    'message'    => 'You are already registered'
-                    );
-                return Response::json($response,200);
-            } else {
-                return Redirect::to('/');
-            }
-        }
 
         $form = $response->all();
 
         // Make sure the form is valid
-        if(empty($form['registration_period'])){
-            if($this->is_mobile){
+        if (empty($form['registration_period'])) {
+            if ($this->is_mobile) {
                 $response = array(
                     'registered' => 'failed',
-                    'message'    => 'Registration period was not provided'
-                    );
-                return Response::json($response,200);
+                    'message' => 'Registration period was not provided'
+                );
+                return Response::json($response, 200);
             } else {
                 return $this->illegalAction();
             }
@@ -98,13 +78,13 @@ class RegistrationController extends AuthController {
         $period = $form['registration_period'];
 
         // Make sure the registration period is valid
-        if(!in_array($period, array('day','week','month','semester'))){
-            if($this->is_mobile){
+        if (!in_array($period, array('day', 'week', 'month', 'semester'))) {
+            if ($this->is_mobile) {
                 $response = array(
                     'registered' => 'failed',
-                    'message'    => 'The registration period is invalid'
-                    );
-                return Response::json($response,200);
+                    'message' => 'The registration period is invalid'
+                );
+                return Response::json($response, 200);
             } else {
                 return $this->illegalAction();
             }
@@ -113,7 +93,7 @@ class RegistrationController extends AuthController {
         // Decide the registration period dates
         $starts = date('Y-m-d H:i:s');
         $ends = new DateTime();
-        switch($period){
+        switch ($period) {
             case 'day':
                 $ends->add(new DateInterval('P1D')); // add 60 seconds
                 break;
@@ -135,9 +115,9 @@ class RegistrationController extends AuthController {
         $registration->ends = $ends;
         $registration->save();
 
-        if($this->is_mobile){
+        if ($this->is_mobile) {
             $response = array('registered' => 'done');
-            return Response::json($response,200);
+            return Response::json($response, 200);
         } else {
             return Redirect::to('/');
         }
