@@ -44,17 +44,17 @@ class AuthorizationLayer
      *
      * @var array
      */
-    private $urlsForbiddenToRegistered= [];
+    private $urlsForbiddenToRegistered = [];
 
     public function __construct(Authenticator $authenticator)
     {
-      $this->authenticator = $authenticator;
+        $this->authenticator = $authenticator;
 
-      $this->urlsAllowedToUnregistered[] = url('registration');
+        $this->urlsAllowedToUnregistered[] = url('registration');
 
-      $this->urlsAllowedToVisitors[] = $this->authenticator->getLoginUrl();
+        $this->urlsAllowedToVisitors[] = $this->authenticator->getLoginUrl();
 
-      $this->urlsForbiddenToRegistered[] = url('registration');
+        $this->urlsForbiddenToRegistered[] = url('registration');
     }
 
     /**
@@ -68,7 +68,7 @@ class AuthorizationLayer
     {
         // The user has not logged in
         if (session('user_status') == 'visitor') {
-            if($request->ajax()){
+            if ($request->ajax()) {
                 return "";
             }
 
@@ -125,8 +125,9 @@ class AuthorizationLayer
      *
      * @return Redirect|void
      */
-    protected function is_registered_to_rvlab(Request $request){
-        if (!session()->has('user_info')){
+    protected function is_registered_to_rvlab(Request $request)
+    {
+        if (!session()->has('user_info')) {
             // Just in case the user is not logged in (should not happen normally)
             return false;
         } else {
@@ -134,9 +135,9 @@ class AuthorizationLayer
 
             // Check if has an active registration
             $now = (new \DateTime)->format('Y-m-d H:i:s');
-            $registration = Registration::where('user_email',$userInfo['email'])->where('ends','>',$now)->get()->toArray();
+            $registration = Registration::where('user_email', $userInfo['email'])->where('ends', '>', $now)->get()->toArray();
 
-            if(empty($registration)){
+            if (empty($registration)) {
                 return false;
             }
 

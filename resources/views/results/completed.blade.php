@@ -100,7 +100,7 @@
             </div>
         <div class="panel-body" style="background-color: #F2F3F9" id="routput-panel-body">
             @if(!empty($content))
-                {{ $content }}
+                {!! $content !!}
             @endif
 
             @if(($function != 'dwc_to_r')&&($function != 'metamds_visual') &&($function != 'cca_visual') &&($function != 'mapping_tools_visual') &&($function != 'mapping_tools_div_visual')&&($function != 'heatcloud') &&($function != 'phylobar')) {
@@ -155,6 +155,7 @@
         var postData = {
             filename: filename,
             jobid: jobId,
+            _token: "{{ csrf_token() }}"
         };
 
         $('#loading-image').center().show();

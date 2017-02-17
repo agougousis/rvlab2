@@ -19,7 +19,8 @@ class CommonController extends Controller
     protected $system_settings = array();
     protected $is_mobile;
 
-    public function __construct() {
+    public function __construct()
+    {
         // Identify if the request comes from a mobile client
         $this->is_mobile = is_mobile();
 

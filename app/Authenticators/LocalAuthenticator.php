@@ -10,8 +10,8 @@ use App\Contracts\Authenticator;
  *
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
-class LocalAuthenticator implements Authenticator {
-
+class LocalAuthenticator implements Authenticator
+{
     /**
      * The URL to redirect users who are not logged in
      *

@@ -9,7 +9,7 @@ Route::post('/rlogin', 'DefaultLoginController@login');
 Route::get('/logout', 'DefaultLoginController@logout');
 
 // Job page
-Route::get('/job/{job_id}', 'JobController@job_page');
+Route::get('/job/{job_id}', 'ResultPageController@job_page');
 
 // New job submission
 Route::post('/job', 'JobController@submit');
