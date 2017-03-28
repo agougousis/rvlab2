@@ -21,7 +21,7 @@
     <br>
 <div style="color: blue; font-weight: bold">Parameters</div>
 
-{!! form_dropdown('mapping_tools_div-column_select','Select Column in Indices File:',array(),'',$tooltips) !!}
+{!! form_dropdown('mapping_tools_div-indices_column','Select Column in Indices File:',array(),'',$tooltips) !!}
 
     {!! form_textinput('mapping_tools_div_visual-top_species','Number of top ranked species','21',$tooltips) !!}
 
@@ -45,7 +45,7 @@
         var selectedValue = $("#mapping_tools_div_visual_form input[name='box3']:checked").val();
         var fileHeaders = getCsvHeaders(selectedValue);
         if(fileHeaders){
-            loadCsvHeaders2(fileHeaders,"mapping_tools_div_visual_form","column_select");
+            loadCsvHeaders2(fileHeaders,"mapping_tools_div_visual_form","indices_column");
         } else {
             toastr.error("File headers could not be retrieved!");
         }

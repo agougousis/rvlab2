@@ -951,8 +951,8 @@ class VisualController extends JobController {
         }
 
 
-        if(!empty($form['column_select'])){
-            $column_select = $form['column_select'];
+        if(!empty($form['indices_column'])){
+            $indices_column = $form['indices_column'];
         } else {
             Session::flash('toastr',array('error','You forgot to set the column in the factor file!'));
             return false;
@@ -962,7 +962,7 @@ class VisualController extends JobController {
         $params .= ";transpose:".$transpose;
         $params .= ";transformation method:".$transformation_method;
         $params .= ";top species:".$top_species;
-        $params .= ";Indices column:".$column_select;
+        $params .= ";Indices column:".$indices_column;
 
         // Move input file from workspace to job's folder
         $workspace_filepath = $user_workspace.'/'.$box;
@@ -1051,7 +1051,7 @@ class VisualController extends JobController {
 
 
 
-        fwrite($fh, "plottest <- spplot(sub_points_SPDF, zcol=c(\"$column_select\"), xlab=\"\",\n");
+        fwrite($fh, "plottest <- spplot(sub_points_SPDF, zcol=c(\"$indices_column\"), xlab=\"\",\n");
         fwrite($fh, "scales=list(draw = TRUE), sp.layout=list(polys), cuts = 6, col.regions=colorset6,xlim=c(-180,180),ylim=c(-80,80),par.settings = list(panel.background=list(col=\"lightblue\")));\n");
 
 
@@ -1094,17 +1094,17 @@ class VisualController extends JobController {
         fwrite($fh, "cat(\"];\\n\\n\");\n");
 
         fwrite($fh, "cat(\"var indices=[\\n\");\n");
-        fwrite($fh, "for (i in (1:length(sub_points_SPDF\$$column_select))){  \n");
+        fwrite($fh, "for (i in (1:length(sub_points_SPDF\$$indices_column))){  \n");
         fwrite($fh, "if(!is.na(coords[rownames(new_x)[i],1]) && !is.na(coords[rownames(new_x)[i],2])) {\n");
-        fwrite($fh, "cat(paste(\"{fact:\",paste(paste(sub_points_SPDF\$".$column_select."[i],sep=\":\"),collapse=\",\"),\"}\\n\",sep=\"\"))     ;\n");
+        fwrite($fh, "cat(paste(\"{fact:\",paste(paste(sub_points_SPDF\$".$indices_column."[i],sep=\":\"),collapse=\",\"),\"}\\n\",sep=\"\"))     ;\n");
 
-        fwrite($fh, "if(i!=length(sub_points_SPDF\$$column_select)[1]){cat(\",\")};\n");
+        fwrite($fh, "if(i!=length(sub_points_SPDF\$$indices_column)[1]){cat(\",\")};\n");
         fwrite($fh, "};\n");
         fwrite($fh, "};\n");
         fwrite($fh, "cat(\"];\\n\");\n");
         fwrite($fh, "cat(\"var indiceslabel=[\\n\");\n");
 
-        fwrite($fh, "cat(paste(\"{fact:\\\"\",paste(paste(\"$column_select\",sep=\":\"),collapse=\",\"),\"\\\"}\\n\",sep=\"\")) ;\n");
+        fwrite($fh, "cat(paste(\"{fact:\\\"\",paste(paste(\"$indices_column\",sep=\":\"),collapse=\",\"),\"\\\"}\\n\",sep=\"\")) ;\n");
         fwrite($fh, "cat(\"];\n\");\n");
 
         fwrite($fh, "sink();\n");
@@ -1487,8 +1487,6 @@ class VisualController extends JobController {
         $box2= $form['box2'];
         $inputs .= ";".$box2;
 
-
-
         if(empty($form['top_nodes'])){
             Session::flash('toastr',array('error','You forgot to set the number of nodes!'));
             return false;
@@ -1514,10 +1512,15 @@ class VisualController extends JobController {
             throw new Exception();
         }
 
-        // Move a required file
-        //$script_source = app_path().'/rvlab/files/HEATcloud.html';
-        //copy($script_source,"$job_folder/HEATcloud.html");
+        // There are no executables. This is a javascript-based analysis.
+        // But a fake job#.jobstatus file is needed to mark its status as
+        // completed and a dummy job#.submitted is needed to mark it as submitted.
+        file_put_contents($job_folder.'/'.$job_id.'.submitted', 'dummy text');
 
+        $now = (new \DateTime())->format('Y-m-d H:i:s');
+        $userInfo = session('user_info');
+        $userEmail = $userInfo['email'];
+        file_put_contents($job_folder.'/'.$job_id.'.jobstatus', "$userEmail job$job_id 00000 $now $now NA ended NA");
 
         return true;
     }

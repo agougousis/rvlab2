@@ -1,0 +1,12 @@
+#!/bin/bash
+#PBS -l walltime=02:00:00
+#PBS -N job1
+#PBS -d /home/rvlab/jobs2/demo@gmail.com/job1
+#PBS -o job1.log
+#PBS -j oe
+#PBS -m n
+#PBS -l nodes=1:ppn=2
+date
+mpiexec /usr/bin/Rscript /home/rvlab/jobs2/demo@gmail.com/job1/job1.R /home/rvlab/jobs2/demo@gmail.com/job1/softLagoonAbundance.csv TRUE /home/rvlab/jobs2/demo@gmail.com/job1/softLagoonEnv.csv /home/rvlab/jobs2/demo@gmail.com/job1/ spearman euclidean 2 FALSE euclidean > /home/rvlab/jobs2/demo@gmail.com/job1/cmd_line_output.txt
+date
+exit 0

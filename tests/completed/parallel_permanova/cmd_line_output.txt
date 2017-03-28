@@ -1,0 +1,29 @@
+[1] "Single parameter"
+[1] "Single parameter"
+[1] "formula"
+COMM.RANK = 0
+[1] "mat ~ Factors[, SelectFactor1]"
+[1] "permutations"
+COMM.RANK = 0
+[1] 999
+[1] "distance"
+COMM.RANK = 0
+[1] "euclidean"
+COMM.RANK = 0
+
+Call:
+adonis(formula = formula, data = Factors, permutations = permutations,      distance = method) 
+
+Terms added sequentially (first to last)
+
+                         Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
+Factors[, SelectFactor1]  2     83290   41645  28.641 0.63448  0.001 ***
+Residuals                33     47983    1454         0.36552           
+Total                    35    131273                 1.00000           
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+[1] "Full program execution time for each processor"
+   user  system elapsed 
+  0.042   0.004   0.046 
+   user  system elapsed 
+  0.043   0.003   0.046 

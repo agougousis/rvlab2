@@ -60,8 +60,8 @@ class SerialSubmissionTest extends TesterBase
             'mantel' => [
                 'function' => 'mantel',
                 'inputs' => [
-                    'box' => 'vegdist_output.csv',
-                    'box2' => 'vegdist_output.csv'
+                    'box' => 'vegdist_job12.csv',
+                    'box2' => 'vegdist_job12.csv'
                 ],
                 'parameters' => [
                     'permutations' => '999',
@@ -101,7 +101,6 @@ class SerialSubmissionTest extends TesterBase
                 'function' => 'radfit',
                 'inputs' => [
                     'box' => 'softLagoonAbundance.csv',
-                    'box' => 'softLagoonFactors.csv'
                 ],
                 'parameters' => [
                     'transf_method_select' => 'none',
@@ -143,6 +142,7 @@ class SerialSubmissionTest extends TesterBase
             if (empty($data)) {
                 continue;
             }
+
             // Submit the job
             $post_data = array_merge($data['parameters'], $data['inputs'], [
                 'function' => $data['function'],
@@ -168,12 +168,17 @@ class SerialSubmissionTest extends TesterBase
             $this->assertTrue(file_exists($this->demoUserJobsPath . "/$jobf"));
 
             // Check the appropriate files are in the job folder
-            $this->assertTrue(file_exists($this->demoUserJobsPath . "/$jobf/$jobf.pbs"));
-            if ($data['function'] != 'bict') {
-                $this->assertTrue(file_exists($this->demoUserJobsPath . "/$jobf/$jobf.R"));
-            }
-            foreach ($data['inputs'] as $filename) {
-                $this->assertTrue(file_exists($this->demoUserJobsPath . "/$jobf/$filename"));
+            $actualJobDir = $this->demoUserJobsPath."/$jobf";
+            $expectedJobDir = __DIR__."/submitted/".$data['function'];
+            foreach(glob($expectedJobDir."/*") as $expectedFilePath) {
+
+                $actualFilePath = $actualJobDir."/".basename($expectedFilePath);
+
+                // The file should exist in the actual job directory
+                $this->assertTrue(file_exists($actualFilePath));
+
+                // The file contents should be the same
+                $this->assertEquals(file_get_contents($expectedFilePath), file_get_contents($actualFilePath));
             }
 
             // Check the database record is correct
@@ -205,6 +210,12 @@ class SerialSubmissionTest extends TesterBase
             sort($given_params);
 
             $this->assertEquals(implode('-', $expected_params), implode('-', $given_params));
+
+            // Clear the database table to keep the Job ID equal to 1
+            Job::query()->truncate();
+
+            // Clear the jobs directory
+            delTree($actualJobDir);
         }
     }
 }

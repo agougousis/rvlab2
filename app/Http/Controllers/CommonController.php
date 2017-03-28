@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Route;
 use Response;
 use App\Models\Setting;
 use App\Models\SystemLog;
-use App\Models\Registration;
 use App\Http\Controllers\Controller;
 /**
  * Builds functionality related to access control and logging

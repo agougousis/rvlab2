@@ -1,0 +1,12 @@
+#!/bin/bash
+#PBS -l walltime=02:00:00
+#PBS -N job19
+#PBS -d /home/rvlab/jobs2/demo@gmail.com/job19
+#PBS -o job19.log
+#PBS -j oe
+#PBS -m n
+#PBS -l nodes=1:ppn=2
+date
+mpiexec /usr/bin/Rscript job19.R /home/rvlab/jobs2/demo@gmail.com/job19/softLagoonAggregation.csv /home/rvlab/jobs2/demo@gmail.com/job19/ /home/rvlab/jobs2/demo@gmail.com/job19/ TRUE FALSE TRUE  output  > /home/rvlab/jobs2/demo@gmail.com/job19/cmd_line_output.txt
+date
+exit 0

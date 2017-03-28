@@ -95,8 +95,8 @@ class WorkspaceManagementTest extends TesterBase
         $this->assertRedirectedTo('/');
 
         $countWorkspaceFiles = WorkspaceFile::where('user_email', $this->demoUser)->count();
-        $this->assertEquals(17, $countWorkspaceFiles);
-        $this->assertEquals(17, count(glob($this->demoUserWorkspacePath . '/*')));
+        $this->assertEquals(22, $countWorkspaceFiles);
+        $this->assertEquals(22, count(glob($this->demoUserWorkspacePath . '/*')));
     }
 
     /**
@@ -127,8 +127,8 @@ class WorkspaceManagementTest extends TesterBase
         $this->assertRedirectedTo('/');
 
         $countWorkspaceFiles = WorkspaceFile::where('user_email', $this->demoUser)->count();
-        $this->assertEquals(16, $countWorkspaceFiles);
-        $this->assertEquals(16, count(glob($this->demoUserWorkspacePath . '/*')));
+        $this->assertEquals(21, $countWorkspaceFiles);
+        $this->assertEquals(21, count(glob($this->demoUserWorkspacePath . '/*')));
     }
 
     /**

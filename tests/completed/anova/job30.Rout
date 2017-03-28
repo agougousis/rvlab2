@@ -1,0 +1,35 @@
+
+R version 3.2.2 (2015-08-14) -- "Fire Safety"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(stats);
+> geo <- read.table("/home/rvlab/jobs2/demo@gmail.com/job30/softLagoonEnv.csv", row.names=1, header = TRUE, sep=",");
+> aov.ex1<-aov(maximumDepthInMeters~Temp,geo);
+> png('rplot.png')
+> boxplot(maximumDepthInMeters~Temp,geo,xlab="Temp", ylab="maximumDepthInMeters")
+> dev.off()
+null device 
+          1 
+> summary(aov.ex1);
+            Df Sum Sq Mean Sq F value   Pr(>F)    
+Temp         1 0.6658  0.6658   69.83 9.36e-10 ***
+Residuals   34 0.3242  0.0095                     
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+> 
+> proc.time()
+   user  system elapsed 
+  0.165   0.023   0.196 

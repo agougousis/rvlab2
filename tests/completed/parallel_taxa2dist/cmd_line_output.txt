@@ -1,0 +1,13 @@
+[1] ">> LW RvLAB: Saving output file localy under the name:"
+[1] "output"
+[1] ">> LW RvLAB: Full program execution time for each processor"
+   user  system elapsed 
+  1.366   0.118   1.853 
+   user  system elapsed 
+  1.363   0.126   1.854 
+[1] ">> LW RvLAB: Size of the matrix stored in each processor (Mb)"
+0.00362387945832539 bytes
+0.00362387945832539 bytes
+[1] ">> LW RvLAB: Size of the output dist matrix (Mb):"
+0.006683349609375 bytes
+[1]  50.00000  83.33333 100.00000 100.00000 100.00000 100.00000

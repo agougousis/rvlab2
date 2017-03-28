@@ -1,0 +1,35 @@
+[1] "method"
+COMM.RANK = 0
+[1] "spearman"
+[1] "permutations"
+COMM.RANK = 0
+[1] 999
+COMM.RANK = 0
+
+Mantel statistic based on Spearman's rank correlation rho 
+
+Call:
+mantel(xdis = xdis, ydis = ydis, method = method, permutations = permutations) 
+
+Mantel statistic r:     1 
+      Significance: 0.001 
+
+Upper quantiles of permutations (null model):
+  90%   95% 97.5%   99% 
+0.114 0.149 0.194 0.237 
+
+[1] "Full program execution time for each processor"
+   user  system elapsed 
+  0.451   0.003   0.455 
+   user  system elapsed 
+  0.453   0.002   0.455 
+[1] "Main calculations time"
+   user  system elapsed 
+  0.452   0.003   0.456 
+   user  system elapsed 
+  0.454   0.002   0.456 
+[1] "Mantel class object size (Mb)"
+0.00942230224609375 bytes
+0.00177001953125 bytes
+[1] "Object size of the main calculation"
+0.007659912109375 bytes

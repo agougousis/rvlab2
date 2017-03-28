@@ -73,6 +73,7 @@ class RefreshStatus extends Command
                     $status_info = file($status_file);
                     $status_parts = preg_split('/\s+/', $status_info[0]);
                     $status_message = $status_parts[8];
+
                     switch ($status_message) {
                         case 'Q':
                             $status = 'queued';
@@ -122,17 +123,18 @@ class RefreshStatus extends Command
                         case 'parallel_simper':
                             $fileToParse = '/cmd_line_output.txt';
                             break;
+                        case 'phylobar':
+                            $fileToParse = '';
                         default:
                             $fileToParse = '/job' . $job->id . '.Rout';
                     }
 
                     // If job has run, check for R errors
-                    if ($status == 'completed') {
+                    if (($status == 'completed') && !$fileToParse) {
                         $parser = new RvlabParser();
                         $parser->parse_output($job_folder . $fileToParse);
                         if ($parser->hasFailed()) {
                             $status = 'failed';
-                            //$this->save_log(implode(' - ',$parser->getOutput()),"info");
                         }
                     }
                 }
@@ -167,8 +169,6 @@ class RefreshStatus extends Command
                 }
             }
 
-            // Just for debbuging
-            //$this->save_log("Command RefreshStatusCommand was executed successfully. ".$counter." jobs updated.",'info');
         } catch (Exception $ex) {
             $this->save_log($ex->getMessage(), 'error');
         }

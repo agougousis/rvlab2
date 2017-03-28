@@ -1,0 +1,47 @@
+
+R version 3.2.2 (2015-08-14) -- "Fire Safety"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(vegan);
+Loading required package: permute
+Loading required package: lattice
+This is vegan 2.4-2
+> ENV <- read.table("/home/rvlab/jobs2/demo@gmail.com/job15/softLagoonFactors.csv",header = TRUE, sep=",",row.names=1);
+> mat <- read.table("/home/rvlab/jobs2/demo@gmail.com/job15/softLagoonAbundance.csv", header = TRUE, sep="," ,row.names=1);
+> mat <- t(mat);
+> otu.ENVFACT.adonis <- adonis(mat ~ ENV$Country,data=ENV,permutations = 999,distance = "euclidean");
+> print("summary")
+[1] "summary"
+> otu.ENVFACT.adonis
+
+Call:
+adonis(formula = mat ~ ENV$Country, data = ENV, permutations = 999,      distance = "euclidean") 
+
+Permutation: free
+Number of permutations: 999
+
+Terms added sequentially (first to last)
+
+            Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
+ENV$Country  2    8.2101  4.1050  43.812 0.72642  0.001 ***
+Residuals   33    3.0920  0.0937         0.27358           
+Total       35   11.3021                 1.00000           
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+> 
+> proc.time()
+   user  system elapsed 
+  1.353   0.034   1.385 

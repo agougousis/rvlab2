@@ -56,7 +56,7 @@ class VisualJobSubmissionTest extends TesterBase
                     'transf_method_select' => 'none',
                     'transpose' => 'transpose',
                     'Factor_select1' => 'Country',
-                    'Factor_select2' => 'Sites',
+                    'Factor_select2' => 'Location',
                     'Factor_select3' => ''
                 ]
             ],
@@ -64,7 +64,7 @@ class VisualJobSubmissionTest extends TesterBase
                 'function' => 'cca_visual',
                 'inputs' => [
                     'box' => 'softLagoonAbundance.csv',
-                    'box2' => 'softLagoonFactors.csv'
+                    'box2' => 'softLagoonEnv.csv'
                 ],
                 'parameters' => [
                     'transf_method_select' => 'none',
@@ -94,7 +94,7 @@ class VisualJobSubmissionTest extends TesterBase
                 ],
                 'parameters' => [
                     'one_or_two_way' => 'one',
-                    'Factor_select1' => 'maximumDepthInMeter',
+                    'Factor_select1' => 'maximumDepthInMeters',
                     'Factor_select2' => 'Temp',
                     'Factor_select3' => 'fieldNumber'
                 ]
@@ -102,11 +102,11 @@ class VisualJobSubmissionTest extends TesterBase
             'hclust' => [
                 'function' => 'hclust',
                 'inputs' => [
-                    'box' => 'vegdist_output.csv'
+                    'box' => 'vegdist_job12.csv'
                 ],
                 'parameters' => [
                     'method_select' => 'ward.D',
-                    'column_select' => 'Class'
+                    'column_select' => 'Station'
                 ]
             ],
             'heatcloud' => [
@@ -124,12 +124,12 @@ class VisualJobSubmissionTest extends TesterBase
                 'function' => 'taxondive',
                 'inputs' => [
                     'box' => 'softLagoonAbundance.csv',
-                    'box2' => 'taxa2dist_output.csv'
+                    'box2' => 'taxadis_job1.csv'
                 ],
                 'parameters' => [
                     'transf_method_select' => 'none',
                     'transpose' => 'transpose',
-                    'column_select' => 'Class',
+                    'column_select' => 'Station',
                     'match_force' => 'FALSE',
                     'deltalamda' => 'Delta'
                 ]
@@ -143,7 +143,7 @@ class VisualJobSubmissionTest extends TesterBase
                     'transf_method_select' => 'none',
                     'transpose' => 'transpose',
                     'single_or_multi' => 'single',
-                    'Factor_select1' => 'maximumDepthInMeter',
+                    'Factor_select1' => 'maximumDepthInMeters',
                     'Factor_select2' => 'Temp',
                     'Factor_select3' => 'fieldNumber'
                 ]
@@ -169,6 +169,14 @@ class VisualJobSubmissionTest extends TesterBase
                 ]
             ],
             'phylobar' => [
+                'function' => 'phylobar',
+                'inputs' => [
+                    'box' => 'table.nwk',
+                    'box2' => 'table.csv'
+                ],
+                'parameters' => [
+                    'top_nodes' => '21'
+                ]
             ],
             'second_metamds' => [
                 'function' => 'second_metamds',
@@ -208,8 +216,30 @@ class VisualJobSubmissionTest extends TesterBase
                 ]
             ],
             'mapping_tools_visual' => [
+                'function' => 'mapping_tools_visual',
+                'inputs' => [
+                    'box' => 'softLagoonAbundance.csv',
+                    'box2' => 'softLagoonCoordinatesTransposedLong-Lat.csv'
+                ],
+                'parameters' => [
+                    'transf_method_select' => 'none',
+                    'transpose' => 'transpose',
+                    'top_species' => '21'
+                ]
             ],
             'mapping_tools_div_visual' => [
+                'function' => 'mapping_tools_div_visual',
+                'inputs' => [
+                    'box' => 'osd2014-16s-formated.csv',
+                    'box2' => '16S-ODV-input-corrected-dec15-formatted-coords.csv',
+                    'box3' => '16S-ODV-input-corrected-dec15-formatted.csv'
+                ],
+                'parameters' => [
+                    'transf_method_select' => 'none',
+                    'transpose' => 'transpose',
+                    'top_species' => '21',
+                    'indices_column' => 'Shannon.Index..ln...H.'
+                ]
             ]
         ];
 
@@ -244,16 +274,21 @@ class VisualJobSubmissionTest extends TesterBase
             $this->assertTrue(file_exists($this->demoUserJobsPath . "/$jobf"));
 
             // Check the appropriate files are in the job folder
-            $this->assertTrue(file_exists($this->demoUserJobsPath . "/$jobf/$jobf.pbs"));
-            $this->assertTrue(file_exists($this->demoUserJobsPath . "/$jobf/$jobf.R"));
-            foreach ($data['inputs'] as $input) {
-                if (is_array($input)) {
-                    foreach ($input as $filename) {
-                        $this->assertTrue(file_exists($this->demoUserJobsPath . "/$jobf/$filename"));
-                    }
-                } else {
-                    $this->assertTrue(file_exists($this->demoUserJobsPath . "/$jobf/$input"));
+            $actualJobDir = $this->demoUserJobsPath."/$jobf";
+            $expectedJobDir = __DIR__."/submitted/".$data['function'];
+            foreach(glob($expectedJobDir."/*") as $expectedFilePath) {
+
+                $actualFilePath = $actualJobDir."/".basename($expectedFilePath);
+
+                if (($data['function'] == 'phylobar')&&(strpos($expectedFilePath, '.jobstatus'))) {
+                    continue;
                 }
+
+                // The file should exist in the actual job directory
+                $this->assertTrue(file_exists($actualFilePath));
+
+                // The file contents should be the same
+                $this->assertEquals(file_get_contents($expectedFilePath), file_get_contents($actualFilePath));
             }
 
             // Check the database record is correct
@@ -293,6 +328,12 @@ class VisualJobSubmissionTest extends TesterBase
             sort($given_params);
 
             $this->assertEquals(implode('-', $expected_params), implode('-', $given_params));
+
+            // Clear the database table to keep the Job ID equal to 1
+            Job::query()->truncate();
+
+            // Clear the jobs directory
+            delTree($actualJobDir);
         }
     }
 }

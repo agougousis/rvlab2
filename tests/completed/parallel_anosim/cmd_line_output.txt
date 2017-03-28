@@ -1,0 +1,20 @@
+[1] "Number of permutations per processor:"
+[1] 500
+[1] 499
+[1] "p.val = "
+[1] 0.001
+COMM.RANK = 0
+
+Call:
+anosim(mat, Factors[, SelectFactor], permutations = 999, method = "euclidean") 
+Dissimilarity: euclidean 
+
+ANOSIM statistic R: 0.7304 
+      Significance: 0.001 
+
+
+[1] "Full program execution time for each processor"
+   user  system elapsed 
+  1.906   0.132   2.146 
+   user  system elapsed 
+  1.910   0.130   2.146 

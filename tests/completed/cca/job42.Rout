@@ -1,0 +1,279 @@
+
+R version 3.2.2 (2015-08-14) -- "Fire Safety"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(vegan);
+Loading required package: permute
+Loading required package: lattice
+This is vegan 2.4-2
+> mat <- read.table("/home/rvlab/jobs2/demo@gmail.com/job42/softLagoonAbundance.csv", row.names=1, header = TRUE, sep=",");
+> ENV <- read.table("/home/rvlab/jobs2/demo@gmail.com/job42/softLagoonFactors.csv",header = TRUE, sep=",",row.names=1);
+> mat <- t(mat);
+> vare.cca <- cca(mat ~ Country+Location, data=ENV);
+> png('rplot.png',height=600,width=600)
+> plot(vare.cca);
+> summary(vare.cca);
+
+Call:
+cca(formula = mat ~ Country + Location, data = ENV) 
+
+Partitioning of mean squared contingency coefficient:
+              Inertia Proportion
+Total          2.6603     1.0000
+Constrained    1.7702     0.6654
+Unconstrained  0.8901     0.3346
+
+Eigenvalues, and their contribution to the mean squared contingency coefficient 
+
+Importance of components:
+                        CCA1   CCA2    CCA3     CA1     CA2     CA3     CA4
+Eigenvalue            0.9954 0.6795 0.09535 0.23157 0.19651 0.12395 0.06871
+Proportion Explained  0.3742 0.2554 0.03584 0.08705 0.07387 0.04659 0.02583
+Cumulative Proportion 0.3742 0.6296 0.66541 0.75246 0.82632 0.87292 0.89875
+                          CA5     CA6     CA7     CA8     CA9    CA10    CA11
+Eigenvalue            0.05244 0.04692 0.03110 0.02578 0.02281 0.01821 0.01523
+Proportion Explained  0.01971 0.01764 0.01169 0.00969 0.00858 0.00685 0.00572
+Cumulative Proportion 0.91846 0.93610 0.94779 0.95748 0.96605 0.97290 0.97862
+                         CA12    CA13     CA14     CA15     CA16     CA17
+Eigenvalue            0.01095 0.01071 0.009948 0.006368 0.005872 0.004687
+Proportion Explained  0.00412 0.00403 0.003740 0.002390 0.002210 0.001760
+Cumulative Proportion 0.98274 0.98677 0.990510 0.992900 0.995110 0.996870
+                          CA18     CA19      CA20
+Eigenvalue            0.004066 0.003908 0.0003591
+Proportion Explained  0.001530 0.001470 0.0001300
+Cumulative Proportion 0.998400 0.999870 1.0000000
+
+Accumulated constrained eigenvalues
+Importance of components:
+                        CCA1   CCA2    CCA3
+Eigenvalue            0.9954 0.6795 0.09535
+Proportion Explained  0.5623 0.3838 0.05386
+Cumulative Proportion 0.5623 0.9461 1.00000
+
+Scaling 2 for species and site scores
+* Species are scaled proportional to eigenvalues
+* Sites are unscaled: weighted dispersion equal on all dimensions
+
+
+Species scores
+
+                             CCA1     CCA2       CCA3        CA1        CA2
+Abra alba                 -1.0628 -0.01495 -0.0006831  1.1079891  1.896e-03
+Anchialina agilis         -1.0628 -0.01495 -0.0006831 -0.5962376 -4.104e-03
+Armandia cirrhosa         -1.0628 -0.01495 -0.0006831  0.4894999 -6.804e-06
+Capitella capitata        -1.0628 -0.01495 -0.0006831  1.5677763  1.875e-03
+Cerastoderma edule        -1.0628 -0.01495 -0.0006831 -0.0211374  6.150e-04
+Ceratopogonidae            0.9137  1.92364  0.2537533  0.0020784 -3.990e-01
+Cerithium vulgatum        -1.0628 -0.01495 -0.0006831  0.2011022  7.821e-04
+Chironomidae               0.8936  1.89708  0.2458915  0.0069648 -8.075e-02
+Dexamine spinosa          -1.0628 -0.01495 -0.0006831 -1.1144671 -3.605e-03
+Eumida sanguinea          -1.0628 -0.01495 -0.0006831 -0.5655116 -2.854e-04
+Gammarus                   0.9565 -1.17629  1.5321933  0.0025227 -1.839e+00
+Gammarus aequicauda       -1.0628 -0.01495 -0.0006831 -0.3068842 -8.351e-04
+Glyptotendipes             0.9565 -1.17629  1.5321933 -0.0017095  1.262e+00
+Idotea balthica basteri   -1.0628 -0.01495 -0.0006831 -0.6989835  4.381e-04
+Loripes lucinalis         -1.0628 -0.01495 -0.0006831 -0.5794200  1.293e-03
+Marenzelleria              0.9546 -0.96963 -0.0276370  0.0015648 -1.144e+00
+Marenzelleria neglecta     0.9549 -1.00430  0.2340865  0.0008748 -6.048e-01
+Marenzelleria viridis      0.9549 -0.99915  0.1951959  0.0005659 -3.646e-01
+Oligochaeta                0.9425 -0.08731 -0.4992836 -0.0013936  7.521e-01
+Paranemonia cinerea       -1.0628 -0.01495 -0.0006831 -0.6782942 -1.708e-04
+Perinereis rullieri       -1.0628 -0.01495 -0.0006831  0.5127018  8.693e-04
+Phylo foetida             -1.0628 -0.01495 -0.0006831 -0.4904929  1.884e-03
+Pisidium                   0.9137  1.92364  0.2537533 -0.0002079  7.132e-02
+Platyhelminthes           -1.0628 -0.01495 -0.0006831 -0.3991847  8.256e-04
+Pontogammarus robustoides  0.9137  1.92364  0.2537533  0.0034956 -5.268e-01
+Procladius                 0.9565 -1.17629  1.5321933 -0.0011273  8.275e-01
+Sphaerium corneum          0.9137  1.92364  0.2537533 -0.0002237  3.265e-02
+Sphaeroma serratum        -1.0628 -0.01495 -0.0006831 -0.2195589 -1.975e-03
+Tanais dulongii           -1.0628 -0.01495 -0.0006831 -0.3509771 -7.401e-04
+Turbellaria                0.9565 -1.17629  1.5321933  0.0007000 -5.147e-01
+                                 CA3
+Abra alba                  0.0365807
+Anchialina agilis         -1.8158850
+Armandia cirrhosa         -1.2139473
+Capitella capitata        -0.8140696
+Cerastoderma edule         0.2484958
+Ceratopogonidae           -0.0063070
+Cerithium vulgatum         0.0139077
+Chironomidae              -0.0134106
+Dexamine spinosa          -1.0736510
+Eumida sanguinea           0.3776478
+Gammarus                   0.0058335
+Gammarus aequicauda       -0.1748168
+Glyptotendipes            -0.0041702
+Idotea balthica basteri    1.0273989
+Loripes lucinalis          1.5020377
+Marenzelleria              0.0034474
+Marenzelleria neglecta     0.0015669
+Marenzelleria viridis      0.0007822
+Oligochaeta               -0.0007008
+Paranemonia cinerea        0.5541124
+Perinereis rullieri        0.0750733
+Phylo foetida              1.9207344
+Pisidium                   0.0007470
+Platyhelminthes            0.4905705
+Pontogammarus robustoides -0.0098791
+Procladius                -0.0025950
+Sphaerium corneum          0.0008739
+Sphaeroma serratum        -0.9197463
+Tanais dulongii            0.1040120
+Turbellaria                0.0017203
+
+
+Site scores (weighted averages of species scores)
+
+                       CCA1     CCA2      CCA3        CA1        CA2        CA3
+IT_ORIS01_MIS_P1_R1 -1.0677 -0.02200 -0.007165 -0.3991847  0.0008256  0.4905705
+IT_ORIS01_MIS_P1_R2 -1.0677 -0.02200 -0.007165  1.5829969  0.0036368 -0.7170541
+IT_ORIS01_MIS_P1_R3 -1.0677 -0.02200 -0.007165  3.3246241  0.0075998 -0.1407437
+IT_ORIS01_MIS_P2_R1 -1.0574 -0.00727  0.006375 -0.5962376 -0.0041039 -1.8158850
+IT_ORIS01_MIS_P2_R2 -1.0594 -0.01018  0.003701 -1.5567978 -0.0057326 -1.9635303
+IT_ORIS01_MIS_P2_R3 -1.0295  0.03264  0.043051  2.3364470 -0.0028999 -0.4481371
+IT_ORIS01_MIS_P3_R1 -1.0677 -0.02200 -0.007165 -0.8658831  0.0006673  1.4859087
+IT_ORIS01_MIS_P3_R2 -1.0677 -0.02200 -0.007165 -0.1872094  0.0031330  2.5724437
+IT_ORIS01_MIS_P3_R3 -1.0677 -0.02200 -0.007165 -0.8278338  0.0002870  0.9630616
+LT_CU01_VE_P1_R1     0.9138  1.89518  0.177979  0.0001109  0.0500598 -0.0005017
+LT_CU01_VE_P1_R2     0.9097  2.25279  1.132988  0.0027521 -0.6455166 -0.0086844
+LT_CU01_VE_P1_R3     0.9192  1.56368 -0.708893 -0.0039430  0.5921451  0.0116269
+LT_CU01_VE_P2_R1     0.9129  1.98809  0.425904  0.0005735 -0.1413640 -0.0019664
+LT_CU01_VE_P2_R2     0.9116  2.04882  0.588756  0.0015702 -0.1864397 -0.0045236
+LT_CU01_VE_P2_R3     0.9087  2.26242  1.159643  0.0034956 -0.5268491 -0.0098791
+LT_CU01_VE_P3_R1     0.9069  2.29753  1.254885  0.0050447 -0.4671961 -0.0138501
+LT_CU01_VE_P3_R2     0.9219  1.39455 -1.161357 -0.0058145  0.8353065  0.0167475
+LT_CU01_VE_P3_R3     0.9207  1.46986 -0.959869 -0.0049805  0.7285613  0.0144592
+PL_VL_E_P1_R1        0.9564 -1.16255  1.534964 -0.0001569  0.1202054 -0.0004170
+PL_VL_E_P1_R2        0.9596 -1.52305  4.875266  0.0025227 -1.8394201  0.0058335
+PL_VL_E_P1_R3        0.9575 -1.27479  1.256858  0.0008680 -0.5998803  0.0013425
+PL_VL_E_P2_R1        0.9557 -1.07899  0.140453 -0.0005082  0.3606673 -0.0010943
+PL_VL_E_P2_R2        0.9543 -0.92957 -0.376016 -0.0016903  1.1974864 -0.0033079
+PL_VL_E_P2_R3        0.9553 -1.04601  0.849141 -0.0011273  0.8274813 -0.0025950
+PL_VL_E_P3_R1        0.9593 -1.47380  2.226363  0.0025817 -1.8606378  0.0053196
+PL_VL_E_P3_R2        0.9569 -1.22560  2.396352  0.0003453 -0.2716031  0.0011536
+PL_VL_E_P3_R3        0.9548 -0.99118  0.415295 -0.0017095  1.2623269 -0.0041702
+PL_VL_W_P1_R1        0.9528 -0.77450 -1.736468  0.0003880 -0.3455916  0.0015477
+PL_VL_W_P1_R2        0.9567 -1.19009  0.628881  0.0033466 -2.4186897  0.0069010
+PL_VL_W_P1_R3        0.9571 -1.23268  1.056634  0.0034655 -2.4671498  0.0065836
+PL_VL_W_P2_R1        0.9502 -0.48425 -3.234408 -0.0019605  1.3570601 -0.0035347
+PL_VL_W_P2_R2        0.9494 -0.40550 -3.680710 -0.0025072  1.7370112 -0.0044813
+PL_VL_W_P2_R3        0.9503 -0.49921 -3.143569 -0.0018533  1.2816320 -0.0033379
+PL_VL_W_P3_R1        0.9575 -1.32622  2.105650  0.0053343 -3.3112788  0.0062125
+PL_VL_W_P3_R2        0.9593 -1.47187  2.122387  0.0056077 -4.0553618  0.0117488
+PL_VL_W_P3_R3        0.9589 -1.42804  2.082375  0.0050031 -3.5740406  0.0097983
+
+
+Site constraints (linear combinations of constraining variables)
+
+                       CCA1     CCA2       CCA3        CA1        CA2
+IT_ORIS01_MIS_P1_R1 -1.0628 -0.01495 -0.0006831 -0.3991847  0.0008256
+IT_ORIS01_MIS_P1_R2 -1.0628 -0.01495 -0.0006831  1.5829969  0.0036368
+IT_ORIS01_MIS_P1_R3 -1.0628 -0.01495 -0.0006831  3.3246241  0.0075998
+IT_ORIS01_MIS_P2_R1 -1.0628 -0.01495 -0.0006831 -0.5962376 -0.0041039
+IT_ORIS01_MIS_P2_R2 -1.0628 -0.01495 -0.0006831 -1.5567978 -0.0057326
+IT_ORIS01_MIS_P2_R3 -1.0628 -0.01495 -0.0006831  2.3364470 -0.0028999
+IT_ORIS01_MIS_P3_R1 -1.0628 -0.01495 -0.0006831 -0.8658831  0.0006673
+IT_ORIS01_MIS_P3_R2 -1.0628 -0.01495 -0.0006831 -0.1872094  0.0031330
+IT_ORIS01_MIS_P3_R3 -1.0628 -0.01495 -0.0006831 -0.8278338  0.0002870
+LT_CU01_VE_P1_R1     0.9137  1.92364  0.2537533  0.0001109  0.0500598
+LT_CU01_VE_P1_R2     0.9137  1.92364  0.2537533  0.0027521 -0.6455166
+LT_CU01_VE_P1_R3     0.9137  1.92364  0.2537533 -0.0039430  0.5921451
+LT_CU01_VE_P2_R1     0.9137  1.92364  0.2537533  0.0005735 -0.1413640
+LT_CU01_VE_P2_R2     0.9137  1.92364  0.2537533  0.0015702 -0.1864397
+LT_CU01_VE_P2_R3     0.9137  1.92364  0.2537533  0.0034956 -0.5268491
+LT_CU01_VE_P3_R1     0.9137  1.92364  0.2537533  0.0050447 -0.4671961
+LT_CU01_VE_P3_R2     0.9137  1.92364  0.2537533 -0.0058145  0.8353065
+LT_CU01_VE_P3_R3     0.9137  1.92364  0.2537533 -0.0049805  0.7285613
+PL_VL_E_P1_R1        0.9565 -1.17629  1.5321933 -0.0001569  0.1202054
+PL_VL_E_P1_R2        0.9565 -1.17629  1.5321933  0.0025227 -1.8394201
+PL_VL_E_P1_R3        0.9565 -1.17629  1.5321933  0.0008680 -0.5998803
+PL_VL_E_P2_R1        0.9565 -1.17629  1.5321933 -0.0005082  0.3606673
+PL_VL_E_P2_R2        0.9565 -1.17629  1.5321933 -0.0016903  1.1974864
+PL_VL_E_P2_R3        0.9565 -1.17629  1.5321933 -0.0011273  0.8274813
+PL_VL_E_P3_R1        0.9565 -1.17629  1.5321933  0.0025817 -1.8606378
+PL_VL_E_P3_R2        0.9565 -1.17629  1.5321933  0.0003453 -0.2716031
+PL_VL_E_P3_R3        0.9565 -1.17629  1.5321933 -0.0017095  1.2623269
+PL_VL_W_P1_R1        0.9524 -0.73344 -1.8103003  0.0003880 -0.3455916
+PL_VL_W_P1_R2        0.9524 -0.73344 -1.8103003  0.0033466 -2.4186897
+PL_VL_W_P1_R3        0.9524 -0.73344 -1.8103003  0.0034655 -2.4671498
+PL_VL_W_P2_R1        0.9524 -0.73344 -1.8103003 -0.0019605  1.3570601
+PL_VL_W_P2_R2        0.9524 -0.73344 -1.8103003 -0.0025072  1.7370112
+PL_VL_W_P2_R3        0.9524 -0.73344 -1.8103003 -0.0018533  1.2816320
+PL_VL_W_P3_R1        0.9524 -0.73344 -1.8103003  0.0053343 -3.3112788
+PL_VL_W_P3_R2        0.9524 -0.73344 -1.8103003  0.0056077 -4.0553618
+PL_VL_W_P3_R3        0.9524 -0.73344 -1.8103003  0.0050031 -3.5740406
+                           CA3
+IT_ORIS01_MIS_P1_R1  0.4905705
+IT_ORIS01_MIS_P1_R2 -0.7170541
+IT_ORIS01_MIS_P1_R3 -0.1407437
+IT_ORIS01_MIS_P2_R1 -1.8158850
+IT_ORIS01_MIS_P2_R2 -1.9635303
+IT_ORIS01_MIS_P2_R3 -0.4481371
+IT_ORIS01_MIS_P3_R1  1.4859087
+IT_ORIS01_MIS_P3_R2  2.5724437
+IT_ORIS01_MIS_P3_R3  0.9630616
+LT_CU01_VE_P1_R1    -0.0005017
+LT_CU01_VE_P1_R2    -0.0086844
+LT_CU01_VE_P1_R3     0.0116269
+LT_CU01_VE_P2_R1    -0.0019664
+LT_CU01_VE_P2_R2    -0.0045236
+LT_CU01_VE_P2_R3    -0.0098791
+LT_CU01_VE_P3_R1    -0.0138501
+LT_CU01_VE_P3_R2     0.0167475
+LT_CU01_VE_P3_R3     0.0144592
+PL_VL_E_P1_R1       -0.0004170
+PL_VL_E_P1_R2        0.0058335
+PL_VL_E_P1_R3        0.0013425
+PL_VL_E_P2_R1       -0.0010943
+PL_VL_E_P2_R2       -0.0033079
+PL_VL_E_P2_R3       -0.0025950
+PL_VL_E_P3_R1        0.0053196
+PL_VL_E_P3_R2        0.0011536
+PL_VL_E_P3_R3       -0.0041702
+PL_VL_W_P1_R1        0.0015477
+PL_VL_W_P1_R2        0.0069010
+PL_VL_W_P1_R3        0.0065836
+PL_VL_W_P2_R1       -0.0035347
+PL_VL_W_P2_R2       -0.0044813
+PL_VL_W_P2_R3       -0.0033379
+PL_VL_W_P3_R1        0.0062125
+PL_VL_W_P3_R2        0.0117488
+PL_VL_W_P3_R3        0.0097983
+
+
+Biplot scores for constraining variables
+
+                   CCA1    CCA2     CCA3 CA1 CA2 CA3
+CountryLithuania 0.4156  0.9005  0.11739   0   0   0
+CountryPoland    0.6964 -0.7134 -0.09724   0   0   0
+LocationVL_E     0.4351 -0.5497  0.71281   0   0   0
+
+
+Centroids for factor constraints
+
+                    CCA1     CCA2       CCA3 CA1 CA2 CA3
+CountryItaly     -1.0628 -0.01495 -0.0006831   0   0   0
+CountryLithuania  0.9137  1.92364  0.2537533   0   0   0
+CountryPoland     0.9545 -0.95635 -0.1278746   0   0   0
+LocationVL_E      0.9565 -1.17629  1.5321933   0   0   0
+LocationVL_W      0.9524 -0.73344 -1.8103003   0   0   0
+
+> dev.off()
+null device 
+          1 
+> 
+> proc.time()
+   user  system elapsed 
+  1.354   0.054   1.435 

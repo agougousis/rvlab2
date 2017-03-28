@@ -1,0 +1,94 @@
+
+R version 3.2.2 (2015-08-14) -- "Fire Safety"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(vegan);
+Loading required package: permute
+Loading required package: lattice
+This is vegan 2.4-2
+> mat <- read.table("/home/rvlab/jobs2/demo@gmail.com/job35/softLagoonAbundance.csv", header = TRUE, sep=",",row.names=1);
+> mat <- t(mat);
+> ENV <- read.table("/home/rvlab/jobs2/demo@gmail.com/job35/softLagoonFactors.csv", header = TRUE, sep="," ,row.names=1);
+> labels <- as.factor(ENV$Country);
+> otu.nmds <- metaMDS(mat,distance="euclidean");
+Square root transformation
+Wisconsin double standardization
+Run 0 stress 0.1033406 
+Run 1 stress 0.1058423 
+Run 2 stress 0.1079366 
+Run 3 stress 0.0997701 
+... New best solution
+... Procrustes: rmse 0.04057441  max resid 0.1923546 
+Run 4 stress 0.1066659 
+Run 5 stress 0.1086497 
+Run 6 stress 0.1133193 
+Run 7 stress 0.1100348 
+Run 8 stress 0.1108105 
+Run 9 stress 0.1024109 
+Run 10 stress 0.1046457 
+Run 11 stress 0.1100365 
+Run 12 stress 0.0997701 
+... New best solution
+... Procrustes: rmse 2.991904e-05  max resid 8.175566e-05 
+... Similar to previous best
+Run 13 stress 0.1057594 
+Run 14 stress 0.1049097 
+Run 15 stress 0.09977013 
+... Procrustes: rmse 8.458329e-05  max resid 0.0003160001 
+... Similar to previous best
+Run 16 stress 0.1046457 
+Run 17 stress 0.1915377 
+Run 18 stress 0.1016853 
+Run 19 stress 0.0998801 
+... Procrustes: rmse 0.002567912  max resid 0.01216693 
+Run 20 stress 0.1046457 
+*** Solution reached
+> par(xpd=TRUE);
+> png('legend.png',height = 700,width=350)
+> plot(otu.nmds, type = "n",ylab="",xlab="",yaxt="n",xaxt="n",bty="n")
+> legend("topright", legend=unique(ENV$Country), col=unique(labels), pch = 16);
+> dev.off()
+pdf 
+  2 
+> png('rplot.png',height = 600,width=600)
+> plot(otu.nmds, type = "n")
+> points(otu.nmds, col = labels, pch = 16,cex = 1.7);
+> dev.off()
+pdf 
+  2 
+> print("summary")
+[1] "summary"
+> otu.nmds;
+
+Call:
+metaMDS(comm = mat, distance = "euclidean") 
+
+global Multidimensional Scaling using monoMDS
+
+Data:     wisconsin(sqrt(mat)) 
+Distance: euclidean 
+
+Dimensions: 2 
+Stress:     0.0997701 
+Stress type 1, weak ties
+Two convergent solutions found after 20 tries
+Scaling: centring, PC rotation 
+Species: expanded scores based on ‘wisconsin(sqrt(mat))’ 
+
+> 
+> proc.time()
+   user  system elapsed 
+  1.339   0.046   1.409 

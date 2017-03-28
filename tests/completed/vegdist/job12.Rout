@@ -1,0 +1,32 @@
+
+R version 3.2.2 (2015-08-14) -- "Fire Safety"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(vegan);
+Loading required package: permute
+Loading required package: lattice
+This is vegan 2.4-2
+> mat <- read.table("/home/rvlab/jobs2/demo@gmail.com/job12/softLagoonAbundance.csv", header = TRUE, sep=",",row.names=1);
+> mat <- t(mat);
+> vegdist <- vegdist(mat, method = "euclidean",binary=FALSE, diag=FALSE, upper=FALSE,na.rm = FALSE)
+> save(vegdist, ascii=TRUE, file = "/home/rvlab/jobs2/demo@gmail.com/job12/vegdist.csv");
+> summary(vegdist);
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   3.00   44.40   77.26   76.94  110.30  182.80 
+> 
+> proc.time()
+   user  system elapsed 
+  1.208   0.045   1.279 

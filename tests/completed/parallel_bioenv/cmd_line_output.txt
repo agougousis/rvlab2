@@ -1,0 +1,94 @@
+COMM.RANK = 0
+
+Call:
+bioenv(comm, env, method = "spearman", index = "euclidean", metric = "euclidean",      upto = 2, trace = FALSE, partial = NULL) 
+
+Subset of environmental variables with best correlation to community data.
+
+Correlations:    spearman 
+Dissimilarities: euclidean 
+Metric:          euclidean 
+
+Best model has 1 parameters (max. 2 allowed):
+maximumDepthInMeters Temp
+with correlation  -0.0313826 
+
+[1] "Full program execution time for each processor"
+   user  system elapsed 
+  0.023   0.000   0.023 
+   user  system elapsed 
+  0.023   0.000   0.024 
+[1] "Full program execution time for each processor"
+   user  system elapsed 
+  0.022   0.000   0.021 
+   user [1] "Names:"
+[1] "maximumDepthInMeters" "Temp"                
+[1] "Method:"
+[1] "spearman"
+[1] "Index"
+[1] "euclidean"
+[1] "Metric"
+[1] "euclidean"
+[1] "upto:"
+[1] 2
+[1] "Model:"
+[[1]]
+[[1]]$best
+[1] 1 2
+
+[[1]]$est
+[1] -0.0313826
+
+
+[1] "whichbest:"
+[1] 1
+[1] "trace:"
+NULL
+[1] "x:"
+                    maximumDepthInMeters       Temp
+IT-ORIS01-MIS-P1-R1           -1.3019866  1.4944839
+IT-ORIS01-MIS-P1-R2           -1.3019866  1.4944839
+IT-ORIS01-MIS-P1-R3           -1.3019866  1.4944839
+IT-ORIS01-MIS-P2-R1           -1.3019866  1.6146837
+IT-ORIS01-MIS-P2-R2           -1.3019866  1.6146837
+IT-ORIS01-MIS-P2-R3           -1.3019866  1.6146837
+IT-ORIS01-MIS-P3-R1           -1.3019866  1.3742842
+IT-ORIS01-MIS-P3-R2           -1.3019866  1.3742842
+IT-ORIS01-MIS-P3-R3           -1.3019866  1.3742842
+LT-CU01-VE-P1-R1              -0.1183624 -0.7492453
+LT-CU01-VE-P1-R2              -0.1183624 -0.7492453
+LT-CU01-VE-P1-R3              -0.1183624 -0.7492453
+LT-CU01-VE-P2-R1              -0.1183624 -0.7492453
+LT-CU01-VE-P2-R2              -0.1183624 -0.7492453
+LT-CU01-VE-P2-R3              -0.1183624 -0.7492453
+LT-CU01-VE-P3-R1              -0.1183624 -0.7492453
+LT-CU01-VE-P3-R2              -0.1183624 -0.7492453
+LT-CU01-VE-P3-R3              -0.1183624 -0.7492453
+PL-VL-W-P1-R1                  1.0652618 -0.5689456
+PL-VL-W-P1-R2                  1.0652618 -0.5689456
+PL-VL-W-P1-R3                  1.0652618 -0.5689456
+PL-VL-W-P2-R1                  1.0652618 -0.5689456
+PL-VL-W-P2-R2                  1.0652618 -0.5689456
+PL-VL-W-P2-R3                  1.0652618 -0.5689456
+PL-VL-W-P3-R1                  1.0652618 -0.5889789
+PL-VL-W-P3-R2                  1.0652618 -0.5889789
+PL-VL-W-P3-R3                  1.0652618 -0.5889789
+PL-VL-E-P1-R1                  1.0652618 -0.5088457
+PL-VL-E-P1-R2                  1.0652618 -0.5088457
+PL-VL-E-P1-R3                  1.0652618 -0.5088457
+attr(,"scaled:center")
+maximumDepthInMeters                 Temp 
+                0.82                15.74 
+attr(,"scaled:scale")
+maximumDepthInMeters                 Temp 
+           0.1689726            4.9916896 
+[1] "Distance function:"
+function (x) 
+dist(x)
+[1] "Call:"
+bioenv(comm, env, method = "spearman", index = "euclidean", metric = "euclidean", 
+    upto = 2, trace = FALSE, partial = NULL)
+[1] "Final result's size"
+0.007904052734375 bytes
+ system elapsed 
+  0.022   0.000   0.022 

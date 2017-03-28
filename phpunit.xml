@@ -31,5 +31,9 @@
         <env name="DB_DATABASE" value="rvlab2_testing"/>
         <env name="DB_USERNAME" value="rvlab2user"/>
         <env name="DB_PASSWORD" value="travoltaG78-"/>
+        <env name="JOBS_PATH" value="/home/rvlab2/localtest/jobs2"/>
+        <env name="REMOTE_JOBS_PATH" value="/home/rvlab/jobs2"/>
+        <env name="WORKSPACE_PATH" value="/mnt/biocluster/workspace2"/>
+        <env name="REMOTE_WORKSPACE_PATH" value="/home/rvlab2/workspace2"/>
     </php>
 </phpunit>

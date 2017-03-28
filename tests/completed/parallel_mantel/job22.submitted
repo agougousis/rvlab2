@@ -1,0 +1,12 @@
+#!/bin/bash
+#PBS -l walltime=02:00:00
+#PBS -N job22
+#PBS -d /home/rvlab/jobs2/demo@gmail.com/job22
+#PBS -o job22.log
+#PBS -j oe
+#PBS -m n
+#PBS -l nodes=1:ppn=2
+date
+mpiexec /usr/bin/Rscript /home/rvlab/jobs2/demo@gmail.com/job22/job22.R /home/rvlab/jobs2/demo@gmail.com/job22/vegdist_job12.csv FALSE /home/rvlab/jobs2/demo@gmail.com/job22/vegdist_job12.csv FALSE /home/rvlab/jobs2/demo@gmail.com/job22/ spearman 999 > /home/rvlab/jobs2/demo@gmail.com/job22/cmd_line_output.txt
+date
+exit 0

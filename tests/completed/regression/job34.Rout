@@ -1,0 +1,61 @@
+
+R version 3.2.2 (2015-08-14) -- "Fire Safety"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(stats);
+> library(vegan);
+Loading required package: permute
+Loading required package: lattice
+This is vegan 2.4-2
+> fact <- read.table("/home/rvlab/jobs2/demo@gmail.com/job34/softLagoonEnv.csv", row.names=1, header = TRUE, sep=",");
+> attach(fact);
+> fit<-lm(maximumDepthInMeters~Temp);
+> png('rplot.png')
+> plot(maximumDepthInMeters~Temp)
+> abline(fit, col="red")
+> dev.off()
+null device 
+          1 
+> png('rplot2.png')
+> layout(matrix(c(1,2,3,4),2,2))
+> plot(fit)
+> dev.off()
+null device 
+          1 
+> summary(fit);
+
+Call:
+lm(formula = maximumDepthInMeters ~ Temp)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.14839 -0.06235  0.03866  0.07982  0.09021 
+
+Coefficients:
+             Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  1.304670   0.056793  22.972  < 2e-16 ***
+Temp        -0.029690   0.003553  -8.356 9.36e-10 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.09765 on 34 degrees of freedom
+Multiple R-squared:  0.6725,	Adjusted R-squared:  0.6629 
+F-statistic: 69.82 on 1 and 34 DF,  p-value: 9.364e-10
+
+> 
+> proc.time()
+   user  system elapsed 
+  1.279   0.052   1.377 

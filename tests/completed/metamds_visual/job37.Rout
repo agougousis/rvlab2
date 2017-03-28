@@ -1,0 +1,75 @@
+
+R version 3.2.2 (2015-08-14) -- "Fire Safety"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(vegan);
+Loading required package: permute
+Loading required package: lattice
+This is vegan 2.4-2
+> x <- read.table("/home/rvlab/jobs2/demo@gmail.com/job37/softLagoonAbundance.csv", header = TRUE, sep=",",row.names=1);
+> x <- t(x);
+> MDS<-metaMDS(x, distance = "euclidean", k = 12, trymax = 20);
+Square root transformation
+Wisconsin double standardization
+Run 0 stress 0.006224183 
+Run 1 stress 0.007411719 
+Run 2 stress 0.006887193 
+Run 3 stress 0.007582916 
+Run 4 stress 0.009684671 
+Run 5 stress 0.008745098 
+Run 6 stress 0.00957718 
+Run 7 stress 0.008939598 
+Run 8 stress 0.008878522 
+Run 9 stress 0.007242832 
+Run 10 stress 0.007822901 
+Run 11 stress 0.008441427 
+Run 12 stress 0.007431443 
+Run 13 stress 0.007004215 
+Run 14 stress 0.008057879 
+Run 15 stress 0.007176557 
+Run 16 stress 0.008443104 
+Run 17 stress 0.009437906 
+Run 18 stress 0.006952637 
+Run 19 stress 0.009465285 
+Run 20 stress 0.00762393 
+*** No convergence -- monoMDS stopping criteria:
+    20: no. of iterations >= maxit
+> x<-x/rowSums(x);
+> x<-x[,order(colSums(x),decreasing=TRUE)];
+> #Extract list of top N Taxa;
+> N<-21;
+> taxa_list<-colnames(x)[1:N];
+> #remove "__Unknown__" and add it to others;
+> taxa_list<-taxa_list[!grepl("__Unknown__",taxa_list)];
+> N<-length(taxa_list);
+> new_x<-data.frame(x[,colnames(x) %in% taxa_list],Others=rowSums(x[,!colnames(x) %in% taxa_list]));
+> new_x2 <- t(new_x);
+> write.table(new_x2, file = "/home/rvlab/jobs2/demo@gmail.com/job37/filtered_abundance.csv",sep=",",quote = FALSE,row.names = TRUE,col.names=NA);
+> names<-gsub("\\.","_",gsub(" ","_",colnames(new_x)));
+> sink("data.js");
+> cat("var freqData=[\n");
+> for (i in (1:dim(new_x)[1])){  
++   cat(paste("{Samples:\'",rownames(new_x)[i],"\',",sep=""));
++   cat(paste("freq:{",paste(paste(names,":",new_x[i,],sep=""),collapse=","),"},",sep=""));
++   cat(paste("MDS:{",paste(paste(colnames(MDS$points),MDS$points[rownames(new_x)[i],],sep=":"),collapse=","),"}}\n",sep=""));
++   if(i!=dim(new_x)[1]){cat(",")};
++   };
+>           cat("];");
+>   sink();
+> 
+> proc.time()
+   user  system elapsed 
+  1.709   0.049   1.767 

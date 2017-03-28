@@ -1,0 +1,15 @@
+library(vegan);
+x <- read.table("/home/rvlab/jobs2/demo@gmail.com/job32/softLagoonAbundance.csv", header = TRUE, sep=",",row.names=1);
+x <- t(x);
+x<-x/rowSums(x);
+x<-x[,order(colSums(x),decreasing=TRUE)];
+#Extract list of top N Taxa;
+N<-21;
+taxa_list<-colnames(x)[1:N];
+#remove "__Unknown__" and add it to others;
+taxa_list<-taxa_list[!grepl("__Unknown__",taxa_list)];
+N<-length(taxa_list);
+new_x<-data.frame(x[,colnames(x) %in% taxa_list],Others=rowSums(x[,!colnames(x) %in% taxa_list]));
+new_x2 <- new_x*100;
+write.table(new_x2, file = "/home/rvlab/jobs2/demo@gmail.com/job32/table.csv",sep=",",quote = FALSE,row.names = TRUE,col.names=NA);
+names<-gsub("\\.","_",gsub(" ","_",colnames(new_x)));

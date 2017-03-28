@@ -7,6 +7,7 @@ use View;
 use Session;
 use Redirect;
 use Response;
+use Validator;
 use App\Models\Job;
 use App\Models\JobsLog;
 use App\Models\WorkspaceFile;
@@ -526,7 +527,6 @@ class JobController extends CommonController {
             $job_folder = $user_jobs_path.'/'.$job_id;
             $user_workspace = $this->workspace_path.'/'.$user_email;
 
-
             // Create the required folders if they are not exist
             if(!file_exists($user_workspace)){
                 if(!mkdir($user_workspace)){
@@ -567,10 +567,11 @@ class JobController extends CommonController {
 
             // Run the function
             $params = "";
-            if(is_array($form['box']))
+            if(is_array($form['box'])) {
                 $inputs = implode(';',$form['box']);
-            else
+            } else {
                 $inputs = $form['box'];
+            }
             $low_function = strtolower($function_select);
             $submitted = $this->{$low_function}($form,$job_id,$job_folder,$remote_job_folder,$user_workspace,$remote_user_workspace,$inputs,$params);
             if(!$submitted){

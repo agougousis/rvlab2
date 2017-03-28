@@ -1,0 +1,12 @@
+#!/bin/bash
+#PBS -l walltime=02:00:00
+#PBS -N job11
+#PBS -d /home/rvlab/jobs2/demo@gmail.com/job11
+#PBS -o job11.log
+#PBS -j oe
+#PBS -m n
+#PBS -l nodes=1:ppn=1
+date
+/usr/bin/R CMD BATCH /home/rvlab/jobs2/demo@gmail.com/job11/job11.R > /home/rvlab/jobs2/demo@gmail.com/job11/cmd_line_output.txt
+date
+exit 0

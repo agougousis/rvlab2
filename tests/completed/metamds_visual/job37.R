@@ -1,0 +1,26 @@
+library(vegan);
+x <- read.table("/home/rvlab/jobs2/demo@gmail.com/job37/softLagoonAbundance.csv", header = TRUE, sep=",",row.names=1);
+x <- t(x);
+MDS<-metaMDS(x, distance = "euclidean", k = 12, trymax = 20);
+x<-x/rowSums(x);
+x<-x[,order(colSums(x),decreasing=TRUE)];
+#Extract list of top N Taxa;
+N<-21;
+taxa_list<-colnames(x)[1:N];
+#remove "__Unknown__" and add it to others;
+taxa_list<-taxa_list[!grepl("__Unknown__",taxa_list)];
+N<-length(taxa_list);
+new_x<-data.frame(x[,colnames(x) %in% taxa_list],Others=rowSums(x[,!colnames(x) %in% taxa_list]));
+new_x2 <- t(new_x);
+write.table(new_x2, file = "/home/rvlab/jobs2/demo@gmail.com/job37/filtered_abundance.csv",sep=",",quote = FALSE,row.names = TRUE,col.names=NA);
+names<-gsub("\\.","_",gsub(" ","_",colnames(new_x)));
+sink("data.js");
+cat("var freqData=[\n");
+for (i in (1:dim(new_x)[1])){  
+  cat(paste("{Samples:\'",rownames(new_x)[i],"\',",sep=""));
+  cat(paste("freq:{",paste(paste(names,":",new_x[i,],sep=""),collapse=","),"},",sep=""));
+  cat(paste("MDS:{",paste(paste(colnames(MDS$points),MDS$points[rownames(new_x)[i],],sep=":"),collapse=","),"}}\n",sep=""));
+  if(i!=dim(new_x)[1]){cat(",")};
+  };
+          cat("];");
+  sink();

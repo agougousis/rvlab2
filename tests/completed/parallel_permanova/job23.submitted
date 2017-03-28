@@ -1,0 +1,12 @@
+#!/bin/bash
+#PBS -l walltime=02:00:00
+#PBS -N job23
+#PBS -d /home/rvlab/jobs2/demo@gmail.com/job23
+#PBS -o job23.log
+#PBS -j oe
+#PBS -m n
+#PBS -l nodes=1:ppn=2
+date
+mpiexec /usr/bin/Rscript /home/rvlab/jobs2/demo@gmail.com/job23/job23.R /home/rvlab/jobs2/demo@gmail.com/job23/softLagoonAbundance.csv TRUE /home/rvlab/jobs2/demo@gmail.com/job23/softLagoonFactors.csv 1 1 1 /home/rvlab/jobs2/demo@gmail.com/job23/ 999 euclidean > /home/rvlab/jobs2/demo@gmail.com/job23/cmd_line_output.txt
+date
+exit 0
