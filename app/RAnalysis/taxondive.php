@@ -2,8 +2,6 @@
 
 namespace App\RAnalysis;
 
-use Session;
-use Validator;
 use App\Contracts\RAnalysis;
 use App\RAnalysis\BaseAnalysis;
 
@@ -81,20 +79,20 @@ class taxondive extends BaseAnalysis implements RAnalysis {
     private $match_force;
 
     /**
-     * The validation rules for taxondive submission form
-     *
-     * @var array
+     * Initializes class properties
      */
-    private $formValidationRules = [
-        'box' => 'required|string|max:250',
-        'box2' => 'required|string|max:250',
-        'box3' => 'string|max:250',
-        'transpose' => 'string|max:250',
-        'transf_method_select'  =>  'required|string|max:250',
-        'column_select' => 'required|string|max:250',
-        'deltalamda' => 'required|string|in:Delta_Lamda',
-        'match_force' => 'required|string|in:TRUE,FALSE'
-    ];
+    protected function init() {
+        $this->formValidationRules = [
+            'box' => 'required|string|max:250',
+            'box2' => 'required|string|max:250',
+            'box3' => 'string|max:250',
+            'transpose' => 'string|max:250',
+            'transf_method_select'  =>  'required|string|max:250',
+            'column_select' => 'required|string|max:250',
+            'deltalamda' => 'required|string|in:Delta,Lamda',
+            'match_force' => 'required|string|in:TRUE,FALSE'
+        ];
+    }
 
     /**
      * Runs a taxondive analysis
@@ -111,7 +109,7 @@ class taxondive extends BaseAnalysis implements RAnalysis {
             $this->copyInputFiles();
 
             $this->buildRScript();
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
                 $this->log_event($ex->getMessage(), "error");
             }
@@ -127,27 +125,11 @@ class taxondive extends BaseAnalysis implements RAnalysis {
     }
 
     /**
-     * Validates the submitted form
-     *
-     * @throws \Exception
-     */
-    private function validateForm()
-    {
-        $validator = Validator::make($this->form, $this->formValidationRules);
-
-        if ($validator->fails()) {
-            // Load validation error messages to a session toastr
-            Session::flash('toastr', implode('<br>', $validator->errors()->all()));
-            throw new \Exception('');
-        }
-    }
-
-    /**
      * Moved input files from workspace to job's folder
      *
      * @throws Exception
      */
-    private function copyInputFiles()
+    protected function copyInputFiles()
     {
         $workspace_filepath = $this->user_workspace . '/' . $this->box;
         $job_filepath = $this->job_folder . '/' . $this->box;
@@ -178,7 +160,7 @@ class taxondive extends BaseAnalysis implements RAnalysis {
      *
      * @throws Exception
      */
-    private function getInputParams()
+    protected function getInputParams()
     {
         $this->box = $this->form['box'];
 
@@ -221,7 +203,7 @@ class taxondive extends BaseAnalysis implements RAnalysis {
      *
      * @throws Exception
      */
-    private function buildRScript()
+    protected function buildRScript()
     {
         // Build the R script
         if (!($fh = fopen("$this->job_folder/$this->job_id.R", "w"))) {
@@ -232,7 +214,7 @@ class taxondive extends BaseAnalysis implements RAnalysis {
         fwrite($fh, "taxdis <- get(load(\"$this->remote_job_folder/$this->box2\"));\n");
         fwrite($fh, "mat <- read.table(\"$this->remote_job_folder/$this->box\", header = TRUE, sep=\",\" ,row.names=1);\n");
 
-        if(!empty($this->tanspose)){
+        if(!empty($this->transpose)){
             fwrite($fh, "mat <- t(mat);\n");
         }
 
@@ -311,43 +293,6 @@ class taxondive extends BaseAnalysis implements RAnalysis {
             fwrite($fh, "summary(taxondive);\n");
         }
         fwrite($fh, "summary(taxondive);\n");
-        fclose($fh);
-
-        // Build the bash script
-        if (!($fh2 = fopen($this->job_folder . "/$this->job_id.pbs", "w"))) {
-            throw new \Exception("Unable to open file $this->job_folder/$this->job_id.pbs");
-        }
-
-        fwrite($fh2, "#!/bin/bash\n");
-        fwrite($fh2, "#PBS -l walltime=02:00:00\n"); // Maximum execution time is 2 hours
-        fwrite($fh2, "#PBS -N $this->job_id\n");
-        fwrite($fh2, "#PBS -d $this->remote_job_folder\n"); // Bash script output goes to <job_id>.log. Errors will be logged in this file.
-        fwrite($fh2, "#PBS -o $this->job_id.log\n");    // The log file will be moved to the job folder after the end of the R script execution
-        fwrite($fh2, "#PBS -j oe\n");
-        fwrite($fh2, "#PBS -m n\n");
-        fwrite($fh2, "#PBS -l nodes=1:ppn=1\n");
-        fwrite($fh2, "date\n");
-        fwrite($fh2, "/usr/bin/R CMD BATCH $this->remote_job_folder/$this->job_id.R > $this->remote_job_folder/cmd_line_output.txt\n");
-        fwrite($fh2, "date\n");
-        fwrite($fh2, "exit 0");
-        fclose($fh2);
-
-        // Build the R script
-        if (!($fh = fopen("$this->job_folder/$this->job_id.R", "w"))) {
-            throw new \Exception("Unable to open file $this->job_folder/$this->job_id.R");
-        }
-
-        fwrite($fh, "library(vegan);\n");
-        fwrite($fh, "ENV <- read.table(\"$this->remote_job_folder/$this->box2\",header = TRUE, sep=\",\",row.names=1);\n");
-        fwrite($fh, "mat <- read.table(\"$this->remote_job_folder/$this->box\", header = TRUE, sep=\",\" ,row.names=1);\n");
-
-        if ($this->transpose == "transpose") {
-            fwrite($fh, "mat <- t(mat);\n");
-        }
-
-        fwrite($fh, "otu.ENVFACT.simper <- simper(mat,ENV\$$this->column_select,permutations = $this->permutations,trace = $this->trace);\n");
-        fwrite($fh, "print(\"summary\")\n");
-        fwrite($fh, "otu.ENVFACT.simper\n");
         fclose($fh);
 
         // Build the bash script

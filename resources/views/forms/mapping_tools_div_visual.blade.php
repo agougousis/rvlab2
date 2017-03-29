@@ -1,6 +1,6 @@
 <?php $function = "mapping_tools_div_visual"; ?>
 
-{!! Form::open(array('url'=>'job/visual','class'=>'form-horizontal','id'=>'mapping_tools_div_visual_form','style'=>'display:none')) !!}
+{!! Form::open(array('url'=>'job','class'=>'form-horizontal','id'=>'mapping_tools_div_visual_form','style'=>'display:none')) !!}
 
 {!! form_function_about('mapping_tools_div_visual_form',$tooltips) !!}
 <br>

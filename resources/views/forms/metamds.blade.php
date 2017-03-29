@@ -1,6 +1,6 @@
 <?php $function = "metamds"; ?>
 
-{!! Form::open(array('url'=>'job/visual','class'=>'form-horizontal','id'=>'metamds_form','style'=>'display:none')) !!}
+{!! Form::open(array('url'=>'job','class'=>'form-horizontal','id'=>'metamds_form','style'=>'display:none')) !!}
 
 {!! form_function_about('metamds',$tooltips) !!}
 <br>

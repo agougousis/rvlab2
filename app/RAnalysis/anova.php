@@ -2,8 +2,6 @@
 
 namespace App\RAnalysis;
 
-use Session;
-use Validator;
 use App\Contracts\RAnalysis;
 use App\RAnalysis\BaseAnalysis;
 
@@ -60,17 +58,17 @@ class anova extends BaseAnalysis implements RAnalysis {
     private $factor_select3;
 
     /**
-     * The validation rules for anova submission form
-     *
-     * @var array
+     * Initializes class properties
      */
-    private $formValidationRules = [
-        'box' => 'required|string|max:250',
-        'one_or_two_way'    => 'required|string|max:250',
-        'Factor_select1'    => 'required|string|max:250',
-        'Factor_select2'    => 'required|string|max:250',
-        'Factor_select3'    =>  'string|max:250'
-    ];
+    protected function init() {
+        $this->formValidationRules = [
+            'box' => 'required|string|max:250',
+            'one_or_two_way'    => 'required|string|max:250',
+            'Factor_select1'    => 'required|string|max:250',
+            'Factor_select2'    => 'required|string|max:250',
+            'Factor_select3'    =>  'string|max:250'
+        ];
+    }
 
     /**
      * Runs a anova analysis
@@ -87,7 +85,7 @@ class anova extends BaseAnalysis implements RAnalysis {
             $this->copyInputFiles();
 
             $this->buildRScript();
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
                 $this->log_event($ex->getMessage(), "error");
             }
@@ -103,27 +101,11 @@ class anova extends BaseAnalysis implements RAnalysis {
     }
 
     /**
-     * Validates the submitted form
-     *
-     * @throws \Exception
-     */
-    private function validateForm()
-    {
-        $validator = Validator::make($this->form, $this->formValidationRules);
-
-        if ($validator->fails()) {
-            // Load validation error messages to a session toastr
-            Session::flash('toastr', implode('<br>', $validator->errors()->all()));
-            throw new \Exception('');
-        }
-    }
-
-    /**
      * Moved input files from workspace to job's folder
      *
      * @throws Exception
      */
-    private function copyInputFiles()
+    protected function copyInputFiles()
     {
         $workspace_filepath = $this->user_workspace . '/' . $this->box;
         $job_filepath = $this->job_folder . '/' . $this->box;
@@ -138,7 +120,7 @@ class anova extends BaseAnalysis implements RAnalysis {
      *
      * @throws Exception
      */
-    private function getInputParams()
+    protected function getInputParams()
     {
         $this->box = $this->form['box'];
 
@@ -164,7 +146,7 @@ class anova extends BaseAnalysis implements RAnalysis {
      *
      * @throws Exception
      */
-    private function buildRScript()
+    protected function buildRScript()
     {
         // Build the R script
         if (!($fh = fopen("$this->job_folder/$this->job_id.R", "w"))) {

@@ -1,6 +1,6 @@
 <?php $function = "permanova"; ?>
 
-{!! Form::open(array('url'=>'job/serial','class'=>'form-horizontal','id'=>'permanova_form','style'=>'display:none')) !!}
+{!! Form::open(array('url'=>'job','class'=>'form-horizontal','id'=>'permanova_form','style'=>'display:none')) !!}
 
 {!! form_function_about('permanova',$tooltips) !!}
 <br>

@@ -1,6 +1,6 @@
 <?php $function = "convert2r"; ?>
 
-{!! Form::open(array('url'=>'job/serial','class'=>'form-horizontal','id'=>'convert2r_form','style'=>'display:none')) !!}
+{!! Form::open(array('url'=>'job','class'=>'form-horizontal','id'=>'convert2r_form','style'=>'display:none')) !!}
 
     {!! form_function_about('convert2r',$tooltips) !!}
     <br>

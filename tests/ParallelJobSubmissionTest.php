@@ -132,14 +132,14 @@ class ParallelJobSubmissionTest extends TesterBase
             if (empty($data)) {
                 continue;
             }
-
+            
             // Submit the job
             $post_data = array_merge($data['parameters'], $data['inputs'], [
                 'function' => $data['function'],
                 '_token' => csrf_token()
             ]);
 
-            $response = $this->call('POST', url('job/parallel'), $post_data, [], [], []);
+            $response = $this->call('POST', url('job'), $post_data, [], [], []);
             $this->assertEquals(302, $response->getStatusCode());
 
             // Check the toastr message

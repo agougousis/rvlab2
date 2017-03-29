@@ -2,8 +2,6 @@
 
 namespace App\RAnalysis;
 
-use Session;
-use Validator;
 use App\Contracts\RAnalysis;
 use App\RAnalysis\BaseAnalysis;
 
@@ -53,16 +51,16 @@ class parallel_taxa2dist extends BaseAnalysis implements RAnalysis
     private $no_of_processors;
 
     /**
-     * The validation rules for parallel_taxa2dist submission form
-     *
-     * @var array
+     * Initializes class properties
      */
-    private $formValidationRules = [
-        'box'               => 'required|string|max:250',
-        'varstep'           =>  'required|string|in:TRUE,FALSE',
-        'check_parallel_taxa2dist'   =>  'required|string|in:TRUE,FALSE',
-        'no_of_processors'  =>  'required|int'
-    ];
+    protected function init() {
+        $this->formValidationRules = [
+            'box'               => 'required|string|max:250',
+            'varstep'           =>  'required|string|in:TRUE,FALSE',
+            'check_parallel_taxa2dist'   =>  'required|string|in:TRUE,FALSE',
+            'No_of_processors'  =>  'required|int'
+        ];
+    }
 
     /**
      * Runs a parallel_taxa2dist analysis
@@ -79,7 +77,7 @@ class parallel_taxa2dist extends BaseAnalysis implements RAnalysis
             $this->copyInputFiles();
 
             $this->buildRScript();
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
                 $this->log_event($ex->getMessage(), "error");
             }
@@ -95,27 +93,11 @@ class parallel_taxa2dist extends BaseAnalysis implements RAnalysis
     }
 
     /**
-     * Validates the submitted form
-     *
-     * @throws \Exception
-     */
-    private function validateForm()
-    {
-        $validator = Validator::make($this->form, $this->formValidationRules);
-
-        if ($validator->fails()) {
-            // Load validation error messages to a session toastr
-            Session::flash('toastr', implode('<br>', $validator->errors()->all()));
-            throw new \Exception('');
-        }
-    }
-
-    /**
      * Moved input files from workspace to job's folder
      *
      * @throws Exception
      */
-    private function copyInputFiles()
+    protected function copyInputFiles()
     {
         $workspace_filepath = $this->user_workspace . '/' . $this->box;
         $job_filepath = $this->job_folder . '/' . $this->box;
@@ -130,7 +112,7 @@ class parallel_taxa2dist extends BaseAnalysis implements RAnalysis
      *
      * @throws Exception
      */
-    private function getInputParams()
+    protected function getInputParams()
     {
         $this->box = $this->form['box'];
 
@@ -149,7 +131,7 @@ class parallel_taxa2dist extends BaseAnalysis implements RAnalysis
      *
      * @throws Exception
      */
-    private function buildRScript()
+    protected function buildRScript()
     {
         // Build the R script
         $script_source = app_path().'/rvlab/files/Taxa2DistMPI.r';
@@ -169,7 +151,7 @@ class parallel_taxa2dist extends BaseAnalysis implements RAnalysis
         fwrite($fh2, "#PBS -m n\n");
         fwrite($fh2, "#PBS -l nodes=1:ppn=$this->no_of_processors\n");    // Use 1 node and 1 CPU from this node
         fwrite($fh2, "date\n");
-        fwrite($fh2, "mpiexec /usr/bin/Rscript $this->job_id.R $this->remote_job_folder/$this->box $this->remote_job_folder/ $this->remote_job_folder/ TRUE $this->varstep $this->check  output  > $this->remote_job_folder/cmd_line_output.txt\n");
+        fwrite($fh2, "mpiexec /usr/bin/Rscript $this->job_id.R $this->remote_job_folder/$this->box $this->remote_job_folder/ $this->remote_job_folder/ TRUE $this->varstep $this->check_parallel_taxa2dist  output  > $this->remote_job_folder/cmd_line_output.txt\n");
         fwrite($fh2, "date\n");
         fwrite($fh2, "exit 0");
         fclose($fh2);

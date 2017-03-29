@@ -1,6 +1,6 @@
 <?php $function = "parallel_taxa2taxon"; ?>
 
-{!! Form::open(array('url'=>'job/parallel','class'=>'form-horizontal','id'=>'parallel_taxa2taxon_form','style'=>'display:none')) !!}
+{!! Form::open(array('url'=>'job','class'=>'form-horizontal','id'=>'parallel_taxa2taxon_form','style'=>'display:none')) !!}
 
 {!! form_function_about('parallel_taxa2taxon',$tooltips) !!}
 <div style="color: blue; font-weight: bold">Input files</div>

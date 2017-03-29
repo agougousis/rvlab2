@@ -1,6 +1,6 @@
 <?php $function = "regression"; ?>
 
-{!! Form::open(array('url'=>'job/visual','class'=>'form-horizontal','id'=>'regression_form','style'=>'display:none')) !!}
+{!! Form::open(array('url'=>'job','class'=>'form-horizontal','id'=>'regression_form','style'=>'display:none')) !!}
 
     {!! form_function_about('regression',$tooltips) !!}
     <br>

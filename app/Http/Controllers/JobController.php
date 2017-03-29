@@ -62,6 +62,7 @@ class JobController extends CommonController {
         $job_list = DB::table('jobs')->where('user_email',$user_email)->orderBy('id','desc')->get();
         $r_functions = config('r_functions.list');
         $form_data['workspace_files'] = WorkspaceFile::getUserFiles($user_email);
+
         $form_data['user_email'] = $user_email;
         $form_data['tooltips'] = config('tooltips');
 
@@ -483,171 +484,227 @@ class JobController extends CommonController {
 
     /**
      * Submits a new job
+     *
      * Handles the basic functionlity of submission that is not related to a specific R vLab function
      *
-     * @return RedirectResponse|JSON
+     * @param Request $request
+     * @return type
      */
-    public function submit(Request $request){
-
+    public function submit(Request $request)
+    {
         try {
-            $form = $request->all();
-            $function_select = $form['function'];
             $userInfo = session('user_info');
-            $user_email = $userInfo['email'];
+            $form = $request->all();
 
-            // Validation
-            if(empty($form['box'])) {
-                if($this->is_mobile){
-                    $response = array('message','You forgot to select an input file!');
-                    return Response::json($response,400);
-                } else {
-                    Session::flash('toastr',array('error','You forgot to select an input file!'));
-                    return Redirect::back();
-                }
-            } else {
-                $box = $form['box'];
-            }
+            $this->basicFormValidation($form);
 
-        } catch(Exception $ex){
-            $this->log_event($ex->getMessage(),"error");
-        }
-
-        try {
-            // Create a job record
-            $job = new Job();
-            $job->user_email = $user_email;
-            $job->function = $function_select;
-            $job->status = 'creating';
-            $job->submitted_at = date("Y-m-d H:i:s");
-            $job->save();
+            $job = $this->createBasicJobRecord($userInfo['email'], $form);
 
             // Get the job id and create the job folder
             $job_id = 'job'.$job->id;
-            $user_jobs_path = $this->jobs_path.'/'.$user_email;
+
+            // Define all the required paths
+            $user_jobs_path = $this->jobs_path.'/'.$userInfo['email'];
             $job_folder = $user_jobs_path.'/'.$job_id;
-            $user_workspace = $this->workspace_path.'/'.$user_email;
+            $user_workspace = $this->workspace_path.'/'.$userInfo['email'];
+            $remote_job_folder = $this->remote_jobs_path.'/'.$userInfo['email'].'/'.$job_id;
+            $remote_user_workspace = $this->remote_workspace_path.'/'.$userInfo['email'];
 
-            // Create the required folders if they are not exist
-            if(!file_exists($user_workspace)){
-                if(!mkdir($user_workspace)){
-                    $this->log_event('User workspace directory could not be created!','error');
-                    if($this->is_mobile){
-                        $response = array('message','User workspace directory could not be created!');
-                        return Response::json($response,500);
-                    } else {
-                        return $this->unexpected_error();
-                    }
-                }
-            }
-            if(!file_exists($user_jobs_path)){
-                if(!mkdir($user_jobs_path)){
-                    $this->log_event('User jobs directory could not be created!','error');
-                    if($this->is_mobile){
-                        $response = array('message','User jobs directory could not be created!');
-                        return Response::json($response,500);
-                    } else {
-                        return $this->unexpected_error();
-                    }
-                }
-            }
-
-            if(!file_exists($job_folder)){
-                if(!mkdir($job_folder)){
-                    $this->log_event('Job directory could not be created!','error');
-                    if($this->is_mobile){
-                        $response = array('message','Job directory could not be created!');
-                        return Response::json($response,500);
-                    } else {
-                        return $this->unexpected_error();
-                    }
-                }
-            }
-            $remote_job_folder = $this->remote_jobs_path.'/'.$user_email.'/'.$job_id;
-            $remote_user_workspace = $this->remote_workspace_path.'/'.$user_email;
+            $this->buildUserDirectories($job_folder, $user_workspace, $user_jobs_path);
 
             // Run the function
             $params = "";
-            if(is_array($form['box'])) {
-                $inputs = implode(';',$form['box']);
-            } else {
-                $inputs = $form['box'];
-            }
-            $low_function = strtolower($function_select);
-            $submitted = $this->{$low_function}($form,$job_id,$job_folder,$remote_job_folder,$user_workspace,$remote_user_workspace,$inputs,$params);
+            $inputs = "";
+
+            $class = "\App\RAnalysis"."\\".strtolower($form['function']);
+            $analysis = new $class($form,$job_id,$job_folder,$remote_job_folder,$user_workspace,$remote_user_workspace,$inputs,$params);
+            $submitted = $analysis->run();
+            //$submitted = $this->{$low_function}($form,$job_id,$job_folder,$remote_job_folder,$user_workspace,$remote_user_workspace,$inputs,$params);
+
+            // Handle submission failure
             if(!$submitted){
-
-                $this->log_event('Function '.$low_function.' failed!',"error");
-
-                // Delete the job record
-                Job::where('id',$job->id)->delete();
-
-                 // Delete folder if created
-                if(file_exists($job_folder)){
-                    if(!delTree($job_folder)){
-                        $this->log_event('Folder '.$job_folder.' could not be deleted after failed job submission!',"error");
-                    }
-                }
-
-                if($this->is_mobile){
-                    $message = 'New job submission failed!';
-                    // Add as part of the message the specialized error message that has been loaded to session flash
-                    if(Session::has('toastr')){
-                        $toastr = Session::get('toastr');
-                        foreach($toastr as $error){
-                            $message .= " - ".$error;
-                        }
-                    }
-                    $response = array('message',$message);
-                    return Response::json($response,500);
-                } else {
-                    return Redirect::back();
-                }
+                return $this->responseAfterFailure('Function '.$form['function'].' failed!', 'Job submission failed. ', $job_id, $job_folder);
             }
 
-            $input_ids = array();
-            $inputs_list = explode(';',$inputs);
-            foreach($inputs_list as $input){
-                $file_record = WorkspaceFile::whereRaw('BINARY filename LIKE ?',array($input))->where('user_email', $user_email)->first();
-                $input_ids[] = $file_record->id.":".$input;
-            }
-            $input_ids_string = implode(';',$input_ids);
-
-
-            $job->status = 'submitted';
-            $job->jobsize = directory_size($job_folder);
-            $job->inputs = $input_ids_string;
-            $job->parameters = trim($params,";");
-            $job->save();
-
+            $this->updateJobAfterSubmission($job, $job_folder, $inputs, $params);
         } catch (Exception $ex) {
-            // Delete record if created
-            if(!empty($job_id)){
-                $job->delete();
-            }
-            // Delete folder if created
-            if(file_exists($job_folder)){
-                if(!delTree($job_folder)){
-                    $this->log_event('Folder '.$job_folder.' could not be deleted!',"error");
-                }
+            $this->errorMessage = 'Job submission failed! '.$this->errorMessage;
+
+            if ($job_id) {
+                return $this->responseAfterFailure($ex->getMessage(), $this->errorMessage, $job_id, $job_folder);
+            } else {
+                return $this->responseAfterFailure($ex->getMessage(), $this->errorMessage);
             }
 
-            $this->log_event($ex->getMessage(),"error");
-            Session::flash('toastr',array('error','New job submission failed!'));
-            if($this->is_mobile){
-                $response = array('message','New job submission failed!');
-                return Response::json($response,500);
-            } else {
-                return Redirect::back();
-            }
         }
 
-        Session::put('last_function_used',$function_select);
-        Session::flash('toastr',array('success','The job submitted successfully!'));
-        //$this->log_event("New job submission","info");
+        Session::put('last_function_used', $form['function']);
+
         if($this->is_mobile){
             return Response::json(array(),200);
         } else {
-             return Redirect::to('/');
+            Session::flash('toastr', array('success', 'The job submitted successfully!'));
+            return Redirect::to('/');
+        }
+    }
+
+/**
+     * Updates the job record after a successful job submission
+     *
+     * @param Job $job
+     * @param string $job_folder
+     * @param string $inputs
+     * @param string $params
+     */
+    protected function updateJobAfterSubmission(Job &$job, $job_folder, $inputs, $params)
+    {
+        $job->status = 'submitted';
+        $job->jobsize = directory_size($job_folder);
+        $job->inputs = $this->inputFilesWithIds($inputs);
+        $job->parameters = trim($params,";");
+        $job->save();
+    }
+
+    /**
+     * Handles a failed job submission
+     *
+     * @param string $logMessage
+     * @param string $flashMessage
+     * @param int $jogId
+     * @param string $job_folder
+     * @return mixed
+     */
+    protected function responseAfterFailure($logMessage, $flashMessage, $jogId = null, $job_folder = null)
+    {
+        // Delete the job directory, if created
+        if ($jogId) {
+            $this->deleteJobDirectory($jogId, $job_folder);
+        }
+
+        // Check if there is something to log
+        if (!empty($logMessage)) {
+            $this->log_event($logMessage,"error");
+        }
+
+        if($this->is_mobile){
+            return Response::json(['message', $flashMessage], 500);
+        } else {
+            if (Session::has('toastr')) {
+                $oldMessage = session('toastr');
+                $flashMessage .= $oldMessage[1];
+            }
+            Session::flash('toastr', ['error', $flashMessage]);
+            return Redirect::back();
+        }
+    }
+
+    /**
+     * Creates a job record with basic information (the job has not
+     * been submitted yet)
+     *
+     * @param string $user_email
+     * @param array $form
+     * @return Job
+     */
+    protected function createBasicJobRecord($user_email, array $form)
+    {
+        $job = new Job();
+        $job->user_email = $user_email;
+        $job->function = $form['function'];
+        $job->status = 'creating';
+        $job->submitted_at = date("Y-m-d H:i:s");
+        $job->save();
+
+        return $job;
+    }
+
+    /**
+     * Adds the file record IDs to a string that initially contains only the
+     * filenames.
+     *
+     * @param string $inputs
+     * @return string
+     */
+    protected function inputFilesWithIds($inputs)
+    {
+        $userInfo = session('user_info');
+
+        $input_ids = array();
+        $inputs_list = explode(';',$inputs);
+        foreach($inputs_list as $input){
+            $file_record = WorkspaceFile::whereRaw('BINARY filename LIKE ?',array($input))->where('user_email', $userInfo['email'])->first();
+            $input_ids[] = $file_record->id.":".$input;
+        }
+        return implode(';',$input_ids);
+    }
+
+    /**
+     * Deletes a job directory
+     *
+     * @param int $jobId
+     * @param string $jobFolder
+     * @return null
+     */
+    protected function deleteJobDirectory($jobId, $jobFolder)
+    {
+        // Delete the job record
+        Job::where('id', $jobId)->delete();
+
+         // Delete folder if created
+        if(file_exists($jobFolder)){
+            if(!delTree($jobFolder)){
+                $this->log_event('Folder '.$jobFolder.' could not be deleted after failed job submission!',"error");
+            }
+        }
+    }
+
+    /**
+     * Makes a basic validation to the submitted form.
+     *
+     * This validation is analysis-agnostic and checks for input that is
+     * required for all kinds of analysis.
+     *
+     * @throws \Exception
+     */
+    protected function basicFormValidation($form)
+    {
+        $validator = Validator::make($form, [
+            'function'  =>  'required|string|max:250',
+            'box'       =>  'required'
+        ]);
+
+        if ($validator->fails()) {
+            $this->errorMessage .= implode('<br>', $validator->errors()->all());
+            throw new \Exception('');
+        }
+    }
+
+    /**
+     * Creates user directories in case they do not exist
+     *
+     * @param string $job_folder
+     * @param string $user_workspace
+     * @param string $user_jobs_path
+     * @throws \Exception
+     */
+    protected function buildUserDirectories($job_folder, $user_workspace, $user_jobs_path)
+    {
+        // Create the required folders if they are not exist
+        if(!file_exists($user_workspace)){
+            if(!mkdir($user_workspace)){
+                throw new \Exception('User workspace directory could not be created!');
+            }
+        }
+        if(!file_exists($user_jobs_path)){
+            if(!mkdir($user_jobs_path)){
+                throw new \Exception('User jobs directory could not be created!');
+            }
+        }
+
+        if(!file_exists($job_folder)){
+            if(!mkdir($job_folder)){
+                throw new \Exception('Job directory could not be created!');
+            }
         }
     }
 }

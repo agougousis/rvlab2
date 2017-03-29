@@ -1,6 +1,6 @@
 <?php $function = "taxa2dist"; ?>
 
-{!! Form::open(array('url'=>'job/serial','class'=>'form-horizontal','id'=>'taxa2dist_form')) !!}
+{!! Form::open(array('url'=>'job','class'=>'form-horizontal','id'=>'taxa2dist_form')) !!}
 
     {!! form_function_about('taxa2dist',$tooltips) !!}
     <br>

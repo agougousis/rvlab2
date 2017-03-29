@@ -2,8 +2,6 @@
 
 namespace App\RAnalysis;
 
-use Session;
-use Validator;
 use App\Contracts\RAnalysis;
 use App\RAnalysis\BaseAnalysis;
 
@@ -46,15 +44,15 @@ class taxa2dist extends BaseAnalysis implements RAnalysis
     private $varstep;
 
     /**
-     * The validation rules for taxa2dist submission form
-     *
-     * @var array
+     * Initializes class properties
      */
-    private $formValidationRules = [
-        'box'               => 'required|string|max:250',
-        'varstep'           =>  'required|string|in:TRUE,FALSE',
-        'check_taxa2dist'   =>  'required|string|in:TRUE,FALSE'
-    ];
+    protected function init() {
+        $this->formValidationRules = [
+            'box'               => 'required|string|max:250',
+            'varstep'           =>  'required|string|in:TRUE,FALSE',
+            'check_taxa2dist'   =>  'required|string|in:TRUE,FALSE'
+        ];
+    }
 
     /**
      * Runs a taxa2dist analysis
@@ -71,7 +69,7 @@ class taxa2dist extends BaseAnalysis implements RAnalysis
             $this->copyInputFiles();
 
             $this->buildRScript();
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
                 $this->log_event($ex->getMessage(), "error");
             }
@@ -87,27 +85,11 @@ class taxa2dist extends BaseAnalysis implements RAnalysis
     }
 
     /**
-     * Validates the submitted form
-     *
-     * @throws \Exception
-     */
-    private function validateForm()
-    {
-        $validator = Validator::make($this->form, $this->formValidationRules);
-
-        if ($validator->fails()) {
-            // Load validation error messages to a session toastr
-            Session::flash('toastr', implode('<br>', $validator->errors()->all()));
-            throw new \Exception('');
-        }
-    }
-
-    /**
      * Moved input files from workspace to job's folder
      *
      * @throws Exception
      */
-    private function copyInputFiles()
+    protected function copyInputFiles()
     {
         $workspace_filepath = $this->user_workspace . '/' . $this->box;
         $job_filepath = $this->job_folder . '/' . $this->box;
@@ -122,7 +104,7 @@ class taxa2dist extends BaseAnalysis implements RAnalysis
      *
      * @throws Exception
      */
-    private function getInputParams()
+    protected function getInputParams()
     {
         $this->box = $this->form['box'];
 
@@ -138,7 +120,7 @@ class taxa2dist extends BaseAnalysis implements RAnalysis
      *
      * @throws Exception
      */
-    private function buildRScript()
+    protected function buildRScript()
     {
         // Build the R script
         if (!($fh = fopen("$this->job_folder/$this->job_id.R", "w"))) {

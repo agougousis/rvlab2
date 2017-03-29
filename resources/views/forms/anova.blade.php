@@ -1,6 +1,6 @@
 <?php $function = "anova"; ?>
 
-{!! Form::open(array('url'=>'job/visual','class'=>'form-horizontal','id'=>'anova_form','style'=>'display:none')) !!}
+{!! Form::open(array('url'=>'job','class'=>'form-horizontal','id'=>'anova_form','style'=>'display:none')) !!}
 
     {!! form_function_about('anova',$tooltips) !!}
     <br>

@@ -71,7 +71,7 @@ class ResultsPageTest extends TesterBase
                 '_token' => csrf_token()
             ]);
 
-            $response = $this->call('POST', url('job/serial'), $post_data, [], [], []);
+            $response = $this->call('POST', url('job'), $post_data, [], [], []);
             $this->assertEquals(302, $response->getStatusCode());
         }
 
@@ -128,7 +128,7 @@ class ResultsPageTest extends TesterBase
             '_token' => csrf_token()
         ]);
 
-        $response = $this->call('POST', url('job/serial'), $post_data, [], [], []);
+        $response = $this->call('POST', url('job'), $post_data, [], [], []);
         $this->assertEquals(302, $response->getStatusCode());
 
         $job = Job::where('user_email', $this->demoUser)->orderBy('id', 'desc')->first();

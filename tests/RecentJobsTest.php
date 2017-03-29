@@ -66,7 +66,7 @@ class RecentJobsTest extends TesterBase
                 '_token' => csrf_token()
             ]);
 
-            $response = $this->call('POST', url('job/serial'), $post_data, [], [], []);
+            $response = $this->call('POST', url('job'), $post_data, [], [], []);
             $this->assertEquals(302, $response->getStatusCode());
         }
 
@@ -88,7 +88,7 @@ class RecentJobsTest extends TesterBase
         $this->assertObjectHasAttribute('inputs', $vegdistJob);
         $this->assertEquals(1, preg_match('/(\d+):softLagoonAbundance\.csv/', $vegdistJob->inputs));
         $this->assertObjectHasAttribute('parameters', $vegdistJob);
-        $this->assertEquals('transpose:transpose;transofrmation method:none;method:euclidean;binary:FALSE;diag:FALSE;upper:FALSE;na.rm:FALSE', $vegdistJob->parameters);
+        $this->assertEquals('transpose:transpose;transf_method_select:none;method:euclidean;binary:FALSE;diag:FALSE;upper:FALSE;na.rm:FALSE', $vegdistJob->parameters);
 
         // Check information of the taxa2dist job
         $taxa2distJob = $responseData[1];

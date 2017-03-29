@@ -2,8 +2,6 @@
 
 namespace App\RAnalysis;
 
-use Session;
-use Validator;
 use App\Contracts\RAnalysis;
 use App\RAnalysis\BaseAnalysis;
 
@@ -82,20 +80,20 @@ class parallel_bioenv extends BaseAnalysis implements RAnalysis
     private $trace;
 
     /**
-     * The validation rules for parallel_bioenv submission form
-     *
-     * @var array
+     * Initializes class properties
      */
-    private $formValidationRules = [
-        'box' => 'required|string|max:250',
-        'box2' => 'required|string|max:250',
-        'transpose' => 'string|max:250',
-        'no_of_processors' => 'required|int',
-        'method_select'    =>  'required|string|max:250',
-        'index' => 'required|string|max:250',
-        'upto' => 'required|int',
-        'trace' => 'required|string|max:250',
-    ];
+    protected function init() {
+        $this->formValidationRules = [
+            'box' => 'required|string|max:250',
+            'box2' => 'required|string|max:250',
+            'transpose' => 'string|max:250',
+            'No_of_processors' => 'required|int',
+            'method_select'    =>  'required|string|max:250',
+            'index_select' => 'required|string|max:250',
+            'upto' => 'required|int',
+            'trace' => 'required|string|max:250'
+        ];
+    }
 
     /**
      * Runs a parallel_bioenv analysis
@@ -112,7 +110,7 @@ class parallel_bioenv extends BaseAnalysis implements RAnalysis
             $this->copyInputFiles();
 
             $this->buildRScript();
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
                 $this->log_event($ex->getMessage(), "error");
             }
@@ -128,27 +126,11 @@ class parallel_bioenv extends BaseAnalysis implements RAnalysis
     }
 
     /**
-     * Validates the submitted form
-     *
-     * @throws \Exception
-     */
-    private function validateForm()
-    {
-        $validator = Validator::make($this->form, $this->formValidationRules);
-
-        if ($validator->fails()) {
-            // Load validation error messages to a session toastr
-            Session::flash('toastr', implode('<br>', $validator->errors()->all()));
-            throw new \Exception('');
-        }
-    }
-
-    /**
      * Moved input files from workspace to job's folder
      *
      * @throws Exception
      */
-    private function copyInputFiles()
+    protected function copyInputFiles()
     {
         $workspace_filepath = $this->user_workspace . '/' . $this->box;
         $job_filepath = $this->job_folder . '/' . $this->box;
@@ -170,7 +152,7 @@ class parallel_bioenv extends BaseAnalysis implements RAnalysis
      *
      * @throws Exception
      */
-    private function getInputParams()
+    protected function getInputParams()
     {
         $this->box = $this->form['box'];
 
@@ -178,21 +160,21 @@ class parallel_bioenv extends BaseAnalysis implements RAnalysis
         $this->inputs .= ";" . $this->box2;
 
         if (empty($this->form['transpose'])) {
-            $this->transpose = "FALSE";
+            $this->transpose = 'FALSE';
             $this->params .= ";transpose: ";
         } else {
-            $this->transpose = $this->form['transpose'];
-            $this->params .= ";transpose:" . $this->transpose;
+            $this->transpose = 'TRUE';
+            $this->params .= ";transpose:" . $this->form['transpose'];
         }
 
-        $this->no_of_processors = $this->form['no_of_processors'];
-        $this->params .= ";no_of_processors:" . $this->no_of_processors;
+        $this->no_of_processors = $this->form['No_of_processors'];
+        $this->params .= ";No_of_processors:" . $this->no_of_processors;
 
         $this->method_select = $this->form['method_select'];
         $this->params .= ";method_select:" . $this->method_select;
 
-        $this->index = $this->form['index'];
-        $this->params .= ";index:" . $this->index;
+        $this->index_select = $this->form['index_select'];
+        $this->params .= ";index_select:" . $this->index_select;
 
         $this->upto = $this->form['upto'];
         $this->params .= ";upto:" . $this->upto;
@@ -206,7 +188,7 @@ class parallel_bioenv extends BaseAnalysis implements RAnalysis
      *
      * @throws Exception
      */
-    private function buildRScript()
+    protected function buildRScript()
     {
         // Build the R script
         $script_source = app_path().'/rvlab/files/parallel_bioenv_MPI.r';
@@ -226,7 +208,7 @@ class parallel_bioenv extends BaseAnalysis implements RAnalysis
         fwrite($fh2, "#PBS -m n\n");
         fwrite($fh2, "#PBS -l nodes=1:ppn=$this->no_of_processors\n");    // Use 1 node and 1 CPU from this node
         fwrite($fh2, "date\n");
-        fwrite($fh2, "mpiexec /usr/bin/Rscript $this->remote_job_folder/$this->job_id.R $this->remote_job_folder/$this->box $transpose $this->remote_job_folder/$this->box2 $this->remote_job_folder/ $this->method_select $this->index_select $this->upto $this->trace $this->index_select > $this->remote_job_folder/cmd_line_output.txt\n");
+        fwrite($fh2, "mpiexec /usr/bin/Rscript $this->remote_job_folder/$this->job_id.R $this->remote_job_folder/$this->box $this->transpose $this->remote_job_folder/$this->box2 $this->remote_job_folder/ $this->method_select $this->index_select $this->upto $this->trace $this->index_select > $this->remote_job_folder/cmd_line_output.txt\n");
         fwrite($fh2, "date\n");
         fwrite($fh2, "exit 0");
         fclose($fh2);

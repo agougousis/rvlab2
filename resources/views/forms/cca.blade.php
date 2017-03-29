@@ -1,6 +1,6 @@
 <?php $function = "cca"; ?>
 
-{!! Form::open(array('url'=>'job/visual','class'=>'form-horizontal','id'=>'cca_form','style'=>'display:none')) !!}
+{!! Form::open(array('url'=>'job','class'=>'form-horizontal','id'=>'cca_form','style'=>'display:none')) !!}
 
     {!! form_function_about('cca',$tooltips) !!}
     <br>

@@ -2,8 +2,6 @@
 
 namespace App\RAnalysis;
 
-use Session;
-use Validator;
 use App\Contracts\RAnalysis;
 use App\RAnalysis\BaseAnalysis;
 
@@ -22,7 +20,7 @@ use App\RAnalysis\BaseAnalysis;
  *
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
-class simper extends BaseAnalysis implements RAnalysis {
+class parallel_simper extends BaseAnalysis implements RAnalysis {
 
     /**
      * The first input file to be used for the analysis
@@ -74,19 +72,19 @@ class simper extends BaseAnalysis implements RAnalysis {
     private $no_of_processors;
 
     /**
-     * The validation rules for simper submission form
-     *
-     * @var array
+     * Initializes class properties
      */
-    private $formValidationRules = [
-        'box' => 'required|string|max:250',
-        'box2' => 'required|string|max:250',
-        'transpose' => 'string|max:250',
-        'column_select' => 'required',
-        'trace' => 'required|string|in:TRUE,FALSE',
-        'permutations' => 'required|int',
-        'no_of_processors'  =>  'required|int'
-    ];
+    protected function init() {
+        $this->formValidationRules = [
+            'box' => 'required|string|max:250',
+            'box2' => 'required|string|max:250',
+            'transpose' => 'string|max:250',
+            'column_select' => 'required',
+            'trace' => 'required|string|in:TRUE,FALSE',
+            'permutations' => 'required|int',
+            'No_of_processors'  =>  'required|int'
+        ];
+    }
 
     /**
      * Runs a simper analysis
@@ -103,7 +101,7 @@ class simper extends BaseAnalysis implements RAnalysis {
             $this->copyInputFiles();
 
             $this->buildRScript();
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
                 $this->log_event($ex->getMessage(), "error");
             }
@@ -119,27 +117,11 @@ class simper extends BaseAnalysis implements RAnalysis {
     }
 
     /**
-     * Validates the submitted form
-     *
-     * @throws \Exception
-     */
-    private function validateForm()
-    {
-        $validator = Validator::make($this->form, $this->formValidationRules);
-
-        if ($validator->fails()) {
-            // Load validation error messages to a session toastr
-            Session::flash('toastr', implode('<br>', $validator->errors()->all()));
-            throw new \Exception('');
-        }
-    }
-
-    /**
      * Moved input files from workspace to job's folder
      *
      * @throws Exception
      */
-    private function copyInputFiles()
+    protected function copyInputFiles()
     {
         $workspace_filepath = $this->user_workspace . '/' . $this->box;
         $job_filepath = $this->job_folder . '/' . $this->box;
@@ -161,7 +143,7 @@ class simper extends BaseAnalysis implements RAnalysis {
      *
      * @throws Exception
      */
-    private function getInputParams()
+    protected function getInputParams()
     {
         $this->box = $this->form['box'];
 
@@ -169,11 +151,11 @@ class simper extends BaseAnalysis implements RAnalysis {
         $this->inputs .= ";" . $this->box2;
 
         if (empty($this->form['transpose'])) {
-            $this->transpose = "FALSE";
+            $this->transpose = 'FALSE';
             $this->params .= ";transpose: ";
         } else {
-            $this->transpose = $this->form['transpose'];
-            $this->params .= ";transpose:" . $this->transpose;
+            $this->transpose = 'TRUE';
+            $this->params .= ";transpose:" . $this->form['transpose'];
         }
 
         $this->column_select = $this->form['column_select'];
@@ -194,7 +176,7 @@ class simper extends BaseAnalysis implements RAnalysis {
      *
      * @throws Exception
      */
-    private function buildRScript()
+    protected function buildRScript()
     {
         // Build the R script
         $script_source = app_path().'/rvlab/files/parallel_simper.r';

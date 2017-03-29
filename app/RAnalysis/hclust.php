@@ -2,8 +2,6 @@
 
 namespace App\RAnalysis;
 
-use Session;
-use Validator;
 use App\Contracts\RAnalysis;
 use App\RAnalysis\BaseAnalysis;
 
@@ -53,16 +51,16 @@ class hclust extends BaseAnalysis implements RAnalysis {
     private $column_select;
 
     /**
-     * The validation rules for hclust submission form
-     *
-     * @var array
+     * Initializes class properties
      */
-    private $formValidationRules = [
-        'box' => 'required|string|max:250',
-        'box2' => 'string|max:250',
-        'method_select' => 'required|string|max:250',
-        'column_select' => 'required_with:box2|string|max:250'
-    ];
+    protected function init() {
+        $this->formValidationRules = [
+            'box' => 'required|string|max:250',
+            'box2' => 'string|max:250',
+            'method_select' => 'required|string|max:250',
+            'column_select' => 'required_with:box2|string|max:250'
+        ];
+    }
 
     /**
      * Runs a hclust analysis
@@ -79,7 +77,7 @@ class hclust extends BaseAnalysis implements RAnalysis {
             $this->copyInputFiles();
 
             $this->buildRScript();
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
                 $this->log_event($ex->getMessage(), "error");
             }
@@ -90,24 +88,8 @@ class hclust extends BaseAnalysis implements RAnalysis {
         // Execute the bash script
         system("chmod +x $this->job_folder/$this->job_id.pbs");
         system("$this->job_folder/$this->job_id.pbs > /dev/null 2>&1 &");
-
+       
         return true;
-    }
-
-    /**
-     * Validates the submitted form
-     *
-     * @throws \Exception
-     */
-    private function validateForm()
-    {
-        $validator = Validator::make($this->form, $this->formValidationRules);
-
-        if ($validator->fails()) {
-            // Load validation error messages to a session toastr
-            Session::flash('toastr', implode('<br>', $validator->errors()->all()));
-            throw new \Exception('');
-        }
     }
 
     /**
@@ -115,7 +97,7 @@ class hclust extends BaseAnalysis implements RAnalysis {
      *
      * @throws Exception
      */
-    private function copyInputFiles()
+    protected function copyInputFiles()
     {
         $workspace_filepath = $this->user_workspace . '/' . $this->box;
         $job_filepath = $this->job_folder . '/' . $this->box;
@@ -139,18 +121,21 @@ class hclust extends BaseAnalysis implements RAnalysis {
      *
      * @throws Exception
      */
-    private function getInputParams()
+    protected function getInputParams()
     {
         $this->box = $this->form['box'];
 
         if (!empty($this->form['box2'])) {
             $this->box2 = $this->form['box2'];
             $this->inputs .= ";" . $this->box2;
+        } else {
+            $this->box2 = "";
+        }
 
+        if (!empty($this->form['column_select'])) {
             $this->column_select = $this->form['column_select'];
             $this->params .= ";column_select:" . $this->column_select;
         } else {
-            $this->box2 = "";
             $this->params .= ";column_select: ";
         }
 
@@ -163,7 +148,7 @@ class hclust extends BaseAnalysis implements RAnalysis {
      *
      * @throws Exception
      */
-    private function buildRScript()
+    protected function buildRScript()
     {
         // Build the R script
         if (!($fh = fopen("$this->job_folder/$this->job_id.R", "w"))) {

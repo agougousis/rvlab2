@@ -2,8 +2,6 @@
 
 namespace App\RAnalysis;
 
-use Session;
-use Validator;
 use App\Contracts\RAnalysis;
 use App\RAnalysis\BaseAnalysis;
 
@@ -46,15 +44,15 @@ class bict extends BaseAnalysis implements RAnalysis
     private $species_family_select;
 
     /**
-     * The validation rules for bict submission form
-     *
-     * @var array
+     * Initializes class properties
      */
-    private $formValidationRules = [
-        'box' => 'required|string|max:250',
-        'box2' => 'string|max:250',
-        'species_family_select' => 'required|string|in:species,family'
-    ];
+    protected function init() {
+        $this->formValidationRules = [
+            'box' => 'required|string|max:250',
+            'box2' => 'string|max:250',
+            'species_family_select' => 'required|string|in:species,family'
+        ];
+    }
 
     /**
      * Runs a bict analysis
@@ -71,7 +69,7 @@ class bict extends BaseAnalysis implements RAnalysis
             $this->copyInputFiles();
 
             $this->buildRScript();
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
                 $this->log_event($ex->getMessage(), "error");
             }
@@ -80,7 +78,7 @@ class bict extends BaseAnalysis implements RAnalysis
         }
 
         // Execute the bash script
-        system("chmod +x $this->job_folder/$this->job_id.pbs");
+        system("chmod +x $this->job_folder/$this->job_id.pbs"); // this command may complain that the file does not exist
         system("chmod +x $this->job_folder/indices");
         system("$this->job_folder/$this->job_id.pbs > /dev/null 2>&1 &");
 
@@ -88,33 +86,17 @@ class bict extends BaseAnalysis implements RAnalysis
     }
 
     /**
-     * Validates the submitted form
-     *
-     * @throws \Exception
-     */
-    private function validateForm()
-    {
-        $validator = Validator::make($this->form, $this->formValidationRules);
-
-        if ($validator->fails()) {
-            // Load validation error messages to a session toastr
-            Session::flash('toastr', implode('<br>', $validator->errors()->all()));
-            throw new \Exception('');
-        }
-    }
-
-    /**
      * Moved input files from workspace to job's folder
      *
      * @throws Exception
      */
-    private function copyInputFiles()
+    protected function copyInputFiles()
     {
         $workspace_filepath = $this->user_workspace . '/' . $this->box;
         $job_filepath = $this->job_folder . '/' . $this->box;
 
         if (!copy($workspace_filepath, $job_filepath)) {
-            throw new Exception('Moving file from workspace to job folder, failed.');
+            throw new \Exception('Moving file from workspace to job folder, failed.');
         }
 
         if ($this->box2) {
@@ -122,38 +104,38 @@ class bict extends BaseAnalysis implements RAnalysis
             $job_filepath = $this->job_folder . '/' . $this->box2;
 
             if (!copy($workspace_filepath, $job_filepath)) {
-                throw new Exception('Moving file from workspace to job folder, failed.');
+                throw new \Exception('Moving file from workspace to job folder, failed.');
             }
         }
 
         $script_source = app_path() . '/rvlab/files/indices';
-        if (!copy($script_source, "$job_folder/indices")) {
-            throw new Exception('Moving file from workspace to job folder, failed.');
+        if (!copy($script_source, "$this->job_folder/indices")) {
+            throw new \Exception('Moving file from workspace to job folder, failed.');
         }
 
         $bqi = app_path() . '/rvlab/files/bqi.csv';
-        if (!copy($bqi, "$job_folder/bqi.csv")) {
-            throw new Exception('Moving file from workspace to job folder, failed.');
+        if (!copy($bqi, "$this->job_folder/bqi.csv")) {
+            throw new \Exception('Moving file from workspace to job folder, failed.');
         }
 
         $ambi = app_path() . '/rvlab/files/ambi.csv';
-        if (!copy($ambi, "$job_folder/ambi.csv")) {
-            throw new Exception('Moving file from workspace to job folder, failed.');
+        if (!copy($ambi, "$this->job_folder/ambi.csv")) {
+            throw new \Exception('Moving file from workspace to job folder, failed.');
         }
 
         $bentix = app_path() . '/rvlab/files/bentix.csv';
-        if (!copy($bentix, "$job_folder/bentix.csv")) {
-            throw new Exception('Moving file from workspace to job folder, failed.');
+        if (!copy($bentix, "$this->job_folder/bentix.csv")) {
+            throw new \Exception('Moving file from workspace to job folder, failed.');
         }
 
         $bqif = app_path() . '/rvlab/files/bqi.family.csv';
-        if (!copy($bqif, "$job_folder/bqi.family.csv")) {
-            throw new Exception('Moving file from workspace to job folder, failed.');
+        if (!copy($bqif, "$this->job_folder/bqi.family.csv")) {
+            throw new \Exception('Moving file from workspace to job folder, failed.');
         }
 
         $distinct = app_path() . '/rvlab/files/TaxDistinctness.R';
-        if (!copy($distinct, "$job_folder/TaxDistinctness.R")) {
-            throw new Exception('Moving file from workspace to job folder, failed.');
+        if (!copy($distinct, "$this->job_folder/TaxDistinctness.R")) {
+            throw new \Exception('Moving file from workspace to job folder, failed.');
         }
     }
 
@@ -162,7 +144,7 @@ class bict extends BaseAnalysis implements RAnalysis
      *
      * @throws Exception
      */
-    private function getInputParams()
+    protected function getInputParams()
     {
         $this->box = $this->form['box'];
 
@@ -180,10 +162,10 @@ class bict extends BaseAnalysis implements RAnalysis
      *
      * @throws Exception
      */
-    private function buildRScript()
+    protected function buildRScript()
     {
         // Build the bash script
-        if (!($fh2 = fopen($this->job_folder . "/$this->job_id.pbs", "w"))) {
+        if (!($fh2 = fopen($this->job_folder."/$this->job_id.pbs", "w"))) {
             throw new \Exception("Unable to open file $this->job_folder/$this->job_id.pbs");
         }
 
@@ -197,7 +179,7 @@ class bict extends BaseAnalysis implements RAnalysis
         fwrite($fh2, "#PBS -l nodes=1:ppn=1\n");
         fwrite($fh2, "date\n");
 
-        if ($sp_fam == 'species') {
+        if ($this->species_family_select == 'species') {
             if (empty($this->box2)) {
                 fwrite($fh2, "tr '\r' '\n' < $this->remote_job_folder/$this->box >$this->remote_job_folder/tmp.csv\n");
                 fwrite($fh2, "$this->remote_job_folder/indices -$this->remote_job_folder/tmp.csv -$this->remote_job_folder/indices.txt -B/dev/null -X/dev/null -A/dev/null > $this->remote_job_folder/cmd_line_output.txt \n");
@@ -212,5 +194,6 @@ class bict extends BaseAnalysis implements RAnalysis
         }
         fwrite($fh2, "date\n");
         fwrite($fh2, "exit 0");
+        fclose($fh2);
     }
 }

@@ -1,6 +1,6 @@
 <?php $function = "mantel"; ?>
 
-{!! Form::open(array('url'=>'job/serial','class'=>'form-horizontal','id'=>'mantel_form','style'=>'display:none')) !!}
+{!! Form::open(array('url'=>'job','class'=>'form-horizontal','id'=>'mantel_form','style'=>'display:none')) !!}
 
 {!! form_function_about('mantel',$tooltips) !!}
 <br>

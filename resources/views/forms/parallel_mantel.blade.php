@@ -1,6 +1,6 @@
 <?php $function = "parallel_mantel"; ?>
 
-{!! Form::open(array('url'=>'job/parallel','class'=>'form-horizontal','id'=>'parallel_mantel_form','style'=>'display:none')) !!}
+{!! Form::open(array('url'=>'job','class'=>'form-horizontal','id'=>'parallel_mantel_form','style'=>'display:none')) !!}
 
 {!! form_function_about('parallel_mantel',$tooltips) !!}
 <br>

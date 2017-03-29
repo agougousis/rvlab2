@@ -132,8 +132,6 @@ class SerialSubmissionTest extends TesterBase
                 'parameters' => [
                     'species_family_select' => 'species'
                 ]
-            ],
-            'convert_to_r' => [
             ]
         ];
 
@@ -149,7 +147,7 @@ class SerialSubmissionTest extends TesterBase
                 '_token' => csrf_token()
             ]);
 
-            $response = $this->call('POST', url('job/serial'), $post_data, [], [], []);
+            $response = $this->call('POST', url('job'), $post_data, [], [], []);
             $this->assertEquals(302, $response->getStatusCode());
 
             // Check the toastr message

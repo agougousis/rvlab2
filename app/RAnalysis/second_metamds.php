@@ -2,8 +2,6 @@
 
 namespace App\RAnalysis;
 
-use Session;
-use Validator;
 use App\Contracts\RAnalysis;
 use App\RAnalysis\BaseAnalysis;
 
@@ -109,24 +107,25 @@ class second_metamds extends BaseAnalysis implements RAnalysis
     private $trace;
 
     /**
-     * The validation rules for second_metamds submission form
-     *
-     * @var array
+     * Initializes class properties
      */
-    private $formValidationRules = [
-        'box' => 'required|string|max:250',
-        'transpose' => 'string|max:250',
-        'transf_method_select' => '',
-        'cor_method_select' => 'required|string|max:250',
-        'column_select' => 'required_with:box2|string|max:250',
-        'k_select' => 'required|int',
-        'trymax' => 'required|int',
-        'autotransform_select' => 'required|string|in:TRUE,FALSE',
-        'noshare' => 'required|numeric',
-        'warscores_select' => 'required|string|in:TRUE,FALSE',
-        'expand' => 'required|string|in:TRUE,FALSE',
-        'trace' => 'required|int'
-    ];
+    protected function init() {
+        $this->formValidationRules = [
+            'box' => 'required|max:10',
+            'transpose' => 'string|max:250',
+            'transf_method_select' => '',
+            'cor_method_select' => 'required|string|max:250',
+            'method_select' => 'required|string|max:250',
+            'column_select' => 'required_with:box2|string|max:250',
+            'k_select' => 'required|int',
+            'trymax' => 'required|int',
+            'autotransform_select' => 'required|string|in:TRUE,FALSE',
+            'noshare' => 'required|numeric',
+            'wascores_select' => 'required|string|in:TRUE,FALSE',
+            'expand' => 'required|string|in:TRUE,FALSE',
+            'trace' => 'required|int'
+        ];
+    }
 
     /**
      * Runs a second_metamds analysis
@@ -143,7 +142,7 @@ class second_metamds extends BaseAnalysis implements RAnalysis
             $this->copyInputFiles();
 
             $this->buildRScript();
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
                 $this->log_event($ex->getMessage(), "error");
             }
@@ -159,27 +158,11 @@ class second_metamds extends BaseAnalysis implements RAnalysis
     }
 
     /**
-     * Validates the submitted form
-     *
-     * @throws \Exception
-     */
-    private function validateForm()
-    {
-        $validator = Validator::make($this->form, $this->formValidationRules);
-
-        if ($validator->fails()) {
-            // Load validation error messages to a session toastr
-            Session::flash('toastr', implode('<br>', $validator->errors()->all()));
-            throw new \Exception('');
-        }
-    }
-
-    /**
      * Moved input files from workspace to job's folder
      *
      * @throws Exception
      */
-    private function copyInputFiles()
+    protected function copyInputFiles()
     {
         foreach($this->box as $box_file){
             $workspace_filepath = $this->user_workspace . '/' . $box_file;
@@ -196,7 +179,7 @@ class second_metamds extends BaseAnalysis implements RAnalysis
      *
      * @throws Exception
      */
-    private function getInputParams()
+    protected function getInputParams()
     {
         $this->box = $this->form['box'];
 
@@ -213,6 +196,9 @@ class second_metamds extends BaseAnalysis implements RAnalysis
 
         $this->cor_method_select = $this->form['cor_method_select'];
         $this->params .= ";cor_method_select:" . $this->cor_method_select;
+
+        $this->method_select = $this->form['method_select'];
+        $this->params .= ";method_select:" . $this->method_select;
 
         $this->k_select = $this->form['k_select'];
         $this->params .= ";k_select:" . $this->k_select;
@@ -241,7 +227,7 @@ class second_metamds extends BaseAnalysis implements RAnalysis
      *
      * @throws Exception
      */
-    private function buildRScript()
+    protected function buildRScript()
     {
         // Build the R script
         if (!($fh = fopen("$this->job_folder/$this->job_id.R", "w"))) {
@@ -283,14 +269,13 @@ class second_metamds extends BaseAnalysis implements RAnalysis
         fwrite($fh, "bcs[combs[1,i],combs[2,i]] <- cor(get(bc1_t), get(bc2_t), method=\"$this->cor_method_select\");\n");
         fwrite($fh,"}\n");
         fwrite($fh,"bcs <- t(bcs)\n");
+        fwrite($fh, "x <- c(\"{$this->box[0]}\");\n");
 
-        fwrite($fh, "x <- c(\"$this->box[0]\");\n");
-        for ($j=1; $j<sizeof($this->box); $j++) {
-            fwrite($fh, "x <- append(x, \"$this->box[$j]\");\n");
+        for ($j=1; $j<count($this->box); $j++) {
+            fwrite($fh, "x <- append(x, \"{$this->box[$j]}\");\n");
         }
         fwrite($fh, "colnames(bcs) <-x;\n");
         fwrite($fh, "rownames(bcs) <-x;\n");
-
         fwrite($fh, "#transform the matrix into a dissimlarity matrix of format \"dis\";\n");
         fwrite($fh, "dist1 <- as.dist(bcs, diag = FALSE, upper = FALSE);\n");
 

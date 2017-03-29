@@ -12,10 +12,7 @@ Route::get('/logout', 'DefaultLoginController@logout');
 Route::get('/job/{job_id}', 'ResultPageController@job_page');
 
 // New job submission
-Route::post('/job', 'JobController@submit');
-Route::post('/job/parallel','ParallelController@submit');
-Route::post('/job/serial', 'SerialController@submit');
-Route::post('/job/visual', 'VisualController@submit');
+Route::post('/job','JobController@submit');
 
 // Delete a Job
 Route::post('/job/delete/{job_id}', 'JobController@delete_job');

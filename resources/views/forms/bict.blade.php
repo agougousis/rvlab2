@@ -1,6 +1,6 @@
 <?php $function = "bict"; ?>
 
-{!! Form::open(array('url'=>'job/serial','class'=>'form-horizontal','id'=>'bict_form','style'=>'display:none')) !!}
+{!! Form::open(array('url'=>'job','class'=>'form-horizontal','id'=>'bict_form','style'=>'display:none')) !!}
 
 {!! form_function_about('bict',$tooltips) !!}
 <br>

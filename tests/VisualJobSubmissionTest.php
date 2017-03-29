@@ -248,14 +248,14 @@ class VisualJobSubmissionTest extends TesterBase
             if (empty($data)) {
                 continue;
             }
-
+            
             // Submit the job
             $post_data = array_merge($data['parameters'], $data['inputs'], [
                 'function' => $data['function'],
                 '_token' => csrf_token()
             ]);
 
-            $response = $this->call('POST', url('job/visual'), $post_data, [], [], []);
+            $response = $this->call('POST', url('job'), $post_data, [], [], []);
             $this->assertEquals(302, $response->getStatusCode());
 
             // Check the toastr message
@@ -321,7 +321,9 @@ class VisualJobSubmissionTest extends TesterBase
             $paramsPairs = explode(';', $job->parameters);
             foreach ($paramsPairs as $pair) {
                 $paramInfo = explode(':', $pair);
-                $given_params[$paramInfo[0]] = $paramInfo[1];
+                // Trim the value since empty values are sometimes stored as
+                // a " " string by the getInputParams() method.
+                $given_params[$paramInfo[0]] = trim($paramInfo[1]);
             }
 
             sort($expected_params);

@@ -2,8 +2,6 @@
 
 namespace App\RAnalysis;
 
-use Session;
-use Validator;
 use App\Contracts\RAnalysis;
 use App\RAnalysis\BaseAnalysis;
 
@@ -67,19 +65,19 @@ class mapping_tools_div_visual extends BaseAnalysis implements RAnalysis {
     private $top_species;
 
     /**
-     * The validation rules for mapping_tools_div_visual submission form
-     *
-     * @var array
+     * Initializes class properties
      */
-    private $formValidationRules = [
-        'box'       =>  'required|string|max:250',
-        'box2'      =>  'required|string|max:250',
-        'box3'      =>  'required|string|max:250',
-        'transpose' => 'string|max:250',
-        'transf_method_select'  =>  'required|string|max:250',
-        'top_species'           =>  'required|int',
-        'column_select'         =>  'required|string|max:250'
-    ];
+    protected function init() {
+        $this->formValidationRules = [
+            'box'       =>  'required|string|max:250',
+            'box2'      =>  'required|string|max:250',
+            'box3'      =>  'required|string|max:250',
+            'transpose' => 'string|max:250',
+            'transf_method_select'  =>  'required|string|max:250',
+            'top_species'           =>  'required|int',
+            'indices_column'         =>  'required|string|max:250'
+        ];
+    }
 
     /**
      * Runs a mapping_tools_div_visual analysis
@@ -96,7 +94,7 @@ class mapping_tools_div_visual extends BaseAnalysis implements RAnalysis {
             $this->copyInputFiles();
 
             $this->buildRScript();
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
                 $this->log_event($ex->getMessage(), "error");
             }
@@ -112,27 +110,11 @@ class mapping_tools_div_visual extends BaseAnalysis implements RAnalysis {
     }
 
     /**
-     * Validates the submitted form
-     *
-     * @throws \Exception
-     */
-    private function validateForm()
-    {
-        $validator = Validator::make($this->form, $this->formValidationRules);
-
-        if ($validator->fails()) {
-            // Load validation error messages to a session toastr
-            Session::flash('toastr', implode('<br>', $validator->errors()->all()));
-            throw new \Exception('');
-        }
-    }
-
-    /**
      * Moved input files from workspace to job's folder
      *
      * @throws Exception
      */
-    private function copyInputFiles()
+    protected function copyInputFiles()
     {
         $workspace_filepath = $this->user_workspace . '/' . $this->box;
         $job_filepath = $this->job_folder . '/' . $this->box;
@@ -167,12 +149,15 @@ class mapping_tools_div_visual extends BaseAnalysis implements RAnalysis {
      *
      * @throws Exception
      */
-    private function getInputParams()
+    protected function getInputParams()
     {
         $this->box = $this->form['box'];
 
         $this->box2 = $this->form['box2'];
         $this->inputs .= ";" . $this->box2;
+
+        $this->box3 = $this->form['box3'];
+        $this->inputs .= ";" . $this->box3;
 
         if (empty($this->form['transpose'])) {
             $this->transpose = "";
@@ -188,8 +173,8 @@ class mapping_tools_div_visual extends BaseAnalysis implements RAnalysis {
         $this->top_species = $this->form['top_species'];
         $this->params .= ";top_species:".$this->top_species;
 
-        $this->column_select = $this->form['column_select'];
-        $this->params .= ";column_select:".$this->top_species;
+        $this->indices_column = $this->form['indices_column'];
+        $this->params .= ";indices_column:".$this->indices_column;
     }
 
     /**
@@ -197,7 +182,7 @@ class mapping_tools_div_visual extends BaseAnalysis implements RAnalysis {
      *
      * @throws Exception
      */
-    private function buildRScript()
+    protected function buildRScript()
     {
         // Build the R script
         if (!($fh = fopen("$this->job_folder/$this->job_id.R", "w"))) {
@@ -248,7 +233,7 @@ class mapping_tools_div_visual extends BaseAnalysis implements RAnalysis {
 
         fwrite($fh, "#Set color set to be used for classes of data  ;\n");
         fwrite($fh, "colorset6<-c(\"#FFFF00\", \"#FFCC00\", \"#FF9900\", \"#FF6600\", \"#FF3300\", \"#FF0000\");\n");
-        fwrite($fh, "plottest <- spplot(sub_points_SPDF, zcol=c(\"$this->column_select\"), xlab=\"\",\n");
+        fwrite($fh, "plottest <- spplot(sub_points_SPDF, zcol=c(\"$this->indices_column\"), xlab=\"\",\n");
         fwrite($fh, "scales=list(draw = TRUE), sp.layout=list(polys), cuts = 6, col.regions=colorset6,xlim=c(-180,180),ylim=c(-80,80),par.settings = list(panel.background=list(col=\"lightblue\")));\n");
 
         fwrite($fh, "x<-x/rowSums(x);\n");
@@ -289,15 +274,15 @@ class mapping_tools_div_visual extends BaseAnalysis implements RAnalysis {
         fwrite($fh, "};\n");
         fwrite($fh, "cat(\"];\\n\\n\");\n");
         fwrite($fh, "cat(\"var indices=[\\n\");\n");
-        fwrite($fh, "for (i in (1:length(sub_points_SPDF\$$this->column_select))){  \n");
+        fwrite($fh, "for (i in (1:length(sub_points_SPDF\$$this->indices_column))){  \n");
         fwrite($fh, "if(!is.na(coords[rownames(new_x)[i],1]) && !is.na(coords[rownames(new_x)[i],2])) {\n");
-        fwrite($fh, "cat(paste(\"{fact:\",paste(paste(sub_points_SPDF\$".$$this->column_select."[i],sep=\":\"),collapse=\",\"),\"}\\n\",sep=\"\"))     ;\n");
-        fwrite($fh, "if(i!=length(sub_points_SPDF\$$this->column_select)[1]){cat(\",\")};\n");
+        fwrite($fh, "cat(paste(\"{fact:\",paste(paste(sub_points_SPDF\$".$this->indices_column."[i],sep=\":\"),collapse=\",\"),\"}\\n\",sep=\"\"))     ;\n");
+        fwrite($fh, "if(i!=length(sub_points_SPDF\$$this->indices_column)[1]){cat(\",\")};\n");
         fwrite($fh, "};\n");
         fwrite($fh, "};\n");
         fwrite($fh, "cat(\"];\\n\");\n");
         fwrite($fh, "cat(\"var indiceslabel=[\\n\");\n");
-        fwrite($fh, "cat(paste(\"{fact:\\\"\",paste(paste(\"$$this->column_select\",sep=\":\"),collapse=\",\"),\"\\\"}\\n\",sep=\"\")) ;\n");
+        fwrite($fh, "cat(paste(\"{fact:\\\"\",paste(paste(\"$this->indices_column\",sep=\":\"),collapse=\",\"),\"\\\"}\\n\",sep=\"\")) ;\n");
         fwrite($fh, "cat(\"];\n\");\n");
 
         fwrite($fh, "sink();\n");

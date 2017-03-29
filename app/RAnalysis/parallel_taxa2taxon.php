@@ -2,8 +2,6 @@
 
 namespace App\RAnalysis;
 
-use Session;
-use Validator;
 use App\Contracts\RAnalysis;
 use App\RAnalysis\BaseAnalysis;
 
@@ -53,16 +51,16 @@ class parallel_taxa2taxon extends BaseAnalysis implements RAnalysis
     private $no_of_processors;
 
     /**
-     * The validation rules for parallel_taxa2taxon submission form
-     *
-     * @var array
+     * Initializes class properties
      */
-    private $formValidationRules = [
-        'box'               => 'required|string|max:250',
-        'box2'               => 'required|string|max:250',
-        'varstep'           =>  'required|string|in:TRUE,FALSE',
-        'no_of_processors'  =>  'required|int'
-    ];
+    protected function init() {
+        $this->formValidationRules = [
+            'box'               => 'required|string|max:250',
+            'box2'               => 'required|string|max:250',
+            'varstep'           =>  'required|string|in:TRUE,FALSE',
+            'No_of_processors'  =>  'required|int'
+        ];
+    }
 
     /**
      * Runs a parallel_taxa2taxon analysis
@@ -79,7 +77,7 @@ class parallel_taxa2taxon extends BaseAnalysis implements RAnalysis
             $this->copyInputFiles();
 
             $this->buildRScript();
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
                 $this->log_event($ex->getMessage(), "error");
             }
@@ -95,27 +93,11 @@ class parallel_taxa2taxon extends BaseAnalysis implements RAnalysis
     }
 
     /**
-     * Validates the submitted form
-     *
-     * @throws \Exception
-     */
-    private function validateForm()
-    {
-        $validator = Validator::make($this->form, $this->formValidationRules);
-
-        if ($validator->fails()) {
-            // Load validation error messages to a session toastr
-            Session::flash('toastr', implode('<br>', $validator->errors()->all()));
-            throw new \Exception('');
-        }
-    }
-
-    /**
      * Moved input files from workspace to job's folder
      *
      * @throws Exception
      */
-    private function copyInputFiles()
+    protected function copyInputFiles()
     {
         $workspace_filepath = $this->user_workspace . '/' . $this->box;
         $job_filepath = $this->job_folder . '/' . $this->box;
@@ -137,7 +119,7 @@ class parallel_taxa2taxon extends BaseAnalysis implements RAnalysis
      *
      * @throws Exception
      */
-    private function getInputParams()
+    protected function getInputParams()
     {
         $this->box = $this->form['box'];
 
@@ -156,7 +138,7 @@ class parallel_taxa2taxon extends BaseAnalysis implements RAnalysis
      *
      * @throws Exception
      */
-    private function buildRScript()
+    protected function buildRScript()
     {
         // Build the R script
         $script_source = app_path().'/rvlab/files/taxa2dist_taxondive.r';

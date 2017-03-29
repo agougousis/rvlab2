@@ -1,6 +1,6 @@
 <?php $function = "taxondive"; ?>
 
-{!! Form::open(array('url'=>'job/visual','class'=>'form-horizontal','id'=>'taxondive_form','style'=>'display:none')) !!}
+{!! Form::open(array('url'=>'job','class'=>'form-horizontal','id'=>'taxondive_form','style'=>'display:none')) !!}
 
 {!! form_function_about('taxondive',$tooltips) !!}
 <br>

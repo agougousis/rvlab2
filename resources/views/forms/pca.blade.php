@@ -1,6 +1,6 @@
 <?php $function = "pca"; ?>
 
-{!! Form::open(array('url'=>'job/visual','class'=>'form-horizontal','id'=>'pca_form','style'=>'display:none')) !!}
+{!! Form::open(array('url'=>'job','class'=>'form-horizontal','id'=>'pca_form','style'=>'display:none')) !!}
 
 {!! form_function_about('pca',$tooltips) !!}
 <br>
