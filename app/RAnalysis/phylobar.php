@@ -20,8 +20,8 @@ use App\RAnalysis\BaseAnalysis;
  *
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
-class phylobar extends BaseAnalysis implements RAnalysis {
-
+class phylobar extends BaseAnalysis implements RAnalysis
+{
     /**
      * The first input file to be used for the analysis
      *
@@ -46,7 +46,8 @@ class phylobar extends BaseAnalysis implements RAnalysis {
     /**
      * Initializes class properties
      */
-    protected function init() {
+    protected function init()
+    {
         $this->formValidationRules = [
             'box' => 'required|string|max:250',
             'box2' => 'required|string|max:250',
@@ -68,7 +69,7 @@ class phylobar extends BaseAnalysis implements RAnalysis {
 
             $this->copyInputFiles();
 
-            $this->buildRScript();
+            $this->makeFakeStatus();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
                 $this->log_event($ex->getMessage(), "error");
@@ -123,11 +124,13 @@ class phylobar extends BaseAnalysis implements RAnalysis {
     }
 
     /**
-     * Builds the required executables for the job execution
+     * This analysis has no executables. This is a javascript-based analysis.
+     * But a fake job#.jobstatus file is needed to mark its status as
+     * completed and a dummy job#.submitted is needed to mark it as submitted.
      *
      * @throws Exception
      */
-    protected function buildRScript()
+    protected function makeFakeStatus()
     {
         // There are no executables. This is a javascript-based analysis.
         // But a fake job#.jobstatus file is needed to mark its status as

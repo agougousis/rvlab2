@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use DB;
-use DateTime;
+use Session;
 use Redirect;
 use App\Models\Job;
 use App\Models\JobsLog;
@@ -20,15 +20,16 @@ use Illuminate\Http\Request;
  * @license MIT
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
-class AdminController extends CommonController {
-
+class AdminController extends CommonController
+{
     /**
      * Loads the administration control panel
      *
      * @return View
      */
-    public function index(){
-        return $this->load_view('admin.index','Admin Pages');
+    public function index()
+    {
+        return $this->load_view('admin.index', 'Admin Pages');
     }
 
     /**
@@ -36,33 +37,31 @@ class AdminController extends CommonController {
      *
      * @return View
      */
-    public function configure(){
-
+    public function configure()
+    {
         $settings = Setting::all();
         $data['settings'] = $settings;
 
-        return $this->load_view('admin.configure','System Configuration',$data);
-
+        return $this->load_view('admin.configure', 'System Configuration', $data);
     }
 
     /**
      * Saves the new system configuration
      *
+     * @param Request $request
      * @return RedirectResponse
      */
-    public function save_configuration(Request $request){
-        $form = $request->all();
-        if(!empty($form)){
-            foreach($form as $key => $value){
-                $setting = Setting::where('sname',$key)->first();
-                if(!empty($setting)){
-                    $setting->value = $value;
-                    $setting->last_modified = (new DateTime())->format("Y-m-d H:i:s");
-                    $setting->save();
-                }
-            }
-        }
+    public function save_configuration(Request $request)
+    {
+        // Validate Input
+        $validation_rules = config('validation.store_settings');
+        $this->validate($request, $validation_rules);
 
+        // Update Settings
+        $form = filter_request($request, array_keys($validation_rules));
+        Setting::updateAll($form);
+
+        Session::flash('toastr', array('success', 'The settings have been updated!'));
         return Redirect::to('admin/configure');
     }
 
@@ -71,101 +70,128 @@ class AdminController extends CommonController {
      *
      * @return View
      */
-    public function statistics(){
-
-        /******************************
-         *  Registration Statistics
-         ******************************/
-        $limits = array(
-            array('Jan','01-01 00:00:00','01-15 23:59:59'),
-            array('Feb','02-01 00:00:00','02-15 23:59:59'),
-            array('Mar','03-01 00:00:00','03-15 23:59:59'),
-            array('Apr','04-01 00:00:00','04-15 23:59:59'),
-            array('May','05-01 00:00:00','05-15 23:59:59'),
-            array('Jun','06-01 00:00:00','06-15 23:59:59'),
-            array('Jul','07-01 00:00:00','07-15 23:59:59'),
-            array('Aug','08-01 00:00:00','08-15 23:59:59'),
-            array('Sep','09-01 00:00:00','09-15 23:59:59'),
-            array('Oct','10-01 00:00:00','10-15 23:59:59'),
-            array('Nov','11-01 00:00:00','11-15 23:59:59'),
-            array('Dec','12-01 00:00:00','12-15 23:59:59'),
-        );
-
-        $counts = array();
-
+    public function statistics()
+    {
         $year = date('Y');
         $prev_year = $year - 1;
         $month = date('n');
         $day = date('j');
-        if ($day < 15)
+
+        if ($day < 15) {
             $month--;
-
-        // From last year's same month to last year's end
-        for($j = $month; $j < 12; $j++){
-            // Get the middle day of this months
-            $checkpoint = $prev_year."-".$limits[$j][2];
-            // Get registrations that were active during this day
-            $regs = Registration::where('starts','<=',$checkpoint)
-                    ->where('ends','>=',$checkpoint)
-                    ->count();
-            // Store month label alogside the counted registrations
-            $counts[] = array($limits[$j][0]." ".$prev_year, $regs);
         }
-
-        // From this year's start to previous month
-        for($j = 0; $j < $month; $j++){
-            // Get the middle day of this months
-            $checkpoint = $year."-".$limits[$j][2];
-            // Get registrations that were active during this day
-            $regs = Registration::where('starts','<=',$checkpoint)
-                    ->where('ends','>=',$checkpoint)
-                    ->count();
-            // Store month label alogside the counted registrations
-            $counts[] = array($limits[$j][0]." ".$year, $regs);
-        }
-
-        /******************************
-         *  Functions Statistics
-         ******************************/
 
         $dateLimit = "$prev_year-$month-$day 00:00:00";
 
-        $f_stats = JobsLog::select(DB::raw('count(*) as total,function'))
-                ->where('submitted_at','>',$dateLimit)
-                ->groupBy('function')
-                ->get()->toArray();
+        $data['registration_counts'] = $this->registration_stats($year, $prev_year, $month, $day);
+        $data['f_stats'] = $this->function_stats($dateLimit);
+        $data['s_stats'] = $this->job_size_stats($dateLimit);
 
-        /******************************
-         *  Job size Statistics
-         ******************************/
+        return $this->load_view('admin.statistics', 'R vLab Usage Statistics', $data);
+    }
 
+    /**
+     * Calculates statistics about the size of jobs submitted in the past
+     *
+     * @param string $dateLimit
+     * @return array
+     */
+    protected function job_size_stats($dateLimit)
+    {
         $s_stats = array(
-            '1' =>  0,
-            '2' =>  0,
-            '3' =>  0,
-            '4' =>  0,
-            '5' =>  0,
-            '6' =>  0,
-            '7' =>  0,
-            '8' =>  0,
-            '9' =>  0
+            '1' => 0,
+            '2' => 0,
+            '3' => 0,
+            '4' => 0,
+            '5' => 0,
+            '6' => 0,
+            '7' => 0,
+            '8' => 0,
+            '9' => 0
         );
 
         // We just count how many jobs are there with jobsize of x digits
         $size_stats = JobsLog::select(DB::raw('count(*) as total, LENGTH(jobsize) AS digits'))
-                ->where('submitted_at','>',$dateLimit)
-                ->groupBy('digits')
-                ->get()->toArray();
+                        ->where('submitted_at', '>', $dateLimit)
+                        ->groupBy('digits')
+                        ->get()->toArray();
 
-        foreach($size_stats as $stat){
+        foreach ($size_stats as $stat) {
             $s_stats[$stat['digits']] = $stat['total'];
         }
 
-        $data['registration_counts'] = $counts;
-        $data['f_stats'] = $f_stats;
-        $data['s_stats'] = $s_stats;
-        return $this->load_view('admin.statistics','R vLab Usage Statistics',$data);
+        return $s_stats;
+    }
 
+    /**
+     * Calculates statistics about the type of jobs/analysis submitted in the past
+     *
+     * @param string $dateLimit
+     * @return array
+     */
+    protected function function_stats($dateLimit)
+    {
+        $f_stats = JobsLog::select(DB::raw('count(*) as total,function'))
+                        ->where('submitted_at', '>', $dateLimit)
+                        ->groupBy('function')
+                        ->get()->toArray();
+
+        return $f_stats;
+    }
+
+    /**
+     * Calculates statistics about registrations
+     *
+     * @param string $year
+     * @param string $prev_year
+     * @param string $month
+     * @param string $day
+     * @return array
+     */
+    protected function registration_stats($year, $prev_year, $month, $day)
+    {
+        $limits = array(
+            array('Jan', '01-01 00:00:00', '01-15 23:59:59'),
+            array('Feb', '02-01 00:00:00', '02-15 23:59:59'),
+            array('Mar', '03-01 00:00:00', '03-15 23:59:59'),
+            array('Apr', '04-01 00:00:00', '04-15 23:59:59'),
+            array('May', '05-01 00:00:00', '05-15 23:59:59'),
+            array('Jun', '06-01 00:00:00', '06-15 23:59:59'),
+            array('Jul', '07-01 00:00:00', '07-15 23:59:59'),
+            array('Aug', '08-01 00:00:00', '08-15 23:59:59'),
+            array('Sep', '09-01 00:00:00', '09-15 23:59:59'),
+            array('Oct', '10-01 00:00:00', '10-15 23:59:59'),
+            array('Nov', '11-01 00:00:00', '11-15 23:59:59'),
+            array('Dec', '12-01 00:00:00', '12-15 23:59:59'),
+        );
+
+        $counts = array();
+
+        // From last year's same month to last year's end
+        for ($j = $month; $j < 12; $j++) {
+            // Get the middle day of this months
+            $checkpoint = $prev_year . "-" . $limits[$j][2];
+            // Get registrations that were active during this day
+            $regs = Registration::where('starts', '<=', $checkpoint)
+                    ->where('ends', '>=', $checkpoint)
+                    ->count();
+            // Store month label alogside the counted registrations
+            $counts[] = array($limits[$j][0] . " " . $prev_year, $regs);
+        }
+
+        // From this year's start to previous month
+        for ($j = 0; $j < $month; $j++) {
+            // Get the middle day of this months
+            $checkpoint = $year . "-" . $limits[$j][2];
+            // Get registrations that were active during this day
+            $regs = Registration::where('starts', '<=', $checkpoint)
+                    ->where('ends', '>=', $checkpoint)
+                    ->count();
+            // Store month label alogside the counted registrations
+            $counts[] = array($limits[$j][0] . " " . $year, $regs);
+        }
+
+        return $counts;
     }
 
     /**
@@ -173,12 +199,11 @@ class AdminController extends CommonController {
      *
      * @return View
      */
-    public function job_list(){
-
-        $job_list = Job::take(50)->orderBy('submitted_at','desc')->get();
+    public function job_list()
+    {
+        $job_list = Job::take(50)->orderBy('submitted_at', 'desc')->get();
         $data['job_list'] = $job_list;
-        return $this->load_view('admin.job_list','Last Jobs List',$data);
-
+        return $this->load_view('admin.job_list', 'Last Jobs List', $data);
     }
 
     /**
@@ -186,12 +211,13 @@ class AdminController extends CommonController {
      *
      * @return View
      */
-    public function last_errors(){
+    public function last_errors()
+    {
+        $last_error_count_setting = Setting::where('sname', 'last_errors_to_display')->first();
+        $error_list = SystemLog::where('category', 'error')->orderBy('when', 'desc')->take($last_error_count_setting->value)->get();
 
-        $error_list = SystemLog::where('category','error')->orderBy('when','desc')->take(20)->get();
         $data['error_list'] = $error_list;
-        return $this->load_view('admin.last_errors','Last errors list',$data);
-
+        return $this->load_view('admin.last_errors', 'Last errors list', $data);
     }
 
     /**
@@ -199,8 +225,8 @@ class AdminController extends CommonController {
      *
      * @return View
      */
-    public function storage_utilization(){
-
+    public function storage_utilization()
+    {
         $rvlab_storage_limit = $this->system_settings['rvlab_storage_limit'];
         $max_users_supported = $this->system_settings['max_users_supported'];
         $jobs_path = config('rvlab.jobs_path');
@@ -209,8 +235,8 @@ class AdminController extends CommonController {
         // Total Storage Utilization
         $jobs_size = directory_size($jobs_path); // in KB
         $workspace_size = directory_size($workspace_path); // in KB
-        $used_size = $jobs_size+$workspace_size;
-        $utilization = 100*$used_size/$rvlab_storage_limit;
+        $used_size = $jobs_size + $workspace_size;
+        $utilization = 100 * $used_size / $rvlab_storage_limit;
 
         // Storage Utilization per User (A - input files)
         $inputs_users = WorkspaceFile::select('user_email')->distinct()->get(); // Get users with a least one input file
@@ -218,17 +244,17 @@ class AdminController extends CommonController {
         $user_totals = array();
         $inputs_totals = array();
 
-        foreach($inputs_users as $user){
-            $inputs_totals[$user->user_email] = directory_size($workspace_path.'/'.$user->user_email); // in KB
-            $user_totals[$user->user_email] =  $inputs_totals[$user->user_email];
+        foreach ($inputs_users as $user) {
+            $inputs_totals[$user->user_email] = directory_size($workspace_path . '/' . $user->user_email); // in KB
+            $user_totals[$user->user_email] = $inputs_totals[$user->user_email];
         }
 
         // Storage Utilization per User (B - jobs)
         $rvlab_users = Job::select('user_email')->distinct()->get(); // Get users with a least one job
         $jobspace_totals = array();
-        foreach($rvlab_users as $user){
-            $jobspace_totals[$user->user_email] = directory_size($jobs_path.'/'.$user->user_email); // in KB
-            if(isset($user_totals[$user->user_email])){
+        foreach ($rvlab_users as $user) {
+            $jobspace_totals[$user->user_email] = directory_size($jobs_path . '/' . $user->user_email); // in KB
+            if (isset($user_totals[$user->user_email])) {
                 $user_totals[$user->user_email] += $jobspace_totals[$user->user_email];
             } else {
                 $user_totals[$user->user_email] = $jobspace_totals[$user->user_email];
@@ -239,24 +265,24 @@ class AdminController extends CommonController {
         // will be used in view
         $user_soft_limit = $rvlab_storage_limit / $max_users_supported; // in KB
 
-        if($used_size > 1000000)
-            $utilized_text = number_format($used_size/1000000,2)." GB";
-        elseif($used_size > 1000)
-            $utilized_text = number_format($used_size/1000,2)." MB";
+        if ($used_size > 1000000)
+            $utilized_text = number_format($used_size / 1000000, 2) . " GB";
+        elseif ($used_size > 1000)
+            $utilized_text = number_format($used_size / 1000, 2) . " MB";
         else
-            $utilized_text = number_format($used_size,2)." KB";
+            $utilized_text = number_format($used_size, 2) . " KB";
 
         $new_user_totals = [];
         foreach ($user_totals as $email => $size_number) {
             $sizeInfo = [];
 
-            $progress = number_format(100*$size_number/$user_soft_limit,1);
-            if($size_number > 1000000){
-                $size_text = number_format($size_number/1000000,2)." GB";
-            } elseif($size_number > 1000) {
-                $size_text = number_format($size_number/1000,2)." MB";
+            $progress = number_format(100 * $size_number / $user_soft_limit, 1);
+            if ($size_number > 1000000) {
+                $size_text = number_format($size_number / 1000000, 2) . " GB";
+            } elseif ($size_number > 1000) {
+                $size_text = number_format($size_number / 1000, 2) . " MB";
             } else {
-                $size_text = number_format($size_number,2)." KB";
+                $size_text = number_format($size_number, 2) . " KB";
             }
 
             $sizeInfo['size_number'] = $size_number;
@@ -275,8 +301,6 @@ class AdminController extends CommonController {
         $data['user_totals'] = $new_user_totals;
         $data['utilized_text'] = $utilized_text;
         $data['utilization'] = $utilization;
-        return $this->load_view('admin.storage_utilization','Storage Utilization',$data);
-
+        return $this->load_view('admin.storage_utilization', 'Storage Utilization', $data);
     }
-
 }

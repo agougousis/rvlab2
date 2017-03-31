@@ -148,5 +148,4 @@ class AdminTest extends TesterBase
         $max_users_setting = Setting::where('sname', 'max_users_supported')->first();
         $this->assertEquals(201, $max_users_setting->value);
     }
-
 }

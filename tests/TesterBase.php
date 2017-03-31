@@ -106,6 +106,13 @@ class TesterBase extends TestCase {
                     'value' => '30000',
                     'last_modified' => '2017-01-26 13:56:06',
                     'about' => "How often (in milliseconds) the web page makes an AJAX request to update the information about the status of each job"
+                ],
+                [
+                    'id' => '5',
+                    'sname' => 'last_errors_to_display',
+                    'value' => '20',
+                    'last_modified' => '2017-01-26 13:56:06',
+                    'about' => "The number of last errors to display in the relevant administration page."
                 ]
             ]);
         }

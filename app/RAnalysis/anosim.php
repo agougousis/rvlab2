@@ -20,8 +20,8 @@ use App\RAnalysis\BaseAnalysis;
  *
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
-class anosim extends BaseAnalysis implements RAnalysis {
-
+class anosim extends BaseAnalysis implements RAnalysis
+{
     /**
      * The first input file to be used for the analysis
      *
@@ -101,6 +101,8 @@ class anosim extends BaseAnalysis implements RAnalysis {
             $this->copyInputFiles();
 
             $this->buildRScript();
+
+            $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
                 $this->log_event($ex->getMessage(), "error");
@@ -172,13 +174,12 @@ class anosim extends BaseAnalysis implements RAnalysis {
     }
 
     /**
-     * Builds the required executables for the job execution
+     * Builds the required R script for the job execution
      *
      * @throws Exception
      */
     protected function buildRScript()
     {
-        // Build the R script
        if (!($fh = fopen("$this->job_folder/$this->job_id.R", "w"))) {
             throw new \Exception("Unable to open file $this->job_folder/$this->job_id.R");
         }
@@ -202,8 +203,15 @@ class anosim extends BaseAnalysis implements RAnalysis {
         fwrite($fh, "print(\"summary\")\n");
         fwrite($fh, "otu.ENVFACT.anosim\n");
         fclose($fh);
+    }
 
-        // Build the bash script
+    /**
+     * Builds the required bash script for the job execution
+     *
+     * @throws Exception
+     */
+    protected function buildBashScript()
+    {
         if (!($fh2 = fopen($this->job_folder . "/$this->job_id.pbs", "w"))) {
             throw new \Exception("Unable to open file $this->job_folder/$this->job_id.pbs");
         }
@@ -220,6 +228,7 @@ class anosim extends BaseAnalysis implements RAnalysis {
         fwrite($fh2, "/usr/bin/R CMD BATCH $this->remote_job_folder/$this->job_id.R > $this->remote_job_folder/cmd_line_output.txt\n");
         fwrite($fh2, "date\n");
         fwrite($fh2, "exit 0");
+
         fclose($fh2);
     }
 }

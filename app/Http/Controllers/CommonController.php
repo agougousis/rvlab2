@@ -7,6 +7,7 @@ use Response;
 use App\Models\Setting;
 use App\Models\SystemLog;
 use App\Http\Controllers\Controller;
+
 /**
  * Builds functionality related to access control and logging
  *
@@ -100,6 +101,16 @@ class CommonController extends Controller
     protected function unexpected_error()
     {
         return $this->load_view('errors/unexpected', 'Unexpected error');
+    }
+
+    /**
+     * Displays a page with a message about an iilegal request.
+     *
+     * @return View
+     */
+    protected function illegalAction()
+    {
+        return $this->load_view('errors/illegalAction', 'Unexpected error');
     }
 
     /**

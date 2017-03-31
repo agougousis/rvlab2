@@ -11,8 +11,8 @@ use App\Models\SystemLog;
  *
  * @author Alexandros
  */
-abstract class BaseAnalysis {
-
+abstract class BaseAnalysis
+{
     /**
      * The submitted form
      *
@@ -126,13 +126,6 @@ abstract class BaseAnalysis {
     abstract protected function getInputParams();
 
     /**
-     * Builds the required executables for the job execution
-     *
-     * @throws Exception
-     */
-    abstract protected function buildRScript();
-
-    /**
      * Validates the submitted form
      *
      * @throws \Exception
@@ -146,7 +139,7 @@ abstract class BaseAnalysis {
             $message = implode('<br>', $validator->errors()->all());
             Session::flash('toastr', ['error', $message]);
             throw new \Exception($message);
-        } 
+        }
     }
 
     /**

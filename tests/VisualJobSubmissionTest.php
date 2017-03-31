@@ -248,7 +248,7 @@ class VisualJobSubmissionTest extends TesterBase
             if (empty($data)) {
                 continue;
             }
-            
+
             // Submit the job
             $post_data = array_merge($data['parameters'], $data['inputs'], [
                 'function' => $data['function'],

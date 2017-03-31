@@ -6,8 +6,8 @@ namespace App\Contracts;
  *
  * @author Alexandros
  */
-interface RAnalysis {
-
+interface RAnalysis
+{
     /**
      * Runs the analysis
      */

@@ -10,6 +10,7 @@ use Validator;
 use App\Models\WorkspaceFile;
 use Illuminate\Http\Request;
 use App\Http\Controllers\CommonController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 define("PORTAL_LOGIN", "https://portal.lifewatchgreece.eu");
 
@@ -42,113 +43,11 @@ class WorkspaceController extends CommonController
         }
     }
 
-    public function vliz_import($token, $jobid)
-    {
-        $cors_headers = [
-            'Access-Control-Allow-Origin' => 'http://www.lifewatch.be',
-            'Access-Control-Allow-Methods' => "POST",
-            'Access-Control-Allow-Credentials' => 'true'
-        ];
-
-        // Validate the URL parameters
-        $params = compact('token', 'jobid');
-        $rules = config('validation.vliz_import');
-        $validator = Validator::make($params, $rules);
-        if ($validator->fails()) {
-            $errorMessage = "";
-            foreach ($validator->errors()->getMessages() as $key => $errorMessages) {
-                foreach ($errorMessages as $msg) {
-                    $errorMessage .= "$key: $msg,";
-                }
-                trim($errorMessage, ',');
-            }
-            return response()->json([
-                        'status' => 'failed',
-                        'message' => $errorMessage
-                            ], 200, $cors_headers);
-        }
-
-        DB::beginTransaction();
-        try {
-            // Build the URL that will be used for file retrieval
-            $vliz_file_url = "http://www.lifewatch.be/data-services/passfile.php?filetype=resultfile&token=$token&jobid=$jobid";
-
-            // Retrieve the file
-            $client = new \Guzzle\Service\Client($vliz_file_url);
-            $request = $client->get();
-            $response = $request->send();
-
-            // Check the status code
-            $statusCode = $response->getStatusCode();
-            if ($statusCode != 200) {
-                DB::rollBack(); // Though nothing has been written to DB, it has to close the transaction.
-                $reason = $response->getReasonPhrase();
-                // Responde to VLIZ
-                return Response::json([
-                            'status' => 'failed',
-                            'message' => "Failed to retrieve file from $vliz_file_url , status code = " . $statusCode . " , reason = " . $reason
-                                ], 200, $cors_headers);
-            } else {
-                $file_content = $response->getBody();
-
-                // If the user workspace folder does not exist, create it
-                $user_email = $this->user_status['email'];
-                $user_workspace_path = $this->workspace_path . '/' . $user_email;
-                if (!file_exists($user_workspace_path)) { // just in case
-                    mkdir($user_workspace_path);
-                }
-
-                // Build the destination file path
-                $remote_filename = "vliz_" . $jobid . ".txt";
-                $new_filepath = $user_workspace_path . '/' . $remote_filename;
-
-                // Check if the file already exists
-                if (!file_exists($new_filepath)) {
-                    // Save the contents to file
-                    file_put_contents($new_filepath, $file_content);
-
-                    // Add a record to database
-                    $workspace_file = new WorkspaceFile();
-                    $workspace_file->user_email = $user_email;
-                    $workspace_file->filename = $remote_filename;
-                    $workspace_file->filesize = filesize($new_filepath);
-                    $workspace_file->save();
-                } else {
-                    DB::rollBack(); // Though nothing has been written to DB, it has to close the transaction.
-                    // Responde to VLIZ
-                    return Response::json([
-                                'status' => 'failed',
-                                'message' => "A file with the same filename exists in user's R vLab workspace. It is possible that this file has been imported again in the past."
-                                    ], 200, $cors_headers);
-                }
-            }
-        } catch (Exception $ex) {
-            DB::rollBack();
-
-            // Log the exception
-            $this->log_event('File import from VLIZ failed! Error: ' . $ex->getMessage(), 'error');
-
-            // Delete file if created
-            if (file_exists($new_filepath)) {
-                unlink($new_filepath);
-            }
-
-            // Responde to VLIZ
-            return Response::json([
-                        'status' => 'failed',
-                        'message' => 'File import failed for unknown reason! Check R vLab logs.'
-                            ], 200, $cors_headers);
-        }
-
-        DB::commit();
-
-        // Responde to VLIZ
-        return Response::json([
-                    'status' => 'imported',
-                    'message' => ''
-                        ], 200, $cors_headers);
-    }
-
+    /**
+     * Calculate storage utilization for the logged in user
+     *
+     * @return Response
+     */
     public function user_storage_utilization()
     {
         $userInfo = session('user_info');
@@ -173,7 +72,7 @@ class WorkspaceController extends CommonController
     /**
      * Saves the new state of "Workspace File Management" tab
      *
-     * @return JSON
+     * @return Response
      */
     public function change_tab_status(Request $request)
     {
@@ -225,7 +124,7 @@ class WorkspaceController extends CommonController
         $user_email = $userInfo['email'];
         $user_workspace_path = $this->workspace_path . '/' . $user_email;
         $filepath = $user_workspace_path . '/' . $filename;
-        
+
         if (file_exists($filepath)) {
             $lines_file = file($filepath);
 
@@ -259,7 +158,7 @@ class WorkspaceController extends CommonController
         $userInfo = session('user_info');
         $user_email = $userInfo['email'];
         $user_workspace_path = $this->workspace_path . '/' . $user_email;
-        $filepath = $user_workspace_path . '/' . $filename;
+        $filepath = $user_workspace_path . '/' . basename($filename);
 
         // Check if such a file belongs to this user
         $count_records = WorkspaceFile::where('user_email', $user_email)
@@ -420,77 +319,87 @@ class WorkspaceController extends CommonController
     public function add_files(Request $request)
     {
         $userInfo = session('user_info');
-        $messages = $this->validate_uploaded_workspace_files($request);
+        list($valid_files, $error_messages) = $this->validate_uploaded_workspace_files($request);
 
-        if ($messages != "ok")
+        if (!empty($error_messages)) {
             if ($this->is_mobile) {
-                return Response::json($messages, 400);
+                return Response::json($error_messages, 400);
             } else {
-                return Redirect::back()->withInput()->withErrors($messages);
+                return Redirect::back()->withInput()->withErrors($error_messages);
             }
+        }
+
+        if (empty($valid_files)) {
+            return Redirect::back();
+        }
 
         $name_conflict = false;
 
         // Add files to workspace
-        if ($request->hasFile('local_files')) {
-
-            $files = $request->file('local_files');
-            $user_email = $userInfo['email'];
-            $user_workspace_path = $this->workspace_path . '/' . $user_email;
-            if (!file_exists($user_workspace_path)) { // just in case
-                mkdir($user_workspace_path);
-            }
-
-            DB::beginTransaction();
-
-            try {
-                foreach ($files as $file) {
-                    // Build the destination file path
-                    $remote_filename = safe_filename($file->getClientOriginalName());
-                    $new_filepath = $user_workspace_path . '/' . $remote_filename;
-
-                    $sourceFilePath = $file->getPath() . '/' . $file->getBasename();
-                    $destinationFilePath = $user_workspace_path . '/' . $remote_filename;
-
-                    if (!file_exists($new_filepath)) {
-                        // Add a record to database
-                        $workspace_file = new WorkspaceFile();
-                        $workspace_file->user_email = $user_email;
-                        $workspace_file->filename = $remote_filename;
-                        $workspace_file->filesize = $file->getSize();
-                        $workspace_file->save();
-
-                        // Copy the file to user workspace and remove the temporary file
-                        // I don't use $file->move($user_workspace_path,$remote_filename);
-                        // because there is an issue with moving a file between filesystems
-                        // causing a "Permission denied" error to be thrown
-                        copy($sourceFilePath, $destinationFilePath);
-                        unlink($sourceFilePath);
-                    } else {
-                        $name_conflict = true;
-                    }
-                }
-            } catch (Exception $ex) {
-                DB::rollback();
-                if (file_exists($destinationFilePath)) {
-                    unlink($destinationFilePath);
-                }
-                $this->log_event($ex->getMessage(), "error");
-                if ($this->is_mobile) {
-                    $response = array('message', 'Unexpected error!');
-                    return Response::json($response, 500);
-                } else {
-                    return $this->unexpected_error();
-                }
-            }
-
-            DB::commit();
+        $user_email = $userInfo['email'];
+        $user_workspace_path = $this->workspace_path . '/' . $user_email;
+        if (!file_exists($user_workspace_path)) { // just in case
+            mkdir($user_workspace_path);
         }
 
-        if ($name_conflict)
+        DB::beginTransaction();
+
+        $added_files = [];
+
+        try {
+            foreach ($valid_files as $file) {
+                // Build the destination file path
+                $remote_filename = safe_filename($file->getClientOriginalName());
+                $new_filepath = $user_workspace_path . '/' . $remote_filename;
+
+                $sourceFilePath = $file->getPath() . '/' . $file->getBasename();
+                $destinationFilePath = $user_workspace_path . '/' . $remote_filename;
+
+                if (!file_exists($new_filepath)) {
+                    // Add a record to database
+                    $workspace_file = new WorkspaceFile();
+                    $workspace_file->user_email = $user_email;
+                    $workspace_file->filename = $remote_filename;
+                    $workspace_file->filesize = $file->getSize();
+                    $workspace_file->save();
+
+                    // Copy the file to user workspace and remove the temporary file
+                    // I don't use $file->move($user_workspace_path,$remote_filename);
+                    // because there is an issue with moving a file between filesystems
+                    // causing a "Permission denied" error to be thrown
+                    copy($sourceFilePath, $destinationFilePath);
+
+                    $added_files[] = $remote_filename;
+
+                    unlink($sourceFilePath);
+                } else {
+                    $name_conflict = true;
+                }
+            }
+        } catch (Exception $ex) {
+            DB::rollback();
+
+            if (file_exists($destinationFilePath)) {
+                unlink($destinationFilePath);
+            }
+
+            $this->log_event($ex->getMessage(), "error");
+
+            if ($this->is_mobile) {
+                $response = array('message', 'An error occured! Only the following files were added: '.implode(',', $added_files));
+                return Response::json($response, 500);
+            } else {
+                return $this->unexpected_error();
+            }
+        }
+
+        DB::commit();
+
+        if ($name_conflict) {
             Session::flash('toastr', array('warning', "Some files couldn't be added because a file with the same name already existed!"));
-        else
+        } else {
             Session::flash('toastr', array('success', 'Files added to workspace successfully!'));
+        }
 
         if ($this->is_mobile) {
             return Response::json(array(), 200);
@@ -502,7 +411,8 @@ class WorkspaceController extends CommonController
     /**
      * Copies a job output file from job's folder to user's workspace.
      *
-     * @return JSON
+     * @param Request $request
+     * @return Response
      */
     public function add_output_file(Request $request)
     {
@@ -582,10 +492,13 @@ class WorkspaceController extends CommonController
     /**
      * Validates that all the files that were sent to be add to user's workspace are valid.
      *
-     * @return string|array|View
+     * @param Request $request
+     * @return array
      */
     private function validate_uploaded_workspace_files(Request &$request)
     {
+        $valid_files = [];
+
         try {
             if ($request->hasFile('local_files')) {
                 $all_uploads = $request->file('local_files');
@@ -600,35 +513,11 @@ class WorkspaceController extends CommonController
                 // Loop through all uploaded files
                 foreach ($all_uploads as $upload) {
 
-                    // Ignore array member if it's not an UploadedFile object, just to be extra safe
-                    if (!is_a($upload, 'Symfony\Component\HttpFoundation\File\UploadedFile')) {
-                        continue;
-                    }
-
-                    $parts = pathinfo($upload->getClientOriginalName());
-                    $filename = $parts['basename'];
-                    $extension = $parts['extension'];
-
-                    $validator = Validator::make(
-                                    array(
-                                'file' => $upload,
-                                'filename' => $filename, //$upload->getClientOriginalName(),
-                                'extension' => $extension, //$upload->guessExtension(),
-                                    ), array(
-                                'file' => 'max:50000',
-                                'filename' => 'max:200',
-                                'extension' => 'in:txt,csv,nwk',
-                                    )
-                    );
-
-                    if ($validator->fails()) {
-                        // Collect error messages
-                        if (!empty($validator->messages()->first('file')))
-                            $error_messages[] = $upload->getClientOriginalName() . ':' . $validator->messages()->first('file');
-                        if (!empty($validator->messages()->first('filename')))
-                            $error_messages[] = $upload->getClientOriginalName() . ':' . $validator->messages()->first('filename');
-                        if (!empty($validator->messages()->first('extension')))
-                            $error_messages[] = $upload->getClientOriginalName() . ':' . $validator->messages()->first('extension');
+                    list($is_valid, $errorMessage) = $this->validate_uploaded_file($upload);
+                    if ($is_valid) {
+                        $valid_files[] = $upload;
+                    } else {
+                        $error_messages[] = $errorMessage;
                     }
                 }
             }
@@ -637,11 +526,63 @@ class WorkspaceController extends CommonController
             return 'Unexpected error!';
         }
 
-        if (!empty($error_messages)) {
-            return $error_messages;
-        } else {
-            return "ok";
+        return [$valid_files, $error_messages];
+    }
+
+    /**
+     * Checks the validity of a single workspace uploaded file
+     *
+     * @param UploadedFile $file
+     * @return array
+     */
+    private function validate_uploaded_file(UploadedFile $file) {
+        // Ignore array member if it's not an UploadedFile object, just to be extra safe
+        if (!is_a($file, 'Symfony\Component\HttpFoundation\File\UploadedFile')) {
+            return [false, ''];
         }
+
+        // This checks for non-zero file size, UPLOAD_ERR_OK and
+        // if the file is really an uploaded file.
+        if ((!$file->isValid()) || (filesize($file->getPathname()) == 0)) {
+            $error_message = $file->getClientOriginalName().': Failed to upload or zero file size!';
+            return [false, $error_message];
+        }
+
+        $parts = pathinfo($file->getClientOriginalName());
+        $filename = $parts['basename'];
+        $extension = $parts['extension'];
+
+        $validator = Validator::make(
+                        array(
+                    'file' => $file,
+                    'filename' => $filename, //$upload->getClientOriginalName(),
+                    'extension' => $extension, //$upload->guessExtension(),
+                        ), array(
+                    'file' => 'max:50000',
+                    'filename' => 'max:200',
+                    'extension' => 'in:txt,csv,nwk',
+                        )
+        );
+
+        if ($validator->fails()) {
+            // Collect error messages
+            if (!empty($validator->messages()->first('file'))){
+                $error_message = $file->getClientOriginalName() . ':' . $validator->messages()->first('file');
+                return [false, $error_message];
+            }
+
+            if (!empty($validator->messages()->first('filename'))) {
+                $error_message = $file->getClientOriginalName() . ':' . $validator->messages()->first('filename');
+                return [false, $error_message];
+            }
+
+            if (!empty($validator->messages()->first('extension'))) {
+                $error_message = $file->getClientOriginalName() . ':' . $validator->messages()->first('extension');
+                return [false, $error_message];
+            }
+        }
+
+        return [true, ''];
     }
 
     /**
@@ -764,6 +705,16 @@ class WorkspaceController extends CommonController
         foreach ($files as $file) {
             $parts = explode('-', $file);
             $file_id = $parts[2];
+
+            // Check if file ID is a number
+            if (!is_numeric($file_id)) {
+                return $this->illegalAction();
+            }
+
+            // Check if file ID is integer
+            if ($file_id != intval($file_id)) {
+                return $this->illegalAction();
+            }
 
             // Retrieve file information
             $file_record = WorkspaceFile::where('id', $file_id)

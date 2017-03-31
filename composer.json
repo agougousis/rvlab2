@@ -26,7 +26,7 @@
         },
         "files": [
             "app/Helpers/helper.php",
-            "app/Helpers/forms.php"
+            "app/Helpers/form_builder.php"
         ]
     },
     "autoload-dev": {

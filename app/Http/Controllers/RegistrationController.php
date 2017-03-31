@@ -122,5 +122,4 @@ class RegistrationController extends CommonController
             return Redirect::to('/');
         }
     }
-
 }

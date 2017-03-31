@@ -9,7 +9,8 @@ use Illuminate\Support\ServiceProvider;
  *
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
-class AuthenticatorServiceProvider extends ServiceProvider {
+class AuthenticatorServiceProvider extends ServiceProvider
+{
     /**
      * Register the application services.
      *

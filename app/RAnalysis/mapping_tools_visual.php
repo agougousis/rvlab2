@@ -20,8 +20,8 @@ use App\RAnalysis\BaseAnalysis;
  *
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
-class mapping_tools_visual extends BaseAnalysis implements RAnalysis {
-
+class mapping_tools_visual extends BaseAnalysis implements RAnalysis
+{
     /**
      * The first input file to be used for the analysis
      *
@@ -60,7 +60,8 @@ class mapping_tools_visual extends BaseAnalysis implements RAnalysis {
     /**
      * Initializes class properties
      */
-    protected function init() {
+    protected function init()
+    {
         $this->formValidationRules = [
             'box'       =>  'required|string|max:250',
             'box2'      =>  'required|string|max:250',
@@ -85,6 +86,8 @@ class mapping_tools_visual extends BaseAnalysis implements RAnalysis {
             $this->copyInputFiles();
 
             $this->buildRScript();
+
+            $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
                 $this->log_event($ex->getMessage(), "error");
@@ -150,13 +153,12 @@ class mapping_tools_visual extends BaseAnalysis implements RAnalysis {
     }
 
     /**
-     * Builds the required executables for the job execution
+     * Builds the required R script for the job execution
      *
      * @throws Exception
      */
     protected function buildRScript()
     {
-        // Build the R script
         if (!($fh = fopen("$this->job_folder/$this->job_id.R", "w"))) {
             throw new \Exception("Unable to open file $this->job_folder/$this->job_id.R");
         }
@@ -200,7 +202,15 @@ class mapping_tools_visual extends BaseAnalysis implements RAnalysis {
         fwrite($fh, "sink();\n");
 
         fclose($fh);
-        // Build the bash script
+    }
+
+    /**
+     * Builds the required bash script for the job execution
+     *
+     * @throws Exception
+     */
+    protected function buildBashScript()
+    {
         if (!($fh2 = fopen($this->job_folder . "/$this->job_id.pbs", "w"))) {
             throw new \Exception("Unable to open file $this->job_folder/$this->job_id.pbs");
         }

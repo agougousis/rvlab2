@@ -5,8 +5,8 @@ namespace App\Models;
 use DB;
 use Illuminate\Database\Eloquent\Model;
 
-class WorkspaceFile extends Model {
-
+class WorkspaceFile extends Model
+{
     protected $table = 'workspace_files';
     public $timestamps = false;
 

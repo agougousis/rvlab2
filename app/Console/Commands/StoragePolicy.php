@@ -25,9 +25,9 @@ class StoragePolicy extends Command
     /**
      * The console command description.
      *
-     * @var string
+     * @var string 
      */
-    protected $description = 'Command description';
+    protected $description = 'Enforces R vLab storage policy';
 
     /**
      * Create a new command instance.

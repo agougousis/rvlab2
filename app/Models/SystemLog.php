@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class SystemLog extends Model {
-
+class SystemLog extends Model
+{
     protected $table = 'logs';
     public $timestamps = false;
 

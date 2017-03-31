@@ -21,15 +21,16 @@ use Illuminate\Http\Request;
  * @license MIT
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
-class JobController extends CommonController {
-
+class JobController extends CommonController
+{
     protected $errorMessage = '';
     protected $workspace_path;
     protected $jobs_path;
     protected $remote_jobs_path;
     protected $remote_workspace_path;
 
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
 
         $this->workspace_path = config('rvlab.workspace_path');
@@ -38,13 +39,13 @@ class JobController extends CommonController {
         $this->remote_workspace_path = config('rvlab.remote_workspace_path');
 
         // Check if cluster storage has been mounted to web server
-        if(!$this->check_storage()){
-            if($this->is_mobile){
-                $response = array('message','Storage not found');
-                return Response::json($response,500);
+        if (!$this->check_storage()) {
+            if ($this->is_mobile) {
+                $response = array('message', 'Storage not found');
+                return Response::json($response, 500);
                 die();
             } else {
-                echo $this->load_view('errors/unmounted','Storage not found');
+                echo $this->load_view('errors/unmounted', 'Storage not found');
                 die();
             }
         }
@@ -55,30 +56,31 @@ class JobController extends CommonController {
      *
      * @return View
      */
-    public function index() {
+    public function index()
+    {
         $userInfo = session('user_info');
         $user_email = $userInfo['email'];
 
-        $job_list = DB::table('jobs')->where('user_email',$user_email)->orderBy('id','desc')->get();
+        $job_list = DB::table('jobs')->where('user_email', $user_email)->orderBy('id', 'desc')->get();
         $r_functions = config('r_functions.list');
         $form_data['workspace_files'] = WorkspaceFile::getUserFiles($user_email);
 
         $form_data['user_email'] = $user_email;
         $form_data['tooltips'] = config('tooltips');
 
-        if($this->is_mobile){
+        if ($this->is_mobile) {
             $mobile_functions = config('mobile_functions.list');
             $response = array(
-                'r_functions'   =>  $mobile_functions,
-                'job_list'      =>  $job_list,
-                'workspace_files'   =>  $form_data['workspace_files'],
+                'r_functions' => $mobile_functions,
+                'job_list' => $job_list,
+                'workspace_files' => $form_data['workspace_files'],
             );
-            return Response::json($response,200);
+            return Response::json($response, 200);
         } else {
 
             $forms = array();
-            foreach($r_functions as $codename => $title){
-                $forms[$codename] = View::make('forms.'.$codename,$form_data);
+            foreach ($r_functions as $codename => $title) {
+                $forms[$codename] = View::make('forms.' . $codename, $form_data);
             }
 
             $data['forms'] = $forms;
@@ -86,34 +88,32 @@ class JobController extends CommonController {
             $data['r_functions'] = $r_functions;
             $data2['workspace_files'] = $form_data['workspace_files'];
             $data['count_workspace_files'] = $form_data['workspace_files']->count();
-            $data['workspace'] = View::make('workspace.manage',$data2);
+            $data['workspace'] = View::make('workspace.manage', $data2);
             $data['is_admin'] = session('is_admin');
             $data['refresh_rate'] = $this->system_settings['status_refresh_rate_page'];
             $data['timezone'] = $userInfo['timezone'];
             //$data['refresh_rate'] = $this->system_settings['status_refresh_rate_page'];
-
             // Check if this we load the page after delete_many_jobs() has been called
-            if(Session::has('deletion_info')){
+            if (Session::has('deletion_info')) {
                 $data['deletion_info'] = Session::get('deletion_info');
             }
 
             //
-            if(Session::has('workspace_tab_status')){
+            if (Session::has('workspace_tab_status')) {
                 $data['workspace_tab_status'] = Session::get('workspace_tab_status');
             } else {
                 $data['workspace_tab_status'] = 'closed';
             }
 
             //
-            if(Session::has('last_function_used')){
+            if (Session::has('last_function_used')) {
                 $data['last_function_used'] = Session::get('last_function_used');
             } else {
                 $data['last_function_used'] = "taxa2dist";
             }
 
-            return $this->load_view('index','R vLab Home Page',$data);
+            return $this->load_view('index', 'R vLab Home Page', $data);
         }
-
     }
 
     /**
@@ -122,21 +122,21 @@ class JobController extends CommonController {
      *
      * @return RedirectResponse
      */
-    public function delete_many_jobs(Request $request){
-
+    public function delete_many_jobs(Request $request)
+    {
         $form = $request->all();
 
-        if(!empty($form['jobs_for_deletion'])){
+        if (!empty($form['jobs_for_deletion'])) {
             $job_list_string = $form['jobs_for_deletion'];
-            $job_list = explode(';',$job_list_string);
+            $job_list = explode(';', $job_list_string);
 
             $total_success = true;
             $error_messages = array();
             $count_deleted = 0;
 
-            foreach($job_list  as $job_id){
+            foreach ($job_list as $job_id) {
                 $result = $this->delete_one_job($job_id);
-                if($result['deleted']){
+                if ($result['deleted']) {
                     $count_deleted++;
                 } else {
                     $total_success = false;
@@ -145,20 +145,19 @@ class JobController extends CommonController {
             }
 
             $deletion_info = array(
-                'total'     =>  count($job_list),
-                'deleted'   =>  $count_deleted,
-                'messages'  =>  $error_messages
+                'total' => count($job_list),
+                'deleted' => $count_deleted,
+                'messages' => $error_messages
             );
 
-            if($this->is_mobile){
-                return Response::json($deletion_info,200);
+            if ($this->is_mobile) {
+                return Response::json($deletion_info, 200);
             } else {
-                return Redirect::to('/')->with('deletion_info',$deletion_info);
+                return Redirect::to('/')->with('deletion_info', $deletion_info);
             }
         } else {
             return Redirect::to('/');
         }
-
     }
 
     /**
@@ -167,64 +166,64 @@ class JobController extends CommonController {
      * @param int $job_id
      * @return array
      */
-    protected function delete_one_job($job_id){
+    protected function delete_one_job($job_id)
+    {
         $userInfo = session('user_info');
         $job = Job::find($job_id);
         $user_email = $userInfo['email'];
 
         // Check if this job exists
-        if(empty($job)){
-            $this->log_event("User tried to delete a job that does not exist.","illegal");
+        if (empty($job)) {
+            $this->log_event("User tried to delete a job that does not exist.", "illegal");
             return array(
-                'deleted'   =>  false,
-                'message'   =>  'You have tried to delete a job ('.$job_id.') that does not exist'
+                'deleted' => false,
+                'message' => 'You have tried to delete a job (' . $job_id . ') that does not exist'
             );
         }
 
         // Check if this job belongs to this user
-        if($job->user_email != $user_email){
-            $this->log_event("User tried to delete a job that does not belong to him.","unauthorized");
+        if ($job->user_email != $user_email) {
+            $this->log_event("User tried to delete a job that does not belong to him.", "unauthorized");
             return array(
-                'deleted'   =>  false,
-                'message'   =>  'You have tried to delete a job that does not belong to you.'
+                'deleted' => false,
+                'message' => 'You have tried to delete a job that does not belong to you.'
             );
         }
 
         // Check if the job has finished running
-        if(in_array($job->status,array('running','queued','submitted'))){
-            $this->log_event("User tried to delete a job that is not finished.","illegal");
+        if (in_array($job->status, array('running', 'queued', 'submitted'))) {
+            $this->log_event("User tried to delete a job that is not finished.", "illegal");
             return array(
-                'deleted'   =>  false,
-                'message'   =>  'You have tried to delete a job ('.$job_id.') that is not finished.'
+                'deleted' => false,
+                'message' => 'You have tried to delete a job (' . $job_id . ') that is not finished.'
             );
         }
 
         try {
             // Delete job record
-            Job::where('id',$job_id)->delete();
+            Job::where('id', $job_id)->delete();
 
             // Delete job files
-            $job_folder = $this->jobs_path.'/'.$user_email.'/job'.$job_id;
-            if(!delTree($job_folder)){
-                $this->log_event('Folder '.$job_folder.' could not be deleted!',"error");
+            $job_folder = $this->jobs_path . '/' . $user_email . '/job' . $job_id;
+            if (!delTree($job_folder)) {
+                $this->log_event('Folder ' . $job_folder . ' could not be deleted!', "error");
                 return array(
-                    'deleted'   =>  false,
-                    'message'   =>  'Unexpected error occured during job folder deletion ('.$job_id.').'
+                    'deleted' => false,
+                    'message' => 'Unexpected error occured during job folder deletion (' . $job_id . ').'
                 );
             }
 
             return array(
-                'deleted'   =>  true,
-                'message'   =>  ''
+                'deleted' => true,
+                'message' => ''
             );
         } catch (Exception $ex) {
-            $this->log_event("Error occured during deletion of job".$job_id.". Message: ".$ex->getMessage(),"error");
+            $this->log_event("Error occured during deletion of job" . $job_id . ". Message: " . $ex->getMessage(), "error");
             return array(
-                'deleted'   =>  false,
-                'message'   =>  'Unexpected error occured during deletion of a job ('.$job_id.').'
+                'deleted' => false,
+                'message' => 'Unexpected error occured during deletion of a job (' . $job_id . ').'
             );
         }
-
     }
 
     /**
@@ -232,7 +231,8 @@ class JobController extends CommonController {
      *
      * @return JSON
      */
-    public function get_user_jobs(){
+    public function get_user_jobs()
+    {
         $userInfo = session('user_info');
 
         if (!empty($userInfo)) {
@@ -257,24 +257,24 @@ class JobController extends CommonController {
      * @param int $job_id
      * @return JSON
      */
-    public function get_job_status($job_id){
+    public function get_job_status($job_id)
+    {
         $userInfo = session('user_info');
         $user_email = $userInfo['email'];
 
         // Check if this job belongs to this user
         $result = DB::table('jobs')
-                    ->where('id',$job_id)
-                    ->where('user_email',$user_email)
-                    ->first();
+                ->where('id', $job_id)
+                ->where('user_email', $user_email)
+                ->first();
 
-        if(empty($result)){
-            $this->log_event("Trying to retrieve status for a job that does not belong to this user.","unauthorized");
-            $response = array('message','Trying to retrieve status for a job that does not belong to this user!');
-            return Response::json($response,401);
+        if (empty($result)) {
+            $this->log_event("Trying to retrieve status for a job that does not belong to this user.", "unauthorized");
+            $response = array('message', 'Trying to retrieve status for a job that does not belong to this user!');
+            return Response::json($response, 401);
         }
 
-        return Response::json(array('status' => $result->status),200);
-
+        return Response::json(array('status' => $result->status), 200);
     }
 
     /**
@@ -283,35 +283,34 @@ class JobController extends CommonController {
      * @param int $job_id
      * @return JSON
      */
-    public function get_r_script($job_id){
+    public function get_r_script($job_id)
+    {
         $userInfo = session('user_info');
         $user_email = $userInfo['email'];
-        $job_folder = $this->jobs_path.'/'.$user_email.'/job'.$job_id;
-        $fullpath = $job_folder.'/job'.$job_id.'.R';
+        $job_folder = $this->jobs_path . '/' . $user_email . '/job' . $job_id;
+        $fullpath = $job_folder . '/job' . $job_id . '.R';
 
         // Check if the R script exists
-        if(!file_exists($fullpath)){
-            $this->log_event("Trying to retrieve non existent R script.","illegal");
-            $response = array('message','Trying to retrieve non existent R script!');
-            return Response::json($response,400);
+        if (!file_exists($fullpath)) {
+            $this->log_event("Trying to retrieve non existent R script.", "illegal");
+            $response = array('message', 'Trying to retrieve non existent R script!');
+            return Response::json($response, 400);
         }
 
         // Check if this job belongs to this user
         $result = DB::table('jobs')
-                    ->where('id',$job_id)
-                    ->where('user_email',$user_email)
-                    ->first();
+                ->where('id', $job_id)
+                ->where('user_email', $user_email)
+                ->first();
 
-        if(empty($result)){
-            $this->log_event("Trying to retrieve an R script from a job that does not belong to this user.","unauthorized");
-            $response = array('message','Trying to retrieve an R script from a job that does not belong to this user!');
-            return Response::json($response,401);
+        if (empty($result)) {
+            $this->log_event("Trying to retrieve an R script from a job that does not belong to this user.", "unauthorized");
+            $response = array('message', 'Trying to retrieve an R script from a job that does not belong to this user!');
+            return Response::json($response, 401);
         }
 
         $r = file($fullpath);
-        return Response::json($r,200);
-
-
+        return Response::json($r, 200);
     }
 
     /**
@@ -321,18 +320,18 @@ class JobController extends CommonController {
      * @param string $filename
      * @return View|file|JSON
      */
-    public function get_job_file($job_id,$filename){
-
+    public function get_job_file($job_id, $filename)
+    {
         $userInfo = session('user_info');
         $user_email = $userInfo['email'];
-        $job_folder = $this->jobs_path.'/'.$user_email.'/job'.$job_id;
-        $fullpath = $job_folder.'/'.$filename;
+        $job_folder = $this->jobs_path . '/' . $user_email . '/job' . $job_id;
+        $fullpath = $job_folder . '/' . $filename;
 
-        if(!file_exists($fullpath)){
-            $this->log_event("Trying to retrieve non existent file.","illegal");
-            if($this->is_mobile){
-                $response = array('message','Trying to retrieve non existent file!');
-                return Response::json($response,400);
+        if (!file_exists($fullpath)) {
+            $this->log_event("Trying to retrieve non existent file.", "illegal");
+            if ($this->is_mobile) {
+                $response = array('message', 'Trying to retrieve non existent file!');
+                return Response::json($response, 400);
             } else {
                 return $this->illegalAction();
             }
@@ -340,37 +339,35 @@ class JobController extends CommonController {
 
         // Check if this job belongs to this user
         $result = DB::table('jobs')
-                    ->where('id',$job_id)
-                    ->where('user_email',$user_email)
-                    ->first();
+                ->where('id', $job_id)
+                ->where('user_email', $user_email)
+                ->first();
 
-        if(!empty($result)){
+        if (!empty($result)) {
             $parts = pathinfo($filename);
-            $new_filename = $parts['filename'].'_job'.$job_id.'.'.$parts['extension'];
+            $new_filename = $parts['filename'] . '_job' . $job_id . '.' . $parts['extension'];
 
-            switch($parts['extension']){
+            switch ($parts['extension']) {
                 case 'png':
-                    return response()->download($fullpath, $new_filename, ['Content-Type'=>'image/png']);
+                    return response()->download($fullpath, $new_filename, ['Content-Type' => 'image/png']);
                     break;
                 case 'csv':
-                    return response()->download($fullpath, $new_filename, ['Content-Type'=>'text/plain','Content-Disposition'=>'attachment; filename='.$new_filename]);
+                    return response()->download($fullpath, $new_filename, ['Content-Type' => 'text/plain', 'Content-Disposition' => 'attachment; filename=' . $new_filename]);
                     break;
                 case 'nwk':
                 case 'pdf':
-                    return response()->download($fullpath, $new_filename, ['Content-Type'=>'application/octet-stream']);
+                    return response()->download($fullpath, $new_filename, ['Content-Type' => 'application/octet-stream']);
                     break;
             }
-
         } else {
-            $this->log_event("Trying to retrieve a file that does not belong to a user's job.","unauthorized");
-            if($this->is_mobile){
-                $response = array('message',"Trying to retrieve a file that does not belong to a user's job");
-                return Response::json($response,401);
+            $this->log_event("Trying to retrieve a file that does not belong to a user's job.", "unauthorized");
+            if ($this->is_mobile) {
+                $response = array('message', "Trying to retrieve a file that does not belong to a user's job");
+                return Response::json($response, 401);
             } else {
                 abort(403, 'Unauthorized action.');
             }
         }
-
     }
 
     /**
@@ -380,43 +377,44 @@ class JobController extends CommonController {
      * @param int $job_id
      * @return void
      */
-    protected function refresh_single_status($job_id){
+    protected function refresh_single_status($job_id)
+    {
         $job = Job::find($job_id);
 
-        $job_folder = $this->jobs_path.'/'.$job->user_email.'/job'.$job_id;
-        $pbs_filepath = $job_folder.'/job'.$job->id.'.pbs';
-        $submitted_filepath = $job_folder.'/job'.$job->id.'.submitted';
+        $job_folder = $this->jobs_path . '/' . $job->user_email . '/job' . $job_id;
+        $pbs_filepath = $job_folder . '/job' . $job->id . '.pbs';
+        $submitted_filepath = $job_folder . '/job' . $job->id . '.submitted';
 
-        if(file_exists($pbs_filepath)){
+        if (file_exists($pbs_filepath)) {
             $status = 'submitted';
-        } else if(!file_exists($submitted_filepath)){
+        } else if (!file_exists($submitted_filepath)) {
             $status = 'creating';
         } else {
-            $status_file = $job_folder.'/job'.$job_id.'.jobstatus';
+            $status_file = $job_folder . '/job' . $job_id . '.jobstatus';
             $status_info = file($status_file);
             $status_parts = preg_split('/\s+/', $status_info[0]);
             $status_message = $status_parts[8];
-            switch($status_message){
+            switch ($status_message) {
                 case 'Q':
                     $status = 'queued';
                     break;
                 case 'R':
                     $status = 'running';
-                    $started_at = $status_parts[3].' '.$status_parts[4];
+                    $started_at = $status_parts[3] . ' ' . $status_parts[4];
                     break;
                 case 'ended':
                     $status = 'completed';
-                    $started_at = $status_parts[3].' '.$status_parts[4];
-                    $completed_at = $status_parts[5].' '.$status_parts[6];
+                    $started_at = $status_parts[3] . ' ' . $status_parts[4];
+                    $completed_at = $status_parts[5] . ' ' . $status_parts[6];
                     break;
                 case 'ended_PBS_ERROR':
                     $status = 'failed';
-                    $started_at = $status_parts[3].' '.$status_parts[4];
-                    $completed_at = $status_parts[5].' '.$status_parts[6];
+                    $started_at = $status_parts[3] . ' ' . $status_parts[4];
+                    $completed_at = $status_parts[5] . ' ' . $status_parts[6];
                     break;
             }
 
-            switch($job->function){
+            switch ($job->function) {
                 case 'bict':
                     $fileToParse = '/cmd_line_output.txt';
                     break;
@@ -433,26 +431,26 @@ class JobController extends CommonController {
                     $fileToParse = '/cmd_line_output.txt';
                     break;
                 case 'parallel_taxa2taxon':
-                        $fileToParse = '/cmd_line_output.txt';
-                        break;
+                    $fileToParse = '/cmd_line_output.txt';
+                    break;
                 case 'parallel_permanova':
-                        $fileToParse = '/cmd_line_output.txt';
-                        break;
+                    $fileToParse = '/cmd_line_output.txt';
+                    break;
                 case 'parallel_bioenv':
-                        $fileToParse = '/cmd_line_output.txt';
-                        break;
+                    $fileToParse = '/cmd_line_output.txt';
+                    break;
                 case 'parallel_simper':
-                        $fileToParse = '/cmd_line_output.txt';
-                        break;
+                    $fileToParse = '/cmd_line_output.txt';
+                    break;
                 default:
-                    $fileToParse = '/job'.$job_id.'.Rout';
+                    $fileToParse = '/job' . $job_id . '.Rout';
             }
 
             // If job has run, check for R errors
-            if($status == 'completed'){
+            if ($status == 'completed') {
                 $parser = new RvlabParser();
-                $parser->parse_output($job_folder.$fileToParse);
-                if($parser->hasFailed()){
+                $parser->parse_output($job_folder . $fileToParse);
+                if ($parser->hasFailed()) {
                     $status = 'failed';
                     //$this->log_event(implode(' - ',$parser->getOutput()),"info");
                 }
@@ -463,7 +461,7 @@ class JobController extends CommonController {
         $job->save();
 
         // IF job was completed successfully use it for statistics
-        if($status == 'completed'){
+        if ($status == 'completed') {
             $job_log = new JobsLog();
             $job_log->id = $job->id;
             $job_log->user_email = $job->user_email;
@@ -476,7 +474,7 @@ class JobController extends CommonController {
             $job_log->inputs = $job->inputs;
             $job_log->parameters = $job->parameters;
             $job_log->save();
-        } else if(($status == 'running')&&(empty($job_log->started_at))){
+        } else if (($status == 'running') && (empty($job_log->started_at))) {
             $job_log->started_at = $job->started_at;
             $job_log->save();
         }
@@ -501,14 +499,14 @@ class JobController extends CommonController {
             $job = $this->createBasicJobRecord($userInfo['email'], $form);
 
             // Get the job id and create the job folder
-            $job_id = 'job'.$job->id;
+            $job_id = 'job' . $job->id;
 
             // Define all the required paths
-            $user_jobs_path = $this->jobs_path.'/'.$userInfo['email'];
-            $job_folder = $user_jobs_path.'/'.$job_id;
-            $user_workspace = $this->workspace_path.'/'.$userInfo['email'];
-            $remote_job_folder = $this->remote_jobs_path.'/'.$userInfo['email'].'/'.$job_id;
-            $remote_user_workspace = $this->remote_workspace_path.'/'.$userInfo['email'];
+            $user_jobs_path = $this->jobs_path . '/' . $userInfo['email'];
+            $job_folder = $user_jobs_path . '/' . $job_id;
+            $user_workspace = $this->workspace_path . '/' . $userInfo['email'];
+            $remote_job_folder = $this->remote_jobs_path . '/' . $userInfo['email'] . '/' . $job_id;
+            $remote_user_workspace = $this->remote_workspace_path . '/' . $userInfo['email'];
 
             $this->buildUserDirectories($job_folder, $user_workspace, $user_jobs_path);
 
@@ -516,39 +514,37 @@ class JobController extends CommonController {
             $params = "";
             $inputs = "";
 
-            $class = "\App\RAnalysis"."\\".strtolower($form['function']);
-            $analysis = new $class($form,$job_id,$job_folder,$remote_job_folder,$user_workspace,$remote_user_workspace,$inputs,$params);
+            $class = "\App\RAnalysis" . "\\" . strtolower($form['function']);
+            $analysis = new $class($form, $job_id, $job_folder, $remote_job_folder, $user_workspace, $remote_user_workspace, $inputs, $params);
             $submitted = $analysis->run();
             //$submitted = $this->{$low_function}($form,$job_id,$job_folder,$remote_job_folder,$user_workspace,$remote_user_workspace,$inputs,$params);
-
             // Handle submission failure
-            if(!$submitted){
-                return $this->responseAfterFailure('Function '.$form['function'].' failed!', 'Job submission failed. ', $job_id, $job_folder);
+            if (!$submitted) {
+                return $this->responseAfterFailure('Function ' . $form['function'] . ' failed!', 'Job submission failed. ', $job_id, $job_folder);
             }
 
             $this->updateJobAfterSubmission($job, $job_folder, $inputs, $params);
         } catch (Exception $ex) {
-            $this->errorMessage = 'Job submission failed! '.$this->errorMessage;
+            $this->errorMessage = 'Job submission failed! ' . $this->errorMessage;
 
             if ($job_id) {
                 return $this->responseAfterFailure($ex->getMessage(), $this->errorMessage, $job_id, $job_folder);
             } else {
                 return $this->responseAfterFailure($ex->getMessage(), $this->errorMessage);
             }
-
         }
 
         Session::put('last_function_used', $form['function']);
 
-        if($this->is_mobile){
-            return Response::json(array(),200);
+        if ($this->is_mobile) {
+            return Response::json(array(), 200);
         } else {
             Session::flash('toastr', array('success', 'The job submitted successfully!'));
             return Redirect::to('/');
         }
     }
 
-/**
+    /**
      * Updates the job record after a successful job submission
      *
      * @param Job $job
@@ -561,7 +557,7 @@ class JobController extends CommonController {
         $job->status = 'submitted';
         $job->jobsize = directory_size($job_folder);
         $job->inputs = $this->inputFilesWithIds($inputs);
-        $job->parameters = trim($params,";");
+        $job->parameters = trim($params, ";");
         $job->save();
     }
 
@@ -583,10 +579,10 @@ class JobController extends CommonController {
 
         // Check if there is something to log
         if (!empty($logMessage)) {
-            $this->log_event($logMessage,"error");
+            $this->log_event($logMessage, "error");
         }
 
-        if($this->is_mobile){
+        if ($this->is_mobile) {
             return Response::json(['message', $flashMessage], 500);
         } else {
             if (Session::has('toastr')) {
@@ -630,12 +626,12 @@ class JobController extends CommonController {
         $userInfo = session('user_info');
 
         $input_ids = array();
-        $inputs_list = explode(';',$inputs);
-        foreach($inputs_list as $input){
-            $file_record = WorkspaceFile::whereRaw('BINARY filename LIKE ?',array($input))->where('user_email', $userInfo['email'])->first();
-            $input_ids[] = $file_record->id.":".$input;
+        $inputs_list = explode(';', $inputs);
+        foreach ($inputs_list as $input) {
+            $file_record = WorkspaceFile::whereRaw('BINARY filename LIKE ?', array($input))->where('user_email', $userInfo['email'])->first();
+            $input_ids[] = $file_record->id . ":" . $input;
         }
-        return implode(';',$input_ids);
+        return implode(';', $input_ids);
     }
 
     /**
@@ -650,10 +646,10 @@ class JobController extends CommonController {
         // Delete the job record
         Job::where('id', $jobId)->delete();
 
-         // Delete folder if created
-        if(file_exists($jobFolder)){
-            if(!delTree($jobFolder)){
-                $this->log_event('Folder '.$jobFolder.' could not be deleted after failed job submission!',"error");
+        // Delete folder if created
+        if (file_exists($jobFolder)) {
+            if (!delTree($jobFolder)) {
+                $this->log_event('Folder ' . $jobFolder . ' could not be deleted after failed job submission!', "error");
             }
         }
     }
@@ -669,8 +665,8 @@ class JobController extends CommonController {
     protected function basicFormValidation($form)
     {
         $validator = Validator::make($form, [
-            'function'  =>  'required|string|max:250',
-            'box'       =>  'required'
+                    'function' => 'required|string|max:250',
+                    'box' => 'required'
         ]);
 
         if ($validator->fails()) {
@@ -690,19 +686,19 @@ class JobController extends CommonController {
     protected function buildUserDirectories($job_folder, $user_workspace, $user_jobs_path)
     {
         // Create the required folders if they are not exist
-        if(!file_exists($user_workspace)){
-            if(!mkdir($user_workspace)){
+        if (!file_exists($user_workspace)) {
+            if (!mkdir($user_workspace)) {
                 throw new \Exception('User workspace directory could not be created!');
             }
         }
-        if(!file_exists($user_jobs_path)){
-            if(!mkdir($user_jobs_path)){
+        if (!file_exists($user_jobs_path)) {
+            if (!mkdir($user_jobs_path)) {
                 throw new \Exception('User jobs directory could not be created!');
             }
         }
 
-        if(!file_exists($job_folder)){
-            if(!mkdir($job_folder)){
+        if (!file_exists($job_folder)) {
+            if (!mkdir($job_folder)) {
                 throw new \Exception('Job directory could not be created!');
             }
         }

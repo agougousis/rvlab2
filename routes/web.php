@@ -40,7 +40,7 @@ Route::post('/workspace/tab_status', 'WorkspaceController@change_tab_status');
 
 Route::get('/workspace/user_storage_utilization', 'WorkspaceController@user_storage_utilization');
 
-Route::post('/workspace/vliz_import/{token}/{jobid}', 'WorkspaceController@vliz_import');
+Route::post('/workspace/vliz_import/{token}/{jobid}', 'ExternalController@vliz_import');
 // Help Routes
 Route::get('/help/documentation/{function}', 'HelpController@documentation');
 Route::get('/help/storage_policy', 'HelpController@policy');
