@@ -8,15 +8,13 @@ use Validator;
 use App\Models\WorkspaceFile;
 use App\Http\Controllers\CommonController;
 
-define("PORTAL_LOGIN", "https://portal.lifewatchgreece.eu");
-
 /**
  * Handles the functionality related to importing and exporting files to user's workspace.
  *
  * @license MIT
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
-class WorkspaceController extends CommonController
+class ExternalController extends CommonController
 {
     private $workspace_path;
     private $jobs_path;
