@@ -11,7 +11,7 @@ use Validator;
 use App\Models\Job;
 use App\Models\JobsLog;
 use App\Models\WorkspaceFile;
-use App\Extras\RvlabParser;
+use App\ClassHelpers\RvlabParser;
 use App\Http\Controllers\CommonController;
 use Illuminate\Http\Request;
 

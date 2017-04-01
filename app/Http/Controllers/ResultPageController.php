@@ -6,7 +6,7 @@ use Session;
 use Response;
 use App\Models\Job;
 use App\Models\WorkspaceFile;
-use App\Extras\RvlabParser;
+use App\ClassHelpers\RvlabParser;
 use App\Http\Controllers\JobController;
 
 /**

@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Job;
 use App\Models\JobsLog;
 use App\Models\SystemLog;
-use App\Extras\RvlabParser;
+use App\ClassHelpers\RvlabParser;
 use Illuminate\Console\Command;
 
 /**

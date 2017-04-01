@@ -25,8 +25,8 @@
             "App\\": "app/"
         },
         "files": [
-            "app/Helpers/helper.php",
-            "app/Helpers/form_builder.php"
+            "app/FunctionHelpers/helper.php",
+            "app/FunctionHelpers/form_builder.php"
         ]
     },
     "autoload-dev": {

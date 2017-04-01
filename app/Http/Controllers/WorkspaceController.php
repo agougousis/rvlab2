@@ -6,11 +6,10 @@ use DB;
 use Session;
 use Response;
 use Redirect;
-use Validator;
 use App\Models\WorkspaceFile;
 use Illuminate\Http\Request;
+use App\ClassHelpers\UploadValidator;
 use App\Http\Controllers\CommonController;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 define("PORTAL_LOGIN", "https://portal.lifewatchgreece.eu");
 
@@ -51,15 +50,13 @@ class WorkspaceController extends CommonController
     public function user_storage_utilization()
     {
         $userInfo = session('user_info');
-
-        $user_email = $userInfo['email'];
         $max_users_supported = $this->system_settings['max_users_supported'];
         $rvlab_storage_limit = $this->system_settings['rvlab_storage_limit'];
         $jobs_path = config('rvlab.jobs_path');
         $workspace_path = config('rvlab.workspace_path');
 
-        $inputspace_totals = directory_size($workspace_path . '/' . $user_email); // in KB
-        $jobspace_totals = directory_size($jobs_path . '/' . $user_email); // in KB
+        $inputspace_totals = directory_size($workspace_path . '/' . $userInfo['email']); // in KB
+        $jobspace_totals = directory_size($jobs_path . '/' . $userInfo['email']); // in KB
 
         $response = array(
             'storage_utilization' => 100 * ($inputspace_totals + $jobspace_totals) / ($rvlab_storage_limit / $max_users_supported),
@@ -121,8 +118,7 @@ class WorkspaceController extends CommonController
     public function convert2r_tool($filename)
     {
         $userInfo = session('user_info');
-        $user_email = $userInfo['email'];
-        $user_workspace_path = $this->workspace_path . '/' . $user_email;
+        $user_workspace_path = $this->workspace_path . '/' . $userInfo['email'];
         $filepath = $user_workspace_path . '/' . $filename;
 
         if (file_exists($filepath)) {
@@ -156,12 +152,11 @@ class WorkspaceController extends CommonController
     public function get_file($filename)
     {
         $userInfo = session('user_info');
-        $user_email = $userInfo['email'];
-        $user_workspace_path = $this->workspace_path . '/' . $user_email;
+        $user_workspace_path = $this->workspace_path . '/' . $userInfo['email'];
         $filepath = $user_workspace_path . '/' . basename($filename);
 
         // Check if such a file belongs to this user
-        $count_records = WorkspaceFile::where('user_email', $user_email)
+        $count_records = WorkspaceFile::where('user_email', $userInfo['email'])
                 ->where('filename', $filename)
                 ->count();
         if ($count_records == 0) {
@@ -199,99 +194,22 @@ class WorkspaceController extends CommonController
     public function add_example_data()
     {
         $userInfo = session('user_info');
-        $user_email = $userInfo['email'];
+        $user_workspace_path = $this->workspace_path . '/' . $userInfo['email'];
 
         try {
             // Create the user workspace if not exists
-            $user_workspace_path = $this->workspace_path . '/' . $user_email;
             if (!file_exists($user_workspace_path)) { // just in case
                 mkdir($user_workspace_path);
             }
 
             // Copy the file to user workspace
-            $source = public_path() . '/files/softLagoonEnv.csv';
-            $destination = $user_workspace_path . '/softLagoonEnv.csv';
-            if (!file_exists($destination)) {
-                copy($source, $destination);
-
-                $workspace_file = new WorkspaceFile();
-                $workspace_file->user_email = $user_email;
-                $workspace_file->filename = 'softLagoonEnv.csv';
-                $workspace_file->filesize = filesize($source);
-                $workspace_file->save();
-            }
-
-            $source = public_path() . '/files/softLagoonFactors.csv';
-            $destination = $user_workspace_path . '/softLagoonFactors.csv';
-            if (!file_exists($destination)) {
-                copy($source, $destination);
-
-                $workspace_file = new WorkspaceFile();
-                $workspace_file->user_email = $user_email;
-                $workspace_file->filename = 'softLagoonFactors.csv';
-                $workspace_file->filesize = filesize($source);
-                $workspace_file->save();
-            }
-
-            $source = public_path() . '/files/softLagoonAbundance.csv';
-            $destination = $user_workspace_path . '/softLagoonAbundance.csv';
-            if (!file_exists($destination)) {
-                copy($source, $destination);
-
-                $workspace_file = new WorkspaceFile();
-                $workspace_file->user_email = $user_email;
-                $workspace_file->filename = 'softLagoonAbundance.csv';
-                $workspace_file->filesize = filesize($source);
-                $workspace_file->save();
-            }
-
-            $source = public_path() . '/files/softLagoonAggregation.csv';
-            $destination = $user_workspace_path . '/softLagoonAggregation.csv';
-            if (!file_exists($destination)) {
-                copy($source, $destination);
-
-                $workspace_file = new WorkspaceFile();
-                $workspace_file->user_email = $user_email;
-                $workspace_file->filename = 'softLagoonAggregation.csv';
-                $workspace_file->filesize = filesize($source);
-                $workspace_file->save();
-            }
-
-            $source = public_path() . '/files/Macrobenthos_Classes_Adundance.csv';
-            $destination = $user_workspace_path . '/Macrobenthos_Classes_Adundance.csv';
-            if (!file_exists($destination)) {
-                copy($source, $destination);
-
-                $workspace_file = new WorkspaceFile();
-                $workspace_file->user_email = $user_email;
-                $workspace_file->filename = 'Macrobenthos_Classes_Adundance.csv';
-                $workspace_file->filesize = filesize($source);
-                $workspace_file->save();
-            }
-
-            $source = public_path() . '/files/Macrobenthos_Crustacea_Adundance.csv';
-            $destination = $user_workspace_path . '/Macrobenthos_Crustacea_Adundance.csv';
-            if (!file_exists($destination)) {
-                copy($source, $destination);
-
-                $workspace_file = new WorkspaceFile();
-                $workspace_file->user_email = $user_email;
-                $workspace_file->filename = 'Macrobenthos_Crustacea_Adundance.csv';
-                $workspace_file->filesize = filesize($source);
-                $workspace_file->save();
-            }
-
-            $source = public_path() . '/files/Macrobenthos_Femilies_Adundance.csv';
-            $destination = $user_workspace_path . '/Macrobenthos_Femilies_Adundance.csv';
-            if (!file_exists($destination)) {
-                copy($source, $destination);
-
-                $workspace_file = new WorkspaceFile();
-                $workspace_file->user_email = $user_email;
-                $workspace_file->filename = 'Macrobenthos_Femilies_Adundance.csv';
-                $workspace_file->filesize = filesize($source);
-                $workspace_file->save();
-            }
+            $this->importExampleFile('softLagoonEnv.csv');
+            $this->importExampleFile('softLagoonFactors.csv');
+            $this->importExampleFile('softLagoonAbundance.csv');
+            $this->importExampleFile('softLagoonAggregation.csv');
+            $this->importExampleFile('Macrobenthos_Classes_Adundance.csv');
+            $this->importExampleFile('Macrobenthos_Crustacea_Adundance.csv');
+            $this->importExampleFile('Macrobenthos_Femilies_Adundance.csv');
 
             Session::flash('toastr', array('success', 'Files added to workspace successfully!'));
             if ($this->is_mobile) {
@@ -312,6 +230,29 @@ class WorkspaceController extends CommonController
     }
 
     /**
+     * Copies an example file to user's workspace
+     *
+     * @param string $filename
+     */
+    protected function importExampleFile($filename)
+    {
+        $userInfo = session('user_info');
+        $user_workspace_path = $this->workspace_path . '/' . $userInfo['email'];
+
+        $source = public_path()."/files/$filename";
+        $destination = "$user_workspace_path/$filename";
+        if (!file_exists($destination)) {
+            copy($source, $destination);
+
+            $workspace_file = new WorkspaceFile();
+            $workspace_file->user_email = $userInfo['email'];
+            $workspace_file->filename = $filename;
+            $workspace_file->filesize = filesize($source);
+            $workspace_file->save();
+        }
+    }
+
+    /**
      * Adds some input files to user's workspace
      *
      * @return View|JSON|RedirectResponse
@@ -319,7 +260,9 @@ class WorkspaceController extends CommonController
     public function add_files(Request $request)
     {
         $userInfo = session('user_info');
-        list($valid_files, $error_messages) = $this->validate_uploaded_workspace_files($request);
+        $user_workspace_path = $this->workspace_path . '/' . $userInfo['email'];
+
+        list($valid_files, $error_messages) = UploadValidator::validate_uploaded_workspace_files($request);
 
         if (!empty($error_messages)) {
             if ($this->is_mobile) {
@@ -336,8 +279,6 @@ class WorkspaceController extends CommonController
         $name_conflict = false;
 
         // Add files to workspace
-        $user_email = $userInfo['email'];
-        $user_workspace_path = $this->workspace_path . '/' . $user_email;
         if (!file_exists($user_workspace_path)) { // just in case
             mkdir($user_workspace_path);
         }
@@ -358,7 +299,7 @@ class WorkspaceController extends CommonController
                 if (!file_exists($new_filepath)) {
                     // Add a record to database
                     $workspace_file = new WorkspaceFile();
-                    $workspace_file->user_email = $user_email;
+                    $workspace_file->user_email = $userInfo['email'];
                     $workspace_file->filename = $remote_filename;
                     $workspace_file->filesize = $file->getSize();
                     $workspace_file->save();
@@ -417,6 +358,8 @@ class WorkspaceController extends CommonController
     public function add_output_file(Request $request)
     {
         $userInfo = session('user_info');
+        $user_workspace_path = $this->workspace_path . '/' . $userInfo['email'];
+
         $form = $request->all();
 
         // Check if all required information has been posted
@@ -427,8 +370,7 @@ class WorkspaceController extends CommonController
         }
 
         // Check if the output file exists
-        $user_email = $userInfo['email'];
-        $job_folder = $this->jobs_path . '/' . $user_email . '/job' . $form['jobid'];
+        $job_folder = $this->jobs_path . '/' . $userInfo['email'] . '/job' . $form['jobid'];
         $filepath = $job_folder . '/' . $form['filename'];
         if (!file_exists($filepath)) {
             $this->log_event("File could not be found.", "illegal");
@@ -439,7 +381,7 @@ class WorkspaceController extends CommonController
         // Check if the job belongs to this user
         $result = DB::table('jobs')
                 ->where('id', $form['jobid'])
-                ->where('user_email', $user_email)
+                ->where('user_email', $userInfo['email'])
                 ->first();
 
         if (empty($result)) {
@@ -449,7 +391,6 @@ class WorkspaceController extends CommonController
         }
 
         // Create the user workspace if not exists
-        $user_workspace_path = $this->workspace_path . '/' . $user_email;
         if (!file_exists($user_workspace_path)) { // just in case
             mkdir($user_workspace_path);
         }
@@ -471,7 +412,7 @@ class WorkspaceController extends CommonController
 
             // Add a record to database
             $workspace_file = new WorkspaceFile();
-            $workspace_file->user_email = $user_email;
+            $workspace_file->user_email = $userInfo['email'];
             $workspace_file->filename = $remote_filename;
             $workspace_file->filesize = filesize($filepath);
             $workspace_file->save();
@@ -490,102 +431,6 @@ class WorkspaceController extends CommonController
     }
 
     /**
-     * Validates that all the files that were sent to be add to user's workspace are valid.
-     *
-     * @param Request $request
-     * @return array
-     */
-    private function validate_uploaded_workspace_files(Request &$request)
-    {
-        $valid_files = [];
-
-        try {
-            if ($request->hasFile('local_files')) {
-                $all_uploads = $request->file('local_files');
-
-                // Make sure it really is an array
-                if (!is_array($all_uploads)) {
-                    $all_uploads = array($all_uploads);
-                }
-
-                $error_messages = array();
-
-                // Loop through all uploaded files
-                foreach ($all_uploads as $upload) {
-
-                    list($is_valid, $errorMessage) = $this->validate_uploaded_file($upload);
-                    if ($is_valid) {
-                        $valid_files[] = $upload;
-                    } else {
-                        $error_messages[] = $errorMessage;
-                    }
-                }
-            }
-        } catch (Exception $ex) {
-            $this->log_event($ex->getMessage(), "error");
-            return 'Unexpected error!';
-        }
-
-        return [$valid_files, $error_messages];
-    }
-
-    /**
-     * Checks the validity of a single workspace uploaded file
-     *
-     * @param UploadedFile $file
-     * @return array
-     */
-    private function validate_uploaded_file(UploadedFile $file) {
-        // Ignore array member if it's not an UploadedFile object, just to be extra safe
-        if (!is_a($file, 'Symfony\Component\HttpFoundation\File\UploadedFile')) {
-            return [false, ''];
-        }
-
-        // This checks for non-zero file size, UPLOAD_ERR_OK and
-        // if the file is really an uploaded file.
-        if ((!$file->isValid()) || (filesize($file->getPathname()) == 0)) {
-            $error_message = $file->getClientOriginalName().': Failed to upload or zero file size!';
-            return [false, $error_message];
-        }
-
-        $parts = pathinfo($file->getClientOriginalName());
-        $filename = $parts['basename'];
-        $extension = $parts['extension'];
-
-        $validator = Validator::make(
-                        array(
-                    'file' => $file,
-                    'filename' => $filename, //$upload->getClientOriginalName(),
-                    'extension' => $extension, //$upload->guessExtension(),
-                        ), array(
-                    'file' => 'max:50000',
-                    'filename' => 'max:200',
-                    'extension' => 'in:txt,csv,nwk',
-                        )
-        );
-
-        if ($validator->fails()) {
-            // Collect error messages
-            if (!empty($validator->messages()->first('file'))){
-                $error_message = $file->getClientOriginalName() . ':' . $validator->messages()->first('file');
-                return [false, $error_message];
-            }
-
-            if (!empty($validator->messages()->first('filename'))) {
-                $error_message = $file->getClientOriginalName() . ':' . $validator->messages()->first('filename');
-                return [false, $error_message];
-            }
-
-            if (!empty($validator->messages()->first('extension'))) {
-                $error_message = $file->getClientOriginalName() . ':' . $validator->messages()->first('extension');
-                return [false, $error_message];
-            }
-        }
-
-        return [true, ''];
-    }
-
-    /**
      * Displays a page for managing the user's input files
      *
      * @return View|JSON
@@ -594,11 +439,10 @@ class WorkspaceController extends CommonController
     {
         $userInfo = session('user_info');
 
-        $user_email = $userInfo['email'];
         $data = array();
 
         // List of files that are contained in user's workspace
-        $data['workspace_files'] = WorkspaceFile::getUserFiles($user_email);
+        $data['workspace_files'] = WorkspaceFile::getUserFiles($userInfo['email']);
 
         if ($this->is_mobile) {
             return Response::json($data, 200);
@@ -614,9 +458,9 @@ class WorkspaceController extends CommonController
      */
     public function remove_file(Request $request)
     {
-        $form = $request->all();
         $userInfo = session('user_info');
-        $user_email = $userInfo['email'];
+
+        $form = $request->all();
 
         if (empty($form['workspace_file'])) {
             $this->log_event("Workspace file removal was requested without a workspace file id.", "error");
@@ -629,7 +473,7 @@ class WorkspaceController extends CommonController
         }
 
         $file_record = WorkspaceFile::where('id', $form['workspace_file'])
-                ->where('user_email', $user_email)
+                ->where('user_email', $userInfo['email'])
                 ->first();
 
         if (empty($file_record)) {
@@ -642,7 +486,7 @@ class WorkspaceController extends CommonController
             }
         }
 
-        $filepath = $this->workspace_path . '/' . $user_email . '/' . $file_record->filename;
+        $filepath = $this->workspace_path . '/' . $userInfo['email'] . '/' . $file_record->filename;
         if (!file_exists($filepath)) {
             $this->log_event("Workspace file could not be found in the file system.", "error");
             if ($this->is_mobile) {
@@ -686,9 +530,9 @@ class WorkspaceController extends CommonController
      */
     public function remove_files(Request $request)
     {
-        $form = $request->all();
         $userInfo = session('user_info');
-        $user_email = $userInfo['email'];
+
+        $form = $request->all();
 
         // Check that list of files is not empty
         if (empty($form['files_to_delete'])) {
@@ -718,7 +562,7 @@ class WorkspaceController extends CommonController
 
             // Retrieve file information
             $file_record = WorkspaceFile::where('id', $file_id)
-                    ->where('user_email', $user_email)
+                    ->where('user_email', $userInfo['email'])
                     ->first();
 
             // Check that file record is not empty
@@ -733,7 +577,7 @@ class WorkspaceController extends CommonController
             }
 
             // Check that file exists in the filesystem
-            $filepath = $this->workspace_path . '/' . $user_email . '/' . $file_record->filename;
+            $filepath = $this->workspace_path . '/' . $userInfo['email'] . '/' . $file_record->filename;
             if (!file_exists($filepath)) {
                 $this->log_event("Workspace file could not be found in the file system.", "error");
                 if ($this->is_mobile) {
