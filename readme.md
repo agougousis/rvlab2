@@ -1,7 +1,9 @@
-##Requirements
+# R vLab - LifeWatchGreece Project
+
+## Requirements
 
 * Apache 
-	rewrite module
+  * rewrite module
 * PHP >= 5.6.4
   * OpenSSL PHP Extension
   * Mcrypt PHP Extension 
@@ -13,15 +15,35 @@
   * short_tags shound be enabled in php.ini  
 * MySQL >= 5.0
 
-##Installation
+## Installation
 
-####Database Schema and configuration
+#### Database Schema and configuration
 
 R vLab requires a MySQL database with a schema described in schema.sql file in the documentation directory. 
-This file does not contain only the schema but also a few basic settings needed by R vLab. The credentials 
-that are used for database connection should be defined in the .env file:
+This file does not contain only the schema but also a few basic settings needed by R vLab. 
 
-####File directories
+The credentials that are used for database connection should be defined in a .env file inside the 
+document root directory. A sample .env file hould probably looks like this:
+
+APP_ENV=production
+APP_KEY=base64:G01sJAF8rt0vl5SmBHw3wb8VpPD9tLIy7/e33/XoHko=
+APP_DEBUG=false
+APP_LOG_LEVEL=debug
+APP_URL=http://myapp.com
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=rvlabdb
+DB_USERNAME=rvlabdbuser
+DB_PASSWORD=mypassword
+
+JOBS_PATH=/mnt/cluster/jobs
+REMOTE_JOBS_PATH=/home/ruser/jobs
+WORKSPACE_PATH=/mnt/cluster/workspace
+REMOTE_WORKSPACE_PATH=/home/ruser/workspace
+
+#### File directories
 
 Generally, R vLab uses two separate directories for user files. One for storing jobs and one for storing input files. 
 The latter is often named as the 'workspace' directory. Each user has its own sub-directory in these two directories. 
@@ -73,7 +95,7 @@ These three tasks should be executed by the same user that R vLab web applicatio
 ####Authentication
 
 Authentication mechanism can be substituted by providing an alternative authenticator class. The authenticator class should implement the App\Contracts\Authenticator interface and
-be placed in the a//Authenticators directory. In order to switch between the available authenticators, just change the bind in the app/Providers/AuthenticatorServiceProvider.php file. 
+be placed in the app/Authenticators directory. In order to switch between the available authenticators, just change the bind in the app/Providers/AuthenticatorServiceProvider.php file. 
 
 A default/dummy authenticator has been included and can be used for testing purposes. The user credentials for this authenticator are:
 
@@ -82,7 +104,7 @@ password: oooooo
 
 and are hard-coded in the authenticator.
 
-In order for this authenticator to work, the following files has been added:
+In order for the default authenticator to work, the following files has been added:
 
 app/Http/Controllers/DefaultController.php
 resources/views/default_external_wrapper.php

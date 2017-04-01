@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="itjobs-api" default="full-build">
+
+    <!-- By default, we assume all tools to be on the $PATH -->
+    <property name="phpcs" value="phpcs"/>
+    <property name="phpunit" value="phpunit"/>
+    <property name="pdepend" value="pdepend"/>
+    <property name="phpmetrics" value="phpmetrics"/>
+	
+    <target name="full-build" depends="prepare,static-analysis,phpunit-coverage" description="Performs static analysis, runs the tests, and generates project documentation"/>
+    <target name="static-analysis" depends="phpcs-ci,pdepend,phpmetrics" description="Performs static analysis"/>
+
+
+    <target name="clean" unless="clean.done" description="Cleanup build artifacts">
+        <delete dir="${basedir}/build/api"/>
+        <delete dir="${basedir}/build/coverage"/>
+        <delete dir="${basedir}/build/pdepend"/>
+        <delete dir="${basedir}/build/reports"/>
+        <delete dir="${basedir}/build/logs"/>
+        <property name="clean.done" value="true"/>
+    </target>
+
+    <target name="prepare" unless="prepare.done" depends="clean" description="Prepare for build">
+        <mkdir dir="${basedir}/build/api"/>
+        <mkdir dir="${basedir}/build/coverage"/>
+        <mkdir dir="${basedir}/build/pdepend"/>
+        <mkdir dir="${basedir}/build/reports"/>
+        <mkdir dir="${basedir}/build/logs"/>
+        <property name="prepare.done" value="true"/>
+    </target>
+
+    <target name="phpcs-ci" unless="phpcs-ci.done" depends="prepare" description="Find coding standard violations using PHP_CodeSniffer and log result in XML format.">
+            <exec executable="${phpcs}" output="/dev/null" taskname="phpcs">
+            <arg value="--report=checkstyle"/>
+            <arg value="--report-file=${basedir}/build/logs/checkstyle.xml"/>
+            <arg value="--standard=${basedir}/build/phpcs.xml"/>
+            <arg value="--extensions=php"/>
+            <arg value="--ignore=autoload.php"/>
+            <arg path="${basedir}/app"/>
+          </exec>
+
+          <property name="phpcs-ci.done" value="true"/>
+    </target>
+
+    <target name="phpunit-coverage"
+         unless="phpunit.done"
+         depends="prepare"
+         description="Run unit tests with PHPUnit (without generating code coverage reports)">
+		<exec executable="${phpunit}" resultproperty="result.phpunit" taskname="phpunit">
+		<arg value="--configuration"/>                
+		<arg path="${basedir}/phpunit.xml"/>  
+                <arg value="--log-junit"/>
+                <arg path="${basedir}/build/logs/junit.xml"/>
+                <arg value="--coverage-html"/>
+                <arg path="${basedir}/build/logs"/>
+                <arg value="--coverage-clover"/>
+                <arg path="${basedir}/build/logs/coverage.xml"/>
+	</exec>
+
+        <property name="phpunit.done" value="true"/>
+    </target>
+
+    <target name="pdepend"
+            unless="pdepend.done"
+            depends="prepare"
+            description="Calculate software metrics using PHP_Depend and log result in XML format. Intended for usage within a continuous integration environment.">
+        <exec executable="${pdepend}" taskname="pdepend">
+            <arg value="--jdepend-xml=${basedir}/build/logs/jdepend.xml" />
+            <arg value="--jdepend-chart=${basedir}/build/pdepend/dependencies.svg" />
+            <arg value="--overview-pyramid=${basedir}/build/pdepend/overview-pyramid.svg" />
+            <arg path="${basedir}/app" />
+        </exec>
+
+        <property name="pdepend.done" value="true"/>
+    </target>
+    
+    <target name="phpmetrics"
+            unless="phpmetrics.done"
+            depends="prepare"
+            description="">
+        <exec executable="${phpmetrics}" taskname="phpmetrics">
+            <arg value="--report-xml=${basedir}/build/logs/phpmetrics.xml" />
+            <arg value="--report-html=${basedir}/build/reports/phpmetrics.html" />
+            <arg path="${basedir}/app" />
+        </exec>
+
+        <property name="phpmetrics.done" value="true"/>
+    </target>
+
+</project>

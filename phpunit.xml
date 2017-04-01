@@ -7,7 +7,8 @@
          convertNoticesToExceptions="true"
          convertWarningsToExceptions="true"
          processIsolation="false"
-         stopOnFailure="true">
+         stopOnFailure="true"
+         syntaxCheck="false">
     <testsuites>
         <testsuite name="Application Test Suite">
             <directory suffix="Test.php">./tests</directory>
@@ -16,6 +17,11 @@
     <filter>
         <whitelist processUncoveredFilesFromWhitelist="true">
             <directory suffix=".php">./app</directory>
+            <exclude> 
+                <directory suffix=".php">./app/Providers</directory>
+                <directory suffix=".php">./app/Exceptions</directory>
+                <directory suffix=".php">./app/build</directory>
+            </exclude>
         </whitelist>
     </filter>
     <php>
