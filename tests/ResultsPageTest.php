@@ -233,7 +233,7 @@ class ResultsPageTest extends TesterBase
             'jobid' =>  '1'
         ];
         $response = $this->call('post', url('workspace/add_output_file'), $post_data);
-        $this->assertTrue(in_array($response->getStatusCode(), [200, 428]));
+        $this->assertTrue(in_array($response->getStatusCode(), [200, 302]));
 
         // Check file is in workspace
         $this->assertTrue(file_exists($this->demoUserWorkspacePath.'/taxadis.csv'));

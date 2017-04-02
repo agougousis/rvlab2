@@ -5,12 +5,15 @@ namespace App\Http\Controllers;
 use DB;
 use Session;
 use Response;
-use Redirect;
+use Validator;
 use App\Models\WorkspaceFile;
 use Illuminate\Http\Request;
 use App\ClassHelpers\UploadValidator;
 use App\ClassHelpers\WorkspaceHelper;
+use App\ClassHelpers\AuthorizationChecker;
+use App\ClassHelpers\ConditionsChecker;
 use App\Http\Controllers\CommonController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 define("PORTAL_LOGIN", "https://portal.lifewatchgreece.eu");
 
@@ -24,12 +27,15 @@ class WorkspaceController extends CommonController
 {
     private $workspace_path;
     private $jobs_path;
+    private $conditionChecker;
 
     public function __construct()
     {
         parent::__construct();
         $this->workspace_path = config('rvlab.workspace_path');
         $this->jobs_path = config('rvlab.jobs_path');
+
+        $this->conditionChecker = new ConditionsChecker($this->jobs_path, $this->workspace_path);
 
         // Check if cluster storage has been mounted to web server
         if (!$this->check_storage()) {
@@ -51,29 +57,12 @@ class WorkspaceController extends CommonController
      */
     public function get_file($filename)
     {
-        $userInfo = session('user_info');
-        $user_workspace_path = $this->workspace_path . '/' . $userInfo['email'];
-        $filepath = $user_workspace_path . '/' . basename($filename);
+        // INPUT FILTERING: Any workspace file stored in R vLab has gone
+        // through the safe_filename() cleaning procedure
+        $safe_filename = safe_filename( basename($filename) );
 
-        // Check if such a file belongs to this user
-        $count_records = WorkspaceFile::where('user_email', $userInfo['email'])
-                ->where('filename', $filename)
-                ->count();
-        if ($count_records == 0) {
-            $this->log_event("User asked for a workspace filename that does not exist in database.", "warning");
-            Session::flash('toastr', array('error', 'The filename you provided does not exist in your workspace.'));
-            if ($this->is_mobile) {
-                $response = array('message', 'The filename you provided does not exist in your workspace.');
-                return Response::json($response, 400);
-            } else {
-                return Redirect::to('/');
-            }
-        }
-
-        // Check if file exists in file system
-        if (!file_exists($filepath)) {
-            return $this->unexpectedErrorResponse("User asked for a workspace file that does not exist in filesystem. File path = " . $filepath, "error", "The filename you provided could not be found");
-        }
+        // CONDITION: Check if such a file exists for this user
+        $filepath = $this->conditionChecker->workspaceFileBelongsToUser($safe_filename, session('user_info.email'));
 
         // Send the file
         return response()->download($filepath);
@@ -86,8 +75,8 @@ class WorkspaceController extends CommonController
      */
     public function add_example_data()
     {
-        $userInfo = session('user_info');
-        $user_workspace_path = $this->workspace_path . '/' . $userInfo['email'];
+        $user_email = session('user_info.email');
+        $user_workspace_path = $this->workspace_path . '/' . $user_email;
 
         try {
             // Create the user workspace if not exists
@@ -96,7 +85,7 @@ class WorkspaceController extends CommonController
             }
 
             // Copy the file to user workspace
-            $workspaceHelper = new WorkspaceHelper($userInfo, $this->workspace_path);
+            $workspaceHelper = new WorkspaceHelper($user_email, $this->workspace_path);
             $workspaceHelper->moveExampleToWorkspace('softLagoonEnv.csv');
             $workspaceHelper->moveExampleToWorkspace('softLagoonFactors.csv');
             $workspaceHelper->moveExampleToWorkspace('softLagoonAbundance.csv');
@@ -108,8 +97,10 @@ class WorkspaceController extends CommonController
             Session::flash('toastr', array('success', 'Files added to workspace successfully!'));
 
             return $this->okResponse();
-        } catch (Exception $ex) {
-            return $this->unexpectedErrorResponse($ex->getMessage(), 'Something went wrong! Some files may not have been added to your workspace.');
+        } catch (\Exception $ex) {
+            $exception = new UnexpectedErrorException($ex->getMessage());
+            $exception->setUserMessage('Something went wrong! Some files may not have been added to your workspace.');
+            throw $exception;
         }
     }
 
@@ -120,49 +111,34 @@ class WorkspaceController extends CommonController
      */
     public function add_files(Request $request)
     {
-        $userInfo = session('user_info');
-        $user_workspace_path = $this->workspace_path . '/' . $userInfo['email'];
+        $user_workspace_path = $this->workspace_path . '/' . session('user_info.email');
 
-        list($valid_files, $error_messages) = UploadValidator::validate_uploaded_workspace_files($request);
-
-        if (!empty($error_messages)) {
-            if ($this->is_mobile) {
-                return Response::json($error_messages, 400);
-            } else {
-                return Redirect::back()->withInput()->withErrors($error_messages);
-            }
-        }
+        // INPUT FILTERING: Validate files has been uploaded correctly and are
+        // valid (in terms of type, size etc.)
+        $valid_files = UploadValidator::validate_uploaded_workspace_files($request);
 
         $name_conflict = false;
 
-        // Add files to workspace
+        // Build user workspace directory, if not exists
         if (!file_exists($user_workspace_path)) { // just in case
             mkdir($user_workspace_path);
         }
 
+        // Add files to workspace
         DB::beginTransaction();
 
         $added_files = [];
 
         try {
             foreach ($valid_files as $file) {
-                // Build the destination file path
-                $remote_filename = safe_filename($file->getClientOriginalName());
-                $destinationFilePath = $user_workspace_path . '/' . $remote_filename;
-
-                if (!file_exists($destinationFilePath)) {
-                    $workspaceHelper = new WorkspaceHelper($userInfo, $this->workspace_path);
-                    $workspaceHelper->moveUploadedToWorkspace($file, $destinationFilePath);
-
-                    $added_files[] = $remote_filename;
-                } else {
-                    $name_conflict = true;
-                }
+                $this->add_file_to_workspace($file, $user_workspace_path, $added_files, $name_conflict);
             }
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             DB::rollback();
 
-            if (file_exists($destinationFilePath)) {
+            foreach ($added_files as $file) {
+                $remote_filename = safe_filename($file->getClientOriginalName());
+                $destinationFilePath = $user_workspace_path . '/' . $remote_filename;
                 unlink($destinationFilePath);
             }
 
@@ -181,6 +157,30 @@ class WorkspaceController extends CommonController
     }
 
     /**
+     * Adds a single uploaded file to user's workspace
+     *
+     * @param UploadedFile $file
+     * @param string $user_workspace_path
+     * @param array $added_files
+     * @param boolean $name_conflict
+     */
+    protected function add_file_to_workspace(UploadedFile $file, $user_workspace_path, &$added_files, &$name_conflict)
+    {
+        // Build the destination file path
+        $remote_filename = safe_filename($file->getClientOriginalName());
+        $destinationFilePath = $user_workspace_path . '/' . $remote_filename;
+
+        if (!file_exists($destinationFilePath)) {
+            $workspaceHelper = new WorkspaceHelper(session('user_info.email'), $this->workspace_path);
+            $workspaceHelper->moveUploadedToWorkspace($file, $destinationFilePath);
+
+            $added_files[] = $remote_filename;
+        } else {
+            $name_conflict = true;
+        }
+    }
+
+    /**
      * Copies a job output file from job's folder to user's workspace.
      *
      * @param Request $request
@@ -188,52 +188,39 @@ class WorkspaceController extends CommonController
      */
     public function add_output_file(Request $request)
     {
-        $userInfo = session('user_info');
-        $user_workspace_path = $this->workspace_path . '/' . $userInfo['email'];
-
         $form = $request->all();
 
-        // Check if all required information has been posted
-        if ((empty($form['filename'])) || (empty($form['jobid']))) {
+        // INPUT FILTERING: Check form data
+        $validator = Validator::make($form, [
+                    'filename'  => 'required|string|max:200',
+                    'jobid'     => 'required|int'
+        ]);
+
+        if ($validator->fails()) {
             $this->log_event("Filename or Job ID is missing.", "illegal");
             $response = array('message', 'Filename or Job ID is missing');
             return Response::json($response, 400);
         }
 
-        // Build the source and destination file paths
-        $job_folder = $this->jobs_path . '/' . $userInfo['email'] . '/job' . $form['jobid'];
-        $filepath = $job_folder . '/' . $form['filename'];
+        // INPUT FILTERING: Remove path from filename
+        $output_filename = basename($form['filename']);
 
-        $remote_filename = safe_filename($form['filename']);
-        $parts = pathinfo($remote_filename);
+        $user_email = session('user_info.email');
+        $user_workspace_path = $this->workspace_path . '/' . $user_email;
+
+        // CONDITION: Check that the jog output file exists
+        $filepath = $this->conditionChecker->outputFilepathExists($user_email, $form['jobid'], $output_filename);
+
+        $parts = pathinfo($output_filename);
         $remote_filename = $parts['filename'] . '_job' . $form['jobid'] . '.' . $parts['extension'];
         $new_filepath = $user_workspace_path . '/' . $remote_filename;
 
-        // Check if the output file exists
-        if (!file_exists($filepath)) {
-            $this->log_event("File could not be found.", "illegal");
-            $response = array('message', 'File could not be found');
-            return Response::json($response, 400);
-        } 
+        // CONDITION: Check that there is no file win workspace with the same
+        // name.
+        $this->conditionChecker->workspaceFilenameIsNotTaken($new_filepath);
 
-        // Checks if destination file path is taken
-        if (file_exists($new_filepath)) {
-            $this->log_event("A file with such a name already exists.", "illegal");
-            $response = array('message', 'A file with such a name already exists.');
-            return Response::json($response, 428);
-        }
-
-        // Check if the job belongs to this user
-        $result = DB::table('jobs')
-                ->where('id', $form['jobid'])
-                ->where('user_email', $userInfo['email'])
-                ->first();
-
-        if (empty($result)) {
-            $this->log_event("This job does not belong to this user.", "unathorized");
-            $response = array('message', 'This job does not belong to this user');
-            return Response::json($response, 401);
-        }
+        // ACCESS CONTROL: Check if the job belongs to this user
+        AuthorizationChecker::jobBelongsToUser($form['jobid'], $user_email);
 
         // Create the user workspace if not exists
         if (!file_exists($user_workspace_path)) { // just in case
@@ -246,7 +233,7 @@ class WorkspaceController extends CommonController
 
             // Add a record to database
             $workspace_file = new WorkspaceFile();
-            $workspace_file->user_email = $userInfo['email'];
+            $workspace_file->user_email = $user_email;
             $workspace_file->filename = $remote_filename;
             $workspace_file->filesize = filesize($filepath);
             $workspace_file->save();
@@ -271,12 +258,10 @@ class WorkspaceController extends CommonController
      */
     public function manage(Request $request)
     {
-        $userInfo = session('user_info');
-
         $data = array();
 
         // List of files that are contained in user's workspace
-        $data['workspace_files'] = WorkspaceFile::getUserFiles($userInfo['email']);
+        $data['workspace_files'] = WorkspaceFile::getUserFiles( session('user_info.email') );
 
         if ($this->is_mobile) {
             return Response::json($data, 200);
@@ -292,28 +277,26 @@ class WorkspaceController extends CommonController
      */
     public function remove_file(Request $request)
     {
-        $userInfo = session('user_info');
+        $user_email = session('user_info.email');
 
         $form = $request->all();
 
-        if (empty($form['workspace_file'])) {
+        // INPUT FILTERING: Check form data
+        $validator = Validator::make($form, ['workspace_file'  => 'required|int']);
+
+        if ($validator->fails()) {
             $errorMessage = "Workspace file removal was requested without a workspace file id.";
             return $this->illegalActionResponse($errorMessage, 400);
         }
 
-        // Retrieve file information
-        $workspaceHelper = new WorkspaceHelper($userInfo, $this->workspace_path);
-        list($file_record, $errorMessage, $errorStatus) = $workspaceHelper->fileExists($form['workspace_file']);
-
-        if (empty($file_record)) {
-            return $this->illegalActionResponse($errorMessage, $errorStatus);
-        }
+        // CONDITION: The file to remove should exist
+        $file_record = $this->conditionChecker->validWorkspaceFileId($form['workspace_file'], $user_email);
 
         DB::beginTransaction();
 
         try {
             $file_record->delete();
-            $filepath = $this->workspace_path . '/' . $userInfo['email'] . '/' . $file_record->filename;
+            $filepath = $this->workspace_path . '/' . $user_email . '/' . $file_record->filename;
             unlink($filepath);
         } catch (Exception $ex) {
             DB::rollback();
@@ -333,40 +316,32 @@ class WorkspaceController extends CommonController
      */
     public function remove_files(Request $request)
     {
-        $userInfo = session('user_info');
+        $user_email = session('user_info.email');
 
         $form = $request->all();
 
-        // Check that list of files is not empty
-        if (empty($form['files_to_delete'])) {
+        // INPUT FILTERING: Check form data
+        $validator = Validator::make($form, ['files_to_delete'  => 'required|array']);
+
+        if ($validator->fails()) {
             $errorMessage = "Input files removal was requested but no IDs found";
             return $this->illegalActionResponse($errorMessage, 400);
         }
 
         $files = $form['files_to_delete'];
         foreach ($files as $file) {
+            // Extract file ID from submitted form value
             $parts = explode('-', $file);
             $file_id = $parts[2];
 
-            // Retrieve file information
-            $workspaceHelper = new WorkspaceHelper($userInfo, $this->workspace_path);
-            list($file_record, $errorMessage, $errorStatus) = $workspaceHelper->fileExists($file_id);
-
-            if (empty($file_record)) {
-                $this->log_event($errorMessage, "error");
-                if ($this->is_mobile) {
-                    $response = array('message', $errorMessage);
-                    return Response::json($response, $errorStatus);
-                } else {
-                    return $this->illegalAction();
-                }
-            }
+            // CONDITION: The provided file ID should be valid
+            $file_record = $this->conditionChecker->validWorkspaceFileId($file_id, $user_email);
 
             DB::beginTransaction();
 
             try {
                 $file_record->delete();
-                $filepath = $this->workspace_path . '/' . $userInfo['email'] . '/' . $file_record->filename;
+                $filepath = $this->workspace_path . '/' . $user_email . '/' . $file_record->filename;
 
                 unlink($filepath);
             } catch (Exception $ex) {

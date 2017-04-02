@@ -4,8 +4,16 @@ namespace App\ClassHelpers;
 
 use Validator;
 use Illuminate\Http\Request;
+use App\Exceptions\InvalidRequestException;
+use App\Exceptions\UnexpectedErrorException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
+/**
+ * Handles validation tasks related to file uploading
+ *
+ * @license MIT
+ * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
+ */
 class UploadValidator
 {
     /**
@@ -39,13 +47,21 @@ class UploadValidator
                         $error_messages[] = $errorMessage;
                     }
                 }
+
+                if (!empty($error_messages)) {
+                    $exception = new InvalidRequestException('');
+                    $exception->setErrorsToReturn($error_messages);
+                    $exception->setUserMessage( implode('<br>', $error_messages) );
+                    throw $exception;
+                }
             }
         } catch (Exception $ex) {
-            $this->log_event($ex->getMessage(), "error");
-            return 'Unexpected error!';
+            $exception = new UnexpectedErrorException($ex->getMessage());
+            $exception->setUserMessage('Something went wrong! Please try again!');
+            throw $exception;
         }
 
-        return [$valid_files, $error_messages];
+        return $valid_files;
     }
 
     /**

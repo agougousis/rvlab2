@@ -2,7 +2,12 @@
 
 namespace App\Exceptions;
 
+use Route;
+use Session;
 use Exception;
+use Response;
+use Redirect;
+use App\Models\SystemLog;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 
@@ -44,6 +49,51 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
+        // Handle UnexpectedErrorException
+        if ($exception instanceof UnexpectedErrorException) {
+            $this->log_event($exception->getLogMessage(), "illegal");
+
+            if ($exception->isMobileRequest()) {
+                $response = array('message', $exception->getUserMessage());
+                return Response::json($response, $exception->getHttpCode());
+            } else {
+                Session::flash('toastr', array('error', $exception->getUserMessage()));
+                return Redirect::back();
+            }
+        }
+
+        // Handle AuthorizationException
+        if ($exception instanceof AuthorizationException) {
+            $this->log_event($exception->getLogMessage(), "illegal");
+
+            if ($exception->displayToastr()) {
+                Session::flash('toastr', array('error', $exception->getUserMessage()));
+            }
+
+            $response = array('message', $exception->getUserMessage());
+            return Response::json($response, $exception->getHttpCode());
+        }
+
+        // Handle InvalidRequestException
+        if ($exception instanceof InvalidRequestException) {
+            $this->log_event($exception->getLogMessage(), "invalid");
+
+            if ($exception->displayToastr()) {
+                Session::flash('toastr', array('error', $exception->getUserMessage()));
+            }
+
+            if ($exception->isMobileRequest()) {
+                $response = array('message', $exception->getUserMessage());
+                return Response::json($response, $exception->getHttpCode());
+            } else {
+                if (!empty($errors = $exception->getErrorsToReturn())) {
+                    return Redirect::back()->withInput()->withErrors($errors);
+                }
+
+                return Redirect::to('/');
+            }
+        }
+
         return parent::render($request, $exception);
     }
 
@@ -61,5 +111,27 @@ class Handler extends ExceptionHandler
         }
 
         return redirect()->guest('login');
+    }
+
+    /**
+     * Saves a log to the database
+     *
+     * @param string $message
+     * @param string $category
+     */
+    protected function log_event($message, $category)
+    {
+
+        $db_message = $message;
+        $route = explode('@', Route::currentRouteName());
+
+        $log = new SystemLog();
+        $log->when = date("Y-m-d H:i:s");
+        $log->user_email = session('user_info.email');
+        $log->controller = (!empty($route[0])) ? $route[0] : 'unknown';
+        $log->method = (!empty($route[0])) ? $route[1] : 'unknown';
+        $log->message = $db_message;
+        $log->category = $category;
+        $log->save();
     }
 }
