@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Route;
 use Response;
+use Redirect;
 use App\Models\Setting;
 use App\Models\SystemLog;
 use App\Http\Controllers\Controller;
@@ -127,6 +128,20 @@ class CommonController extends Controller
         } else {
             Session::flash('toastr', array('error', $userMessage));
             return Redirect::back();
+        }
+    }
+
+    /**
+     * Produces a typical response for successful requests
+     *
+     * @return Response|RedirectResponse
+     */
+    protected function okResponse()
+    {
+        if ($this->is_mobile) {
+            return Response::json(array(), 200);
+        } else {
+            return Redirect::to('/');
         }
     }
 
