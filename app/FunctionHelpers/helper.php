@@ -3,6 +3,31 @@
 use Illuminate\Http\Request;
 
 /**
+     * Cleans a CSV column name.
+     *
+     * It removes from column name the new line character and quotes, replaces
+     * any character that is not alphanumeric (or underscore) with dot, trims any
+     * leading or trailing space and if the remaining string is comprised only by
+     * digits it adds an 'X' at the front.
+     * an 'X' character
+     *
+     * @param string $header_value
+     * @return string
+     */
+    function clean_csv_header($header_value)
+    {
+        $header_value = trim(preg_replace('/\r\n|\r|\n/', '', $header_value));
+        $header_value = trim(preg_replace('/\"/', '', $header_value));
+        $header_value = trim(preg_replace('/[^A-Za-z0-9\_]/', '.', $header_value));
+        // If first character is number, put an "X" in front of everything
+        if (is_numeric(substr($header_value, 0, 1))) {
+            $header_value = "X" . $header_value;
+        }
+
+        return $header_value;
+    }
+
+/**
  * Filter an associative array keeping only the entries with specific keys
  *
  * @param Illuminate\Http\Request $request

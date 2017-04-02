@@ -328,13 +328,8 @@ class JobController extends CommonController
         $fullpath = $job_folder . '/' . $filename;
 
         if (!file_exists($fullpath)) {
-            $this->log_event("Trying to retrieve non existent file.", "illegal");
-            if ($this->is_mobile) {
-                $response = array('message', 'Trying to retrieve non existent file!');
-                return Response::json($response, 400);
-            } else {
-                return $this->illegalAction();
-            }
+            $errorMessage = "Trying to retrieve non existent file.";
+            return $this->illegalActionResponse($errorMessage, 400);
         }
 
         // Check if this job belongs to this user

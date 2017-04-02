@@ -35,10 +35,10 @@ Route::post('/workspace/remove_files', 'WorkspaceController@remove_files');
 Route::post('/workspace/add_output_file', 'WorkspaceController@add_output_file');
 Route::post('/workspace/add_example_data', 'WorkspaceController@add_example_data');
 
-Route::get('/workspace/convert2r/{filename}', 'WorkspaceController@convert2r_tool');
-Route::post('/workspace/tab_status', 'WorkspaceController@change_tab_status');
+Route::get('/workspace/convert2r/{filename}', 'WorkspaceAjaxController@convert2r_tool');
+Route::post('/workspace/tab_status', 'WorkspaceAjaxController@change_tab_status');
 
-Route::get('/workspace/user_storage_utilization', 'WorkspaceController@user_storage_utilization');
+Route::get('/workspace/user_storage_utilization', 'WorkspaceAjaxController@user_storage_utilization');
 
 Route::post('/workspace/vliz_import/{token}/{jobid}', 'ExternalController@vliz_import');
 // Help Routes

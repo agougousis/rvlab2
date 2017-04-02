@@ -94,6 +94,43 @@ class CommonController extends Controller
     }
 
     /**
+     * Produces a response for an illegal action
+     *
+     * @param string $errorMessage
+     * @param int $errorStatus
+     * @return Response
+     */
+    protected function illegalActionResponse($errorMessage, $errorStatus)
+    {
+        $this->log_event($errorMessage, "error");
+        if ($this->is_mobile) {
+            $response = array('message', $errorMessage);
+            return Response::json($response, $errorStatus);
+        } else {
+            return $this->illegalAction();
+        }
+    }
+
+    /**
+     * Produces a response for a server-side unexpected error
+     *
+     * @param string $logMessage
+     * @param string $userMessage
+     * @return RedirectResponse
+     */
+    protected function unexpectedErrorResponse($logMessage, $userMessage)
+    {
+        $this->log_event($logMessage, "error");
+        if ($this->is_mobile) {
+            $response = array('message', $userMessage);
+            return Response::json($response, 500);
+        } else {
+            Session::flash('toastr', array('error', $userMessage));
+            return Redirect::back();
+        }
+    }
+
+    /**
      * Displays a page with a message about unexpected error.
      *
      * @return View
