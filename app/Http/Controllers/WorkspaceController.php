@@ -94,9 +94,7 @@ class WorkspaceController extends CommonController
             $workspaceHelper->moveExampleToWorkspace('Macrobenthos_Crustacea_Adundance.csv');
             $workspaceHelper->moveExampleToWorkspace('Macrobenthos_Femilies_Adundance.csv');
 
-            Session::flash('toastr', array('success', 'Files added to workspace successfully!'));
-
-            return $this->okResponse();
+            return $this->okResponse('Files added to workspace successfully!');
         } catch (\Exception $ex) {
             $exception = new UnexpectedErrorException($ex->getMessage());
             $exception->setUserMessage('Something went wrong! Some files may not have been added to your workspace.');
@@ -305,8 +303,7 @@ class WorkspaceController extends CommonController
 
         DB::commit();
 
-        Session::flash('toastr', array('success', 'File removed from workspace successfully!'));
-        return $this->okResponse();
+        return $this->okResponse('File removed from workspace successfully!');
     }
 
     /**
@@ -352,7 +349,6 @@ class WorkspaceController extends CommonController
             DB::commit();
         }
 
-        Session::flash('toastr', array('success', 'Files removed from workspace successfully!'));
-        return $this->okResponse();
+        return $this->okResponse('Files removed from workspace successfully!');
     }
 }

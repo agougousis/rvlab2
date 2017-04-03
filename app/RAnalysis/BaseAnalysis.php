@@ -79,14 +79,21 @@ abstract class BaseAnalysis
      */
     protected $formValidationRules;
 
-    public function __construct($form, $job_id, $job_folder, $remote_job_folder, $user_workspace, $remote_user_workspace, &$inputs, &$params)
+    public function __construct($form, $job_id, $user_email, &$inputs, &$params)
     {
+        $workspace_path = config('rvlab.workspace_path');
+        $jobs_path = config('rvlab.jobs_path');
+        $remote_jobs_path = config('rvlab.remote_jobs_path');
+        $remote_workspace_path = config('rvlab.remote_workspace_path');
+
+        $user_jobs_path = $jobs_path . '/' . $user_email;
+
         $this->form = $form;
         $this->job_id = $job_id;
-        $this->job_folder = $job_folder;
-        $this->remote_job_folder = $remote_job_folder;
-        $this->user_workspace = $user_workspace;
-        $this->remote_user_workspace = $remote_user_workspace;
+        $this->job_folder = $user_jobs_path . '/' . $job_id;
+        $this->remote_job_folder = $remote_jobs_path . '/' . $user_email . '/' . $job_id;
+        $this->user_workspace = $workspace_path . '/' . $user_email;
+        $this->remote_user_workspace = $remote_workspace_path . '/' . $user_email;
         $this->params = &$params;
         $this->inputs = &$inputs;
 

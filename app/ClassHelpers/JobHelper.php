@@ -90,10 +90,14 @@ class JobHelper
      * @param string $jobFolder
      * @return null
      */
-    public function deleteJobDirectory($jobId, $jobFolder)
+    public function deleteJob($jobId, $jobFolder)
     {
         // Delete the job record
-        Job::where('id', $jobId)->delete();
+        $job = Job::where('id', $jobId)->first();
+
+        if (!empty($job)) {
+            $job->delete();
+        }
 
         // Delete folder if created
         if (file_exists($jobFolder)) {

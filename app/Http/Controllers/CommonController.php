@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Route;
 use Response;
 use Redirect;
+use Session;
 use App\Models\Setting;
 use App\Models\SystemLog;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Route;
 
 /**
  * Builds functionality related to access control and logging
@@ -136,11 +137,14 @@ class CommonController extends Controller
      *
      * @return Response|RedirectResponse
      */
-    protected function okResponse()
+    protected function okResponse($toastr = null)
     {
         if ($this->is_mobile) {
             return Response::json(array(), 200);
         } else {
+            if (!empty($toastr)) {
+                Session::flash('toastr', array('success', $toastr));
+            }
             return Redirect::to('/');
         }
     }

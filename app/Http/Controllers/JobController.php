@@ -11,6 +11,8 @@ use Validator;
 use App\Models\Job;
 use App\Models\WorkspaceFile;
 use App\ClassHelpers\JobHelper;
+use App\ClassHelpers\ConditionsChecker;
+use App\ClassHelpers\AuthorizationChecker;
 use App\Http\Controllers\CommonController;
 use Illuminate\Http\Request;
 
@@ -28,6 +30,7 @@ class JobController extends CommonController
     protected $remote_jobs_path;
     protected $remote_workspace_path;
     protected $jobHelper;
+    private $conditionChecker;
 
     public function __construct(JobHelper $directoryManager)
     {
@@ -39,6 +42,8 @@ class JobController extends CommonController
         $this->jobs_path = config('rvlab.jobs_path');
         $this->remote_jobs_path = config('rvlab.remote_jobs_path');
         $this->remote_workspace_path = config('rvlab.remote_workspace_path');
+
+        $this->conditionChecker = new ConditionsChecker($this->jobs_path, $this->workspace_path);
 
         // Check if cluster storage has been mounted to web server
         if (!$this->check_storage()) {
@@ -94,7 +99,7 @@ class JobController extends CommonController
             $data['is_admin'] = session('is_admin');
             $data['refresh_rate'] = $this->system_settings['status_refresh_rate_page'];
             $data['timezone'] = $userInfo['timezone'];
-            //$data['refresh_rate'] = $this->system_settings['status_refresh_rate_page'];
+
             // Check if this we load the page after delete_many_jobs() has been called
             if (Session::has('deletion_info')) {
                 $data['deletion_info'] = Session::get('deletion_info');
@@ -128,90 +133,70 @@ class JobController extends CommonController
     {
         $form = $request->all();
 
-        if (!empty($form['jobs_for_deletion'])) {
-            $job_list_string = $form['jobs_for_deletion'];
-            $job_list = explode(';', $job_list_string);
-
-            $total_success = true;
-            $error_messages = array();
-            $count_deleted = 0;
-
-            foreach ($job_list as $job_id) {
-                $result = $this->delete_one_job($job_id);
-                if ($result['deleted']) {
-                    $count_deleted++;
-                } else {
-                    $total_success = false;
-                    $error_messages[] = $result['message'];
-                }
-            }
-
-            $deletion_info = array(
-                'total' => count($job_list),
-                'deleted' => $count_deleted,
-                'messages' => $error_messages
-            );
-
-            if ($this->is_mobile) {
-                return Response::json($deletion_info, 200);
-            } else {
-                return Redirect::to('/')->with('deletion_info', $deletion_info);
-            }
-        } else {
+        // INPUT FILTERING: Basic submitted data validation
+        if (empty($form['jobs_for_deletion'])) {
             return Redirect::to('/');
+        }
+
+        $job_list_string = $form['jobs_for_deletion'];
+        $job_list = explode(';', $job_list_string);
+
+        // CONDITION: Check the existance and integrity of all jobs related
+        // to provided job IDs.
+        $job_records = $this->conditionsChecker->jobsAreDeletable($job_list);
+
+        // ACCESS CONTROL: Jobs related to provided job IDs should be owned by
+        // the logged in user
+        AuthorizationChecker::jobsBelongToUser($job_records, session('user_info.email', 'delete_many_jobs'));
+
+        $total_success = true;
+        $error_messages = array();
+        $count_deleted = 0;
+
+        foreach ($job_records as $job) {
+            $result = $this->delete_one_job($job);
+            if ($result['deleted']) {
+                $count_deleted++;
+            } else {
+                $total_success = false;
+                $error_messages[] = $result['message'];
+            }
+        }
+
+        $deletion_info = array(
+            'total' => count($job_list),
+            'deleted' => $count_deleted,
+            'messages' => $error_messages
+        );
+
+        if ($this->is_mobile) {
+            return Response::json($deletion_info, 200);
+        } else {
+            return Redirect::to('/')->with('deletion_info', $deletion_info);
         }
     }
 
     /**
      * Deletes a specific job
      *
-     * @param int $job_id
+     * @param Job $job
      * @return array
      */
-    protected function delete_one_job($job_id)
+    protected function delete_one_job($job)
     {
-        $userInfo = session('user_info');
-        $job = Job::find($job_id);
-        $user_email = $userInfo['email'];
-
-        // Check if this job exists
-        if (empty($job)) {
-            $this->log_event("User tried to delete a job that does not exist.", "illegal");
-            return array(
-                'deleted' => false,
-                'message' => 'You have tried to delete a job (' . $job_id . ') that does not exist'
-            );
-        }
-
-        // Check if this job belongs to this user
-        if ($job->user_email != $user_email) {
-            $this->log_event("User tried to delete a job that does not belong to him.", "unauthorized");
-            return array(
-                'deleted' => false,
-                'message' => 'You have tried to delete a job that does not belong to you.'
-            );
-        }
-
-        // Check if the job has finished running
-        if (in_array($job->status, array('running', 'queued', 'submitted'))) {
-            $this->log_event("User tried to delete a job that is not finished.", "illegal");
-            return array(
-                'deleted' => false,
-                'message' => 'You have tried to delete a job (' . $job_id . ') that is not finished.'
-            );
-        }
+        $user_email = session('user_info.email');
 
         try {
             // Delete job record
-            Job::where('id', $job_id)->delete();
+            $job->delete();
 
             // Delete job files
-            $job_folder = $this->jobs_path . '/' . $user_email . '/job' . $job_id;
+            $job_folder = $this->jobs_path . '/' . $user_email . '/job' . $job->id;
             if (!delTree($job_folder)) {
                 $this->log_event('Folder ' . $job_folder . ' could not be deleted!', "error");
                 return array(
                     'deleted' => false,
-                    'message' => 'Unexpected error occured during job folder deletion (' . $job_id . ').'
+                    'message' => 'Unexpected error occured during job folder deletion (' . $job->id . ').'
                 );
             }
 
@@ -220,10 +205,10 @@ class JobController extends CommonController
                 'message' => ''
             );
         } catch (Exception $ex) {
-            $this->log_event("Error occured during deletion of job" . $job_id . ". Message: " . $ex->getMessage(), "error");
+            $this->log_event("Error occured during deletion of job" . $job->id . ". Message: " . $ex->getMessage(), "error");
             return array(
                 'deleted' => false,
-                'message' => 'Unexpected error occured during deletion of a job (' . $job_id . ').'
+                'message' => 'Unexpected error occured during deletion of a job (' . $job->id . ').'
             );
         }
     }
@@ -324,46 +309,42 @@ class JobController extends CommonController
      */
     public function get_job_file($job_id, $filename)
     {
-        $userInfo = session('user_info');
-        $user_email = $userInfo['email'];
-        $job_folder = $this->jobs_path . '/' . $user_email . '/job' . $job_id;
-        $fullpath = $job_folder . '/' . $filename;
+        $clean_filename = safe_filename( basename($filename) );
 
-        if (!file_exists($fullpath)) {
-            $errorMessage = "Trying to retrieve non existent file.";
-            return $this->illegalActionResponse($errorMessage, 400);
+        $user_email = session('user_info.email');
+
+        // INPUT FILTERING: Check form data
+        $validator = Validator::make(['job_id' => $job_id, 'filename' => $clean_filename], [
+            'job_id'    => 'required|int',
+            'filename'  => 'required|string|max:200'
+        ]);
+
+        if ($validator->fails()) {
+            return $this->illegalActionResponse('Invalid file name or job ID!', 400);
         }
 
-        // Check if this job belongs to this user
-        $result = DB::table('jobs')
-                ->where('id', $job_id)
-                ->where('user_email', $user_email)
-                ->first();
+        // CONDITION: Job file exists
+        $fullpath = $this->conditionChecker->jobFileExists($user_email, $job_id, $clean_filename);
 
-        if (!empty($result)) {
-            $parts = pathinfo($filename);
-            $new_filename = $parts['filename'] . '_job' . $job_id . '.' . $parts['extension'];
+        // ACCESS CONTROL: The job, which the requested file is part of, belongs
+        // to the logged in user (and so, it exists!)
+        AuthorizationChecker::jobBelongsToUser($job_id, $user_email);
 
-            switch ($parts['extension']) {
-                case 'png':
-                    return response()->download($fullpath, $new_filename, ['Content-Type' => 'image/png']);
-                    break;
-                case 'csv':
-                    return response()->download($fullpath, $new_filename, ['Content-Type' => 'text/plain', 'Content-Disposition' => 'attachment; filename=' . $new_filename]);
-                    break;
-                case 'nwk':
-                case 'pdf':
-                    return response()->download($fullpath, $new_filename, ['Content-Type' => 'application/octet-stream']);
-                    break;
-            }
-        } else {
-            $this->log_event("Trying to retrieve a file that does not belong to a user's job.", "unauthorized");
-            if ($this->is_mobile) {
-                $response = array('message', "Trying to retrieve a file that does not belong to a user's job");
-                return Response::json($response, 401);
-            } else {
-                abort(403, 'Unauthorized action.');
-            }
+        // Download the file
+        $parts = pathinfo($clean_filename);
+        $new_filename = $parts['filename'] . '_job' . $job_id . '.' . $parts['extension'];
+
+        switch ($parts['extension']) {
+            case 'png':
+                return response()->download($fullpath, $new_filename, ['Content-Type' => 'image/png']);
+                break;
+            case 'csv':
+                return response()->download($fullpath, $new_filename, ['Content-Type' => 'text/plain', 'Content-Disposition' => 'attachment; filename=' . $new_filename]);
+                break;
+            case 'nwk':
+            case 'pdf':
+                return response()->download($fullpath, $new_filename, ['Content-Type' => 'application/octet-stream']);
+                break;
         }
     }
 
@@ -383,19 +364,16 @@ class JobController extends CommonController
 
         $this->jobHelper->basicFormValidation($form);
 
+        $job = $this->createBasicJobRecord($user_email, $form);
+
+        // Get the job id and create the job folder
+        $job_id = 'job' . $job->id;
+
+        // Define all the required paths
+        $user_jobs_path = $this->jobs_path . '/' . $user_email;
+        $job_folder = $user_jobs_path . '/' . $job_id;
+
         try {
-            $job = $this->createBasicJobRecord($user_email, $form);
-
-            // Get the job id and create the job folder
-            $job_id = 'job' . $job->id;
-
-            // Define all the required paths
-            $user_jobs_path = $this->jobs_path . '/' . $user_email;
-            $job_folder = $user_jobs_path . '/' . $job_id;
-            $user_workspace = $this->workspace_path . '/' . $user_email;
-            $remote_job_folder = $this->remote_jobs_path . '/' . $user_email . '/' . $job_id;
-            $remote_user_workspace = $this->remote_workspace_path . '/' . $user_email;
-
             $this->jobHelper->buildJobDirectories($job_id, $user_email);
 
             // Run the function
@@ -403,9 +381,9 @@ class JobController extends CommonController
             $inputs = "";
 
             $class = "\App\RAnalysis" . "\\" . strtolower($form['function']);
-            $analysis = new $class($form, $job_id, $job_folder, $remote_job_folder, $user_workspace, $remote_user_workspace, $inputs, $params);
+            $analysis = new $class($form, $job_id, $user_email, $inputs, $params);
             $submitted = $analysis->run();
-            //$submitted = $this->{$low_function}($form,$job_id,$job_folder,$remote_job_folder,$user_workspace,$remote_user_workspace,$inputs,$params);
+
             // Handle submission failure
             if (!$submitted) {
                 return $this->responseAfterFailure('Function ' . $form['function'] . ' failed!', 'Job submission failed. ', $job_id, $job_folder);
@@ -413,23 +391,16 @@ class JobController extends CommonController
 
             $this->updateJobAfterSubmission($job, $job_folder, $inputs, $params);
         } catch (Exception $ex) {
+            $this->jobHelper->deleteJob($job_id, $job_folder);
+
             $this->errorMessage = 'Job submission failed! ' . $this->errorMessage;
 
-            if ($job_id) {
-                return $this->responseAfterFailure($ex->getMessage(), $this->errorMessage, $job_id, $job_folder);
-            } else {
-                return $this->responseAfterFailure($ex->getMessage(), $this->errorMessage);
-            }
+            return $this->responseAfterFailure($ex->getMessage(), $this->errorMessage, $job_id, $job_folder);
         }
 
         Session::put('last_function_used', $form['function']);
 
-        if ($this->is_mobile) {
-            return Response::json(array(), 200);
-        } else {
-            Session::flash('toastr', array('success', 'The job submitted successfully!'));
-            return Redirect::to('/');
-        }
+        return $this->okResponse('The job submitted successfully!');
     }
 
     /**
@@ -462,7 +433,7 @@ class JobController extends CommonController
     {
         // Delete the job directory, if created
         if ($jogId) {
-            $this->jobHelper->deleteJobDirectory($jogId, $job_folder);
+            $this->jobHelper->deleteJob($jogId, $job_folder);
         }
 
         // Check if there is something to log

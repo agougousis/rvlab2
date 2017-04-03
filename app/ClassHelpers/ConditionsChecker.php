@@ -3,6 +3,7 @@
 
 namespace App\ClassHelpers;
 
+use App\Models\Job;
 use App\Models\WorkspaceFile;
 use App\Exceptions\InvalidRequestException;
 use App\Exceptions\UnexpectedErrorException;
@@ -22,6 +23,42 @@ class ConditionsChecker
     {
         $this->workspace_path = $workspace_path;
         $this->jobs_path = $jobs_path;
+    }
+
+    /**
+     * Checks that the jobs represented by the provided job IDs can be deleted
+     *
+     * @param array $jobIdList
+     * @return array  An array of App\Models\Job
+     * @throws InvalidRequestException
+     */
+    public function jobsAreDeletable($jobIdList)
+    {
+        $job_records = [];
+
+        foreach($jobIdList as $job_id) {
+            $job = Job::find($job_id);
+
+            // Check if this job exists
+            if (empty($job)) {
+                $exception = new InvalidRequestException("The user tried to delete a job that does not exist (jod ID = $job_id).");
+                $exception->setUserMessage('You have tried to delete a job that does not exist');
+                $exception->enableToastr();
+                throw $exception;
+            }
+
+            // Check if the job has finished running
+            if (in_array($job->status, array('running', 'queued', 'submitted'))) {
+                $exception = new InvalidRequestException("The user tried to delete a job that is not finished.");
+                $exception->setUserMessage('You cannot delete a job that is not finished.');
+                $exception->enableToastr();
+                throw $exception;
+            }
+
+            $job_records[] = $job;
+        }
+
+        return $job_records;
     }
 
     /**
@@ -53,6 +90,29 @@ class ConditionsChecker
         if (!file_exists($filepath)) {
             $exception = new UnexpectedErrorException("A workspace file is mentioned in database but does not exist in filesystem. File path = " . $filepath);
             $exception->setUserMessage('Something went wrong! The filename you provided could not be found.');
+            throw $exception;
+        }
+
+        return $filepath;
+    }
+
+    /**
+     * Checks that the specified job file exists
+     *
+     * @param string $user_email
+     * @param int $job_id
+     * @param string $filename
+     * @return string
+     * @throws InvalidRequestException
+     */
+    public function jobFileExists($user_email, $job_id, $filename)
+    {
+        $job_folder = $this->jobs_path . '/' . $user_email . '/job' . $job_id;
+        $filepath = $job_folder . '/' . $filename;
+
+        if (!file_exists($filepath)) {
+            $exception = new InvalidRequestException("Trying to retrieve non existent job file at $filepath");
+            $exception->setUserMessage('The requested file could not be found.');
             throw $exception;
         }
 
