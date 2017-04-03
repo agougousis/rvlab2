@@ -9,9 +9,8 @@ use Redirect;
 use Response;
 use Validator;
 use App\Models\Job;
-use App\Models\JobsLog;
 use App\Models\WorkspaceFile;
-use App\ClassHelpers\RvlabParser;
+use App\ClassHelpers\JobHelper;
 use App\Http\Controllers\CommonController;
 use Illuminate\Http\Request;
 
@@ -28,10 +27,13 @@ class JobController extends CommonController
     protected $jobs_path;
     protected $remote_jobs_path;
     protected $remote_workspace_path;
+    protected $jobHelper;
 
-    public function __construct()
+    public function __construct(JobHelper $directoryManager)
     {
         parent::__construct();
+
+        $this->jobHelper = $directoryManager;
 
         $this->workspace_path = config('rvlab.workspace_path');
         $this->jobs_path = config('rvlab.jobs_path');
@@ -366,116 +368,6 @@ class JobController extends CommonController
     }
 
     /**
-     *
-     * @param int $job_id Refreshes the status of a specific job
-     *
-     * @param int $job_id
-     * @return void
-     */
-    protected function refresh_single_status($job_id)
-    {
-        $job = Job::find($job_id);
-
-        $job_folder = $this->jobs_path . '/' . $job->user_email . '/job' . $job_id;
-        $pbs_filepath = $job_folder . '/job' . $job->id . '.pbs';
-        $submitted_filepath = $job_folder . '/job' . $job->id . '.submitted';
-
-        if (file_exists($pbs_filepath)) {
-            $status = 'submitted';
-        } else if (!file_exists($submitted_filepath)) {
-            $status = 'creating';
-        } else {
-            $status_file = $job_folder . '/job' . $job_id . '.jobstatus';
-            $status_info = file($status_file);
-            $status_parts = preg_split('/\s+/', $status_info[0]);
-            $status_message = $status_parts[8];
-            switch ($status_message) {
-                case 'Q':
-                    $status = 'queued';
-                    break;
-                case 'R':
-                    $status = 'running';
-                    $started_at = $status_parts[3] . ' ' . $status_parts[4];
-                    break;
-                case 'ended':
-                    $status = 'completed';
-                    $started_at = $status_parts[3] . ' ' . $status_parts[4];
-                    $completed_at = $status_parts[5] . ' ' . $status_parts[6];
-                    break;
-                case 'ended_PBS_ERROR':
-                    $status = 'failed';
-                    $started_at = $status_parts[3] . ' ' . $status_parts[4];
-                    $completed_at = $status_parts[5] . ' ' . $status_parts[6];
-                    break;
-            }
-
-            switch ($job->function) {
-                case 'bict':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                case 'parallel_taxa2dist':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                case 'parallel_postgres_taxa2dist':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                case 'parallel_anosim':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                case 'parallel_mantel':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                case 'parallel_taxa2taxon':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                case 'parallel_permanova':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                case 'parallel_bioenv':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                case 'parallel_simper':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                default:
-                    $fileToParse = '/job' . $job_id . '.Rout';
-            }
-
-            // If job has run, check for R errors
-            if ($status == 'completed') {
-                $parser = new RvlabParser();
-                $parser->parse_output($job_folder . $fileToParse);
-                if ($parser->hasFailed()) {
-                    $status = 'failed';
-                    //$this->log_event(implode(' - ',$parser->getOutput()),"info");
-                }
-            }
-        }
-
-        $job->status = $status;
-        $job->save();
-
-        // IF job was completed successfully use it for statistics
-        if ($status == 'completed') {
-            $job_log = new JobsLog();
-            $job_log->id = $job->id;
-            $job_log->user_email = $job->user_email;
-            $job_log->function = $job->function;
-            $job_log->status = $job->status;
-            $job_log->submitted_at = $job->submitted_at;
-            $job_log->started_at = $job->started_at;
-            $job_log->completed_at = $job->completed_at;
-            $job_log->jobsize = $job->jobsize;
-            $job_log->inputs = $job->inputs;
-            $job_log->parameters = $job->parameters;
-            $job_log->save();
-        } else if (($status == 'running') && (empty($job_log->started_at))) {
-            $job_log->started_at = $job->started_at;
-            $job_log->save();
-        }
-    }
-
-    /**
      * Submits a new job
      *
      * Handles the basic functionlity of submission that is not related to a specific R vLab function
@@ -485,25 +377,26 @@ class JobController extends CommonController
      */
     public function submit(Request $request)
     {
+
+        $user_email = session('user_info.email');
+        $form = $request->all();
+
+        $this->jobHelper->basicFormValidation($form);
+
         try {
-            $userInfo = session('user_info');
-            $form = $request->all();
-
-            $this->basicFormValidation($form);
-
-            $job = $this->createBasicJobRecord($userInfo['email'], $form);
+            $job = $this->createBasicJobRecord($user_email, $form);
 
             // Get the job id and create the job folder
             $job_id = 'job' . $job->id;
 
             // Define all the required paths
-            $user_jobs_path = $this->jobs_path . '/' . $userInfo['email'];
+            $user_jobs_path = $this->jobs_path . '/' . $user_email;
             $job_folder = $user_jobs_path . '/' . $job_id;
-            $user_workspace = $this->workspace_path . '/' . $userInfo['email'];
-            $remote_job_folder = $this->remote_jobs_path . '/' . $userInfo['email'] . '/' . $job_id;
-            $remote_user_workspace = $this->remote_workspace_path . '/' . $userInfo['email'];
+            $user_workspace = $this->workspace_path . '/' . $user_email;
+            $remote_job_folder = $this->remote_jobs_path . '/' . $user_email . '/' . $job_id;
+            $remote_user_workspace = $this->remote_workspace_path . '/' . $user_email;
 
-            $this->buildUserDirectories($job_folder, $user_workspace, $user_jobs_path);
+            $this->jobHelper->buildJobDirectories($job_id, $user_email);
 
             // Run the function
             $params = "";
@@ -551,7 +444,7 @@ class JobController extends CommonController
     {
         $job->status = 'submitted';
         $job->jobsize = directory_size($job_folder);
-        $job->inputs = $this->inputFilesWithIds($inputs);
+        $job->inputs = $this->jobHelper->addIdsToInputFiles($inputs);
         $job->parameters = trim($params, ";");
         $job->save();
     }
@@ -569,7 +462,7 @@ class JobController extends CommonController
     {
         // Delete the job directory, if created
         if ($jogId) {
-            $this->deleteJobDirectory($jogId, $job_folder);
+            $this->jobHelper->deleteJobDirectory($jogId, $job_folder);
         }
 
         // Check if there is something to log
@@ -607,95 +500,5 @@ class JobController extends CommonController
         $job->save();
 
         return $job;
-    }
-
-    /**
-     * Adds the file record IDs to a string that initially contains only the
-     * filenames.
-     *
-     * @param string $inputs
-     * @return string
-     */
-    protected function inputFilesWithIds($inputs)
-    {
-        $userInfo = session('user_info');
-
-        $input_ids = array();
-        $inputs_list = explode(';', $inputs);
-        foreach ($inputs_list as $input) {
-            $file_record = WorkspaceFile::whereRaw('BINARY filename LIKE ?', array($input))->where('user_email', $userInfo['email'])->first();
-            $input_ids[] = $file_record->id . ":" . $input;
-        }
-        return implode(';', $input_ids);
-    }
-
-    /**
-     * Deletes a job directory
-     *
-     * @param int $jobId
-     * @param string $jobFolder
-     * @return null
-     */
-    protected function deleteJobDirectory($jobId, $jobFolder)
-    {
-        // Delete the job record
-        Job::where('id', $jobId)->delete();
-
-        // Delete folder if created
-        if (file_exists($jobFolder)) {
-            if (!delTree($jobFolder)) {
-                $this->log_event('Folder ' . $jobFolder . ' could not be deleted after failed job submission!', "error");
-            }
-        }
-    }
-
-    /**
-     * Makes a basic validation to the submitted form.
-     *
-     * This validation is analysis-agnostic and checks for input that is
-     * required for all kinds of analysis.
-     *
-     * @throws \Exception
-     */
-    protected function basicFormValidation($form)
-    {
-        $validator = Validator::make($form, [
-                    'function' => 'required|string|max:250',
-                    'box' => 'required'
-        ]);
-
-        if ($validator->fails()) {
-            $this->errorMessage .= implode('<br>', $validator->errors()->all());
-            throw new \Exception('');
-        }
-    }
-
-    /**
-     * Creates user directories in case they do not exist
-     *
-     * @param string $job_folder
-     * @param string $user_workspace
-     * @param string $user_jobs_path
-     * @throws \Exception
-     */
-    protected function buildUserDirectories($job_folder, $user_workspace, $user_jobs_path)
-    {
-        // Create the required folders if they are not exist
-        if (!file_exists($user_workspace)) {
-            if (!mkdir($user_workspace)) {
-                throw new \Exception('User workspace directory could not be created!');
-            }
-        }
-        if (!file_exists($user_jobs_path)) {
-            if (!mkdir($user_jobs_path)) {
-                throw new \Exception('User jobs directory could not be created!');
-            }
-        }
-
-        if (!file_exists($job_folder)) {
-            if (!mkdir($job_folder)) {
-                throw new \Exception('Job directory could not be created!');
-            }
-        }
     }
 }

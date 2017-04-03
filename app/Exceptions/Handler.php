@@ -90,7 +90,7 @@ class Handler extends ExceptionHandler
                     return Redirect::back()->withInput()->withErrors($errors);
                 }
 
-                return Redirect::to('/');
+                return Redirect::back();
             }
         }
 

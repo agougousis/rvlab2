@@ -4,7 +4,6 @@
 namespace App\ClassHelpers;
 
 use App\Models\WorkspaceFile;
-use App\ClassHelpers\WorkspaceHelper;
 use App\Exceptions\InvalidRequestException;
 use App\Exceptions\UnexpectedErrorException;
 

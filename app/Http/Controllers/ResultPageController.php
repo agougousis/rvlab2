@@ -17,11 +17,6 @@ use App\Http\Controllers\JobController;
  */
 class ResultPageController extends JobController
 {
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
     /**
      * Displays the results page of a job
      *
@@ -30,9 +25,9 @@ class ResultPageController extends JobController
      */
     public function job_page($job_id)
     {
-        $userInfo = session('user_info');
+        $user_email = session('user_info.email');
 
-        $data['job'] = $job = Job::where('user_email', $userInfo['email'])->where('id', $job_id)->first();
+        $data['job'] = $job = Job::where('user_email', $user_email)->where('id', $job_id)->first();
 
         // In case job id wasn't found
         if (empty($job)) {
@@ -44,7 +39,7 @@ class ResultPageController extends JobController
 
         // If job execution has not finished, try to update its status
         if (in_array($job->status, array('submitted', 'running', 'queued'))) {
-            $this->refresh_single_status($job_id);
+            $this->jobHelper->refresh_job_status($job_id);
         }
 
         $data['function'] = $job->function;
@@ -73,7 +68,7 @@ class ResultPageController extends JobController
             }
         }
 
-        $job_folder = $this->jobs_path . '/' . $userInfo['email'] . '/job' . $job_id;
+        $job_folder = $this->jobs_path . '/' . $user_email . '/job' . $job_id;
 
         // Build the result page for this job
         return $this->build_result_page($job, $job_folder, $inputs);
