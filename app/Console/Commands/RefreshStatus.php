@@ -58,7 +58,7 @@ class RefreshStatus extends Command
                 $jobHelper->refreshJobStatus($job);
             }
         } catch (\Exception $ex) {
-            $this->save_log($ex->getMessage(), 'error');
+            $this->saveLog($ex->getMessage(), 'error');
         }
     }
 

@@ -47,7 +47,7 @@ class StoragePolicy extends Command
     public function handle()
     {
         // Calculate storage utilization
-        $rvlab_storage_limit = Setting::where('name', 'rvlab_storage_limit')->first();
+        $rvlab_storage_limit = Setting::where('sname', 'rvlab_storage_limit')->first();
 
         $jobs_path = config('rvlab.jobs_path');
         $jobs_size = directory_size($jobs_path); // in KB
@@ -60,10 +60,10 @@ class StoragePolicy extends Command
 
         // If we are running out of space, delete jobs from users that have
         // exceeded their personal limit
-        $max_users_suported = Setting::where('name', 'max_users_suported')->first();
+        $max_users_suported = Setting::where('sname', 'max_users_supported')->first();
         $user_soft_limit = $rvlab_storage_limit->value / $max_users_suported->value;
 
-        if ($utilization > 10) {
+        if ($utilization > 20) {
             // Find R vLab active users
             $users_with_inputs = WorkspaceFile::select('user_email')->distinct()->get()->toArray(); // Get users with a least one input file
             $users_with_jobs = Job::select('user_email')->distinct()->get()->toArray(); // Get users with a least one job
@@ -74,6 +74,7 @@ class StoragePolicy extends Command
             foreach ($active_users as $user_email) {
                 $jobs_size = directory_size($jobs_path . '/' . $user_email); // in KB
                 $workspace_size = directory_size($workspace_path . '/' . $user_email); // in KB
+
                 // If user has exceeded his soft limit
                 if (($jobs_size + $workspace_size) > $user_soft_limit) {
                     // Get user's jobs
