@@ -134,7 +134,7 @@ class metamds_visual extends BaseAnalysis implements RAnalysis
         }
 
         $script_source = app_path().'/rvlab/files/summarize.html';
-        copy($script_source,"$this->job_folder/summarize.html");
+        copy($script_source, "$this->job_folder/summarize.html");
     }
 
     /**

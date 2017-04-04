@@ -181,7 +181,7 @@ class anosim extends BaseAnalysis implements RAnalysis
      */
     protected function buildRScript()
     {
-       if (!($fh = fopen("$this->job_folder/$this->job_id.R", "w"))) {
+        if (!($fh = fopen("$this->job_folder/$this->job_id.R", "w"))) {
             throw new \Exception("Unable to open file $this->job_folder/$this->job_id.R");
         }
 

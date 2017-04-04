@@ -197,7 +197,6 @@ class regression extends BaseAnalysis implements RAnalysis
             fwrite($fh, "plot($this->factor_select1~$this->factor_select2)\n");//, xlim = c(3, 5), ylim = c(4, 10))\n");
             fwrite($fh, "abline(fit, col=\"red\")\n");
             fwrite($fh, "dev.off()\n");
-
         } else {
             fwrite($fh, "fit<-lm($this->factor_select1~$this->factor_select2+$this->factor_select3);\n");
             fwrite($fh, "png('rplot.png')\n");

@@ -91,11 +91,12 @@ class UploadValidator
             array(
                 'file' => $file,
                 'filename' => $filename, //$upload->getClientOriginalName(),
-                'extension' => $extension, //$upload->guessExtension(),
-            ), array(
+                'extension' => $extension //$upload->guessExtension(),
+            ),
+            array(
                 'file' => 'max:50000',
                 'filename' => 'max:200',
-                'extension' => 'in:txt,csv,nwk',
+                'extension' => 'in:txt,csv,nwk'
             )
         );
 

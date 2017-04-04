@@ -117,7 +117,6 @@ class JobOutputParser
             $this->error_string[] = "Unexpected error happened when parsing the output of R script.";
             $this->error_string[] = "<br>Error message: ".$ex->getMessage();
         }
-
     }
 
     /**

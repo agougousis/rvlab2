@@ -110,7 +110,7 @@ class heatcloud extends BaseAnalysis implements RAnalysis
         }
 
         $script_source = app_path().'/rvlab/files/HEATcloud.html';
-        copy($script_source,"$this->job_folder/HEATcloud.html");
+        copy($script_source, "$this->job_folder/HEATcloud.html");
     }
 
     /**

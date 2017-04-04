@@ -149,7 +149,7 @@ class cca_visual extends BaseAnalysis implements RAnalysis
         }
 
         $script_source = app_path().'/rvlab/files/summarizeCCA.html';
-        if (!copy($script_source,"$this->job_folder/summarizeCCA.html")) {
+        if (!copy($script_source, "$this->job_folder/summarizeCCA.html")) {
             throw new Exception('Moving html file to job folder, failed.');
         }
     }
@@ -223,10 +223,9 @@ class cca_visual extends BaseAnalysis implements RAnalysis
             fwrite($fh, "vare.cca <- cca(x ~ $this->factor_select1+$this->factor_select2+$this->factor_select3, data=ENV);\n");
         }
 
-
-        fwrite($fh,"cca1.plot<-plot(vare.cca, type=\"n\");\n");
-        fwrite($fh,"text(vare.cca, dis=\"cn\");\n");
-        fwrite($fh,"points(vare.cca, pch=21, col=\"red\", bg=\"red\", cex=0.5);\n");
+        fwrite($fh, "cca1.plot<-plot(vare.cca, type=\"n\");\n");
+        fwrite($fh, "text(vare.cca, dis=\"cn\");\n");
+        fwrite($fh, "points(vare.cca, pch=21, col=\"red\", bg=\"red\", cex=0.5);\n");
 
         fwrite($fh, "x<-x/rowSums(x);\n");
         fwrite($fh, "x<-x[,order(colSums(x),decreasing=TRUE)];\n");
@@ -238,7 +237,7 @@ class cca_visual extends BaseAnalysis implements RAnalysis
         fwrite($fh, "N<-length(taxa_list);\n");
         fwrite($fh, "new_x<-data.frame(x[,colnames(x) %in% taxa_list],Others=rowSums(x[,!colnames(x) %in% taxa_list]));\n");
         fwrite($fh, "names<-gsub(\"\\\.\",\"_\",gsub(\" \",\"_\",colnames(new_x)));\n");
-	fwrite($fh, "rownames(new_x) <- gsub(\"\\\.\",\"_\",gsub(\" \",\"_\",rownames(new_x)));\n");//new
+        fwrite($fh, "rownames(new_x) <- gsub(\"\\\.\",\"_\",gsub(\" \",\"_\",rownames(new_x)));\n");
         fwrite($fh, "sink(\"dataCCA.js\");\n");
         fwrite($fh, "cat(\"var freqData=[\\n\");\n");
         fwrite($fh, "for (i in (1:dim(new_x)[1])){  \n");

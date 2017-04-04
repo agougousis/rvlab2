@@ -244,13 +244,12 @@ class second_metamds extends BaseAnalysis implements RAnalysis
         fwrite($fh, "#transpose the matrices, bcdist needs rows as samples;\n");
         fwrite($fh, "# calculate bray curtis for all;\n");
         foreach ($this->box as $val) {
-
             fwrite($fh, "mat".$filecount." <- read.table(\"$this->remote_job_folder/$val\", header = TRUE, sep=\",\",row.names=1);\n");
-            if($this->transpose == "transpose"){
+            if ($this->transpose == "transpose") {
                 fwrite($fh, "mat".$filecount." <- t(mat".$filecount.");\n");
             }
 
-            if($this->transf_method_select != "none"){
+            if ($this->transf_method_select != "none") {
                 fwrite($fh, "mat".$filecount." <- decostand(mat".$filecount.", method = \"$this->transf_method_select\");\n");
             }
 
@@ -259,7 +258,6 @@ class second_metamds extends BaseAnalysis implements RAnalysis
             fwrite($fh, "mat".$filecount."_tr <- t(mat".$filecount."_2);\n");
             fwrite($fh, "bc".$filecount." <-bcdist(mat".$filecount."_tr);\n");
             $filecount++;
-
         }
         fwrite($fh, "#create an empty matrix to fill in the correlation coefficients;\n");
         $filecount--;
@@ -269,8 +267,8 @@ class second_metamds extends BaseAnalysis implements RAnalysis
         fwrite($fh, "bc1_t <- paste(\"bc\",combs[1,i],sep=\"\");\n");
         fwrite($fh, "bc2_t <- paste(\"bc\",combs[2,i],sep=\"\");\n");
         fwrite($fh, "bcs[combs[1,i],combs[2,i]] <- cor(get(bc1_t), get(bc2_t), method=\"$this->cor_method_select\");\n");
-        fwrite($fh,"}\n");
-        fwrite($fh,"bcs <- t(bcs)\n");
+        fwrite($fh, "}\n");
+        fwrite($fh, "bcs <- t(bcs)\n");
         fwrite($fh, "x <- c(\"{$this->box[0]}\");\n");
 
         for ($j=1; $j<count($this->box); $j++) {
