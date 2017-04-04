@@ -22,7 +22,7 @@ class UploadValidator
      * @param Request $request
      * @return array
      */
-    public static function validate_uploaded_workspace_files(Request &$request)
+    public static function validateUploadedWorkspaceFiles(Request &$request)
     {
         $valid_files = [];
 
@@ -39,8 +39,7 @@ class UploadValidator
 
                 // Loop through all uploaded files
                 foreach ($all_uploads as $upload) {
-
-                    list($is_valid, $errorMessage) = self::validate_uploaded_file($upload);
+                    list($is_valid, $errorMessage) = self::validateUploadedFile($upload);
                     if ($is_valid) {
                         $valid_files[] = $upload;
                     } else {
@@ -51,7 +50,7 @@ class UploadValidator
                 if (!empty($error_messages)) {
                     $exception = new InvalidRequestException('');
                     $exception->setErrorsToReturn($error_messages);
-                    $exception->setUserMessage( implode('<br>', $error_messages) );
+                    $exception->setUserMessage(implode('<br>', $error_messages));
                     throw $exception;
                 }
             }
@@ -70,7 +69,8 @@ class UploadValidator
      * @param UploadedFile $file
      * @return array
      */
-    private static function validate_uploaded_file(UploadedFile $file) {
+    private static function validateUploadedFile(UploadedFile $file)
+    {
         // Ignore array member if it's not an UploadedFile object, just to be extra safe
         if (!is_a($file, 'Symfony\Component\HttpFoundation\File\UploadedFile')) {
             return [false, ''];
@@ -88,20 +88,20 @@ class UploadValidator
         $extension = $parts['extension'];
 
         $validator = Validator::make(
-                        array(
-                    'file' => $file,
-                    'filename' => $filename, //$upload->getClientOriginalName(),
-                    'extension' => $extension, //$upload->guessExtension(),
-                        ), array(
-                    'file' => 'max:50000',
-                    'filename' => 'max:200',
-                    'extension' => 'in:txt,csv,nwk',
-                        )
+            array(
+                'file' => $file,
+                'filename' => $filename, //$upload->getClientOriginalName(),
+                'extension' => $extension, //$upload->guessExtension(),
+            ), array(
+                'file' => 'max:50000',
+                'filename' => 'max:200',
+                'extension' => 'in:txt,csv,nwk',
+            )
         );
 
         if ($validator->fails()) {
             // Collect error messages
-            if (!empty($validator->messages()->first('file'))){
+            if (!empty($validator->messages()->first('file'))) {
                 $error_message = $file->getClientOriginalName() . ':' . $validator->messages()->first('file');
                 return [false, $error_message];
             }

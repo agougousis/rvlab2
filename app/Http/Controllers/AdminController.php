@@ -29,7 +29,7 @@ class AdminController extends CommonController
      */
     public function index()
     {
-        return $this->load_view('admin.index', 'Admin Pages');
+        return $this->loadView('admin.index', 'Admin Pages');
     }
 
     /**
@@ -42,7 +42,7 @@ class AdminController extends CommonController
         $settings = Setting::all();
         $data['settings'] = $settings;
 
-        return $this->load_view('admin.configure', 'System Configuration', $data);
+        return $this->loadView('admin.configure', 'System Configuration', $data);
     }
 
     /**
@@ -51,7 +51,7 @@ class AdminController extends CommonController
      * @param Request $request
      * @return RedirectResponse
      */
-    public function save_configuration(Request $request)
+    public function saveConfiguration(Request $request)
     {
         // Validate Input
         $validation_rules = config('validation.store_settings');
@@ -83,11 +83,11 @@ class AdminController extends CommonController
 
         $dateLimit = "$prev_year-$month-$day 00:00:00";
 
-        $data['registration_counts'] = $this->registration_stats($year, $prev_year, $month, $day);
-        $data['f_stats'] = $this->function_stats($dateLimit);
-        $data['s_stats'] = $this->job_size_stats($dateLimit);
+        $data['registration_counts'] = $this->registrationStats($year, $prev_year, $month, $day);
+        $data['f_stats'] = $this->functionStats($dateLimit);
+        $data['s_stats'] = $this->jobSizeStats($dateLimit);
 
-        return $this->load_view('admin.statistics', 'R vLab Usage Statistics', $data);
+        return $this->loadView('admin.statistics', 'R vLab Usage Statistics', $data);
     }
 
     /**
@@ -96,7 +96,7 @@ class AdminController extends CommonController
      * @param string $dateLimit
      * @return array
      */
-    protected function job_size_stats($dateLimit)
+    protected function jobSizeStats($dateLimit)
     {
         $s_stats = array(
             '1' => 0,
@@ -129,7 +129,7 @@ class AdminController extends CommonController
      * @param string $dateLimit
      * @return array
      */
-    protected function function_stats($dateLimit)
+    protected function functionStats($dateLimit)
     {
         $f_stats = JobsLog::select(DB::raw('count(*) as total,function'))
                         ->where('submitted_at', '>', $dateLimit)
@@ -148,7 +148,7 @@ class AdminController extends CommonController
      * @param string $day
      * @return array
      */
-    protected function registration_stats($year, $prev_year, $month, $day)
+    protected function registrationStats($year, $prev_year, $month, $day)
     {
         $limits = array(
             array('Jan', '01-01 00:00:00', '01-15 23:59:59'),
@@ -199,11 +199,11 @@ class AdminController extends CommonController
      *
      * @return View
      */
-    public function job_list()
+    public function jobList()
     {
         $job_list = Job::take(50)->orderBy('submitted_at', 'desc')->get();
         $data['job_list'] = $job_list;
-        return $this->load_view('admin.job_list', 'Last Jobs List', $data);
+        return $this->loadView('admin.job_list', 'Last Jobs List', $data);
     }
 
     /**
@@ -211,13 +211,13 @@ class AdminController extends CommonController
      *
      * @return View
      */
-    public function last_errors()
+    public function lastErrors()
     {
         $last_error_count_setting = Setting::where('sname', 'last_errors_to_display')->first();
         $error_list = SystemLog::where('category', 'error')->orderBy('when', 'desc')->take($last_error_count_setting->value)->get();
 
         $data['error_list'] = $error_list;
-        return $this->load_view('admin.last_errors', 'Last errors list', $data);
+        return $this->loadView('admin.last_errors', 'Last errors list', $data);
     }
 
     /**
@@ -225,7 +225,7 @@ class AdminController extends CommonController
      *
      * @return View
      */
-    public function storage_utilization()
+    public function storageUtilization()
     {
         $rvlab_storage_limit = $this->system_settings['rvlab_storage_limit'];
         $max_users_supported = $this->system_settings['max_users_supported'];
@@ -265,13 +265,14 @@ class AdminController extends CommonController
         // will be used in view
         $user_soft_limit = $rvlab_storage_limit / $max_users_supported; // in KB
 
-        if ($used_size > 1000000)
+        if ($used_size > 1000000) {
             $utilized_text = number_format($used_size / 1000000, 2) . " GB";
-        elseif ($used_size > 1000)
+        } elseif ($used_size > 1000) {
             $utilized_text = number_format($used_size / 1000, 2) . " MB";
-        else
+        } else {
             $utilized_text = number_format($used_size, 2) . " KB";
-
+        }
+         
         $new_user_totals = [];
         foreach ($user_totals as $email => $size_number) {
             $sizeInfo = [];
@@ -301,6 +302,6 @@ class AdminController extends CommonController
         $data['user_totals'] = $new_user_totals;
         $data['utilized_text'] = $utilized_text;
         $data['utilization'] = $utilization;
-        return $this->load_view('admin.storage_utilization', 'Storage Utilization', $data);
+        return $this->loadView('admin.storage_utilization', 'Storage Utilization', $data);
     }
 }

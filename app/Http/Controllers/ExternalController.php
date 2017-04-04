@@ -37,12 +37,12 @@ class ExternalController extends CommonController
         $this->jobs_path = config('rvlab.jobs_path');
 
         // Check if cluster storage has been mounted to web server
-        if (!$this->check_storage()) {
+        if (!$this->checkStorage()) {
             if ($this->is_mobile) {
                 $response = array('message', 'Storage not found');
                 return Response::json($response, 500);
             } else {
-                echo $this->load_view('errors/unmounted', 'Storage not found');
+                echo $this->loadView('errors/unmounted', 'Storage not found');
                 die();
             }
         }
@@ -55,7 +55,7 @@ class ExternalController extends CommonController
      * @param string $jobid
      * @return Response
      */
-    public function vliz_import($token, $jobid)
+    public function vlizImport($token, $jobid)
     {
         $cors_headers = [
             'Access-Control-Allow-Origin' => 'http://www.lifewatch.be',
@@ -139,7 +139,7 @@ class ExternalController extends CommonController
             DB::rollBack();
 
             // Log the exception
-            $this->log_event('File import from VLIZ failed! Error: ' . $ex->getMessage(), 'error');
+            $this->logEvent('File import from VLIZ failed! Error: ' . $ex->getMessage(), 'error');
 
             // Delete file if created
             if (file_exists($new_filepath)) {

@@ -58,7 +58,7 @@ class JobHelper
 
         if ($validator->fails()) {
             $exception = new InvalidRequestException('Invalid job submission by '.session('user_info.email'));
-            $exception->setUserMessage( implode('<br>', $validator->errors()->all()) );
+            $exception->setUserMessage(implode('<br>', $validator->errors()->all()));
             $exception->enableToastr();
             throw $exception;
         }
@@ -116,7 +116,7 @@ class JobHelper
         // Delete folder if created
         if (file_exists($job_folder)) {
             if (!delTree($job_folder)) {
-                $this->log_event('Folder ' . $job_folder . ' could not be deleted after failed job submission!', "error");
+                $this->logEvent('Folder ' . $job_folder . ' could not be deleted after failed job submission!', "error");
                 return false;
             }
         }
@@ -153,7 +153,7 @@ class JobHelper
      * @param Job $job
      * @return void
      */
-    public function refresh_job_status(Job $job)
+    public function refreshJobStatus(Job $job)
     {
         $job_folder = $this->jobs_path . '/' . $job->user_email . '/job' . $job->id;
         $pbs_filepath = $job_folder . '/job' . $job->id . '.pbs';
@@ -161,7 +161,7 @@ class JobHelper
 
         if (file_exists($pbs_filepath)) {
             $status = 'submitted';
-        } else if (!file_exists($submitted_filepath)) {
+        } elseif (!file_exists($submitted_filepath)) {
             $status = 'creating';
         } else {
             $statusFilePath = $job_folder . '/job' . $job->id . '.jobstatus';
@@ -178,19 +178,19 @@ class JobHelper
             if ($status == 'completed') {
                 $parser = new JobOutputParser();
 
-                $parser->parse_output($job_folder . $outputFileToParse);
+                $parser->parseOutput($job_folder . $outputFileToParse);
 
                 if ($parser->hasFailed()) {
                     $status = 'failed';
                 }
             }
 
-                if (!empty($started_at)) {
-                    $job->started_at = $started_at;
-                }
-                if (!empty($completed_at)) {
-                    $job->completed_at = $completed_at;
-                }
+            if (!empty($started_at)) {
+                $job->started_at = $started_at;
+            }
+            if (!empty($completed_at)) {
+                $job->completed_at = $completed_at;
+            }
         }
 
         $job->jobsize = directory_size($job_folder);
@@ -245,7 +245,7 @@ class JobHelper
      * @param string $message
      * @param string $category
      */
-    protected function log_event($message, $category)
+    protected function logEvent($message, $category)
     {
 
         $db_message = $message;

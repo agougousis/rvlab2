@@ -88,4 +88,3 @@ class JobStatusParser
         return $fileToParse;
     }
 }
-

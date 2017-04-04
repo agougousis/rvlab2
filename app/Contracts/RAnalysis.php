@@ -12,5 +12,4 @@ interface RAnalysis
      * Runs the analysis
      */
     public function run();
-
 }

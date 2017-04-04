@@ -20,16 +20,17 @@ use Illuminate\Http\Request;
  */
 class RegistrationController extends CommonController
 {
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
 
         // Check if cluster storage has been mounted to web server
-        if (!$this->check_storage()) {
+        if (!$this->checkStorage()) {
             if ($this->is_mobile) {
                 $response = array('message', 'Storage not found');
                 return Response::json($response, 500);
             } else {
-                echo $this->load_view('errors/unmounted', 'Storage not found');
+                echo $this->loadView('errors/unmounted', 'Storage not found');
                 die();
             }
         }
@@ -40,15 +41,15 @@ class RegistrationController extends CommonController
      *
      * @return View
      */
-    public function registration_page()
+    public function registrationPage()
     {
         $max_users_suported = $this->system_settings['max_users_supported'];
         $count_current_users = Registration::where('ends', '>', date('Y-m-d H:i:s'))->count();
 
         if ($count_current_users >= $max_users_suported) {
-            return $this->load_view('run_out_of_users', 'Registration Impossible');
+            return $this->loadView('run_out_of_users', 'Registration Impossible');
         } else {
-            return $this->load_view('registration', 'Registration');
+            return $this->loadView('registration', 'Registration');
         }
     }
 

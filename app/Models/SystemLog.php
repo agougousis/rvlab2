@@ -8,5 +8,4 @@ class SystemLog extends Model
 {
     protected $table = 'logs';
     public $timestamps = false;
-
 }

@@ -82,7 +82,7 @@ class heatcloud extends BaseAnalysis implements RAnalysis
             $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;
@@ -151,11 +151,11 @@ class heatcloud extends BaseAnalysis implements RAnalysis
         fwrite($fh, "library(vegan);\n");
         fwrite($fh, "x <- read.table(\"$this->remote_job_folder/$this->box\", header = TRUE, sep=\",\",row.names=1);\n");
 
-        if($this->transpose == "transpose"){
+        if ($this->transpose == "transpose") {
             fwrite($fh, "x <- t(x);\n");
         }
 
-        if($this->transf_method_select != "none"){
+        if ($this->transf_method_select != "none") {
             fwrite($fh, "x <- decostand(x, method = \"$this->transf_method_select\");\n");
         }
 
@@ -168,7 +168,7 @@ class heatcloud extends BaseAnalysis implements RAnalysis
         fwrite($fh, "taxa_list<-taxa_list[!grepl(\"__Unknown__\",taxa_list)];\n");
         fwrite($fh, "N<-length(taxa_list);\n");
         fwrite($fh, "new_x<-data.frame(x[,colnames(x) %in% taxa_list],Others=rowSums(x[,!colnames(x) %in% taxa_list]));\n");
-        //fwrite($fh, "new_x2 <- t(new_x);\n");
+
         fwrite($fh, "new_x2 <- new_x*100;\n");
         fwrite($fh, "write.table(new_x2, file = \"$this->remote_job_folder/table.csv\",sep=\",\",quote = FALSE,row.names = TRUE,col.names=NA);\n");
         fwrite($fh, "names<-gsub(\"\\\.\",\"_\",gsub(\" \",\"_\",colnames(new_x)));\n");

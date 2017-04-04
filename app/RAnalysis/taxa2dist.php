@@ -74,7 +74,7 @@ class taxa2dist extends BaseAnalysis implements RAnalysis
             $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;

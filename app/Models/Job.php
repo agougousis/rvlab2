@@ -9,7 +9,7 @@ class Job extends Model
     protected $table = 'jobs';
     public $timestamps = false;
 
-    static function getOldJobs()
+    public static function getOldJobs()
     {
         $job_max_storagetime = Setting::where('sname', 'job_max_storagetime')->first(); // should be in days
 

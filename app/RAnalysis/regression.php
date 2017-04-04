@@ -106,7 +106,7 @@ class regression extends BaseAnalysis implements RAnalysis
             $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;
@@ -186,19 +186,19 @@ class regression extends BaseAnalysis implements RAnalysis
         fwrite($fh, "library(vegan);\n");
         fwrite($fh, "fact <- read.table(\"$this->remote_job_folder/$this->box\", row.names=1, header = TRUE, sep=\",\");\n");
 
-        if($this->transf_method_select != "none"){
+        if ($this->transf_method_select != "none") {
             fwrite($fh, "fact <- decostand(fact, method = \"$this->transf_method_select\");\n");
         }
 
         fwrite($fh, "attach(fact);\n");
-        if($this->single_or_multi =="single"){
+        if ($this->single_or_multi =="single") {
             fwrite($fh, "fit<-lm($this->factor_select1~$this->factor_select2);\n");
             fwrite($fh, "png('rplot.png')\n");
             fwrite($fh, "plot($this->factor_select1~$this->factor_select2)\n");//, xlim = c(3, 5), ylim = c(4, 10))\n");
             fwrite($fh, "abline(fit, col=\"red\")\n");
             fwrite($fh, "dev.off()\n");
 
-        }else{
+        } else {
             fwrite($fh, "fit<-lm($this->factor_select1~$this->factor_select2+$this->factor_select3);\n");
             fwrite($fh, "png('rplot.png')\n");
             fwrite($fh, "plot($this->factor_select1~$this->factor_select2+$this->factor_select3)\n");//, xlim = c(3, 5), ylim = c(4, 10))\n");

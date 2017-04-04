@@ -13,7 +13,7 @@ class AdminOnly
 {
     public function handle($request, Closure $next)
     {
-        if(!session('is_admin')){
+        if (!session('is_admin')) {
             return redirect('/');
         }
 

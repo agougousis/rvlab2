@@ -11,7 +11,8 @@ namespace App\Exceptions;
  */
 class AuthorizationException extends CustomException
 {
-    public function __construct($message = "", $defaultHttpCode = 401, $code = 0, \Exception $previous = null) {
+    public function __construct($message = "", $defaultHttpCode = 401, $code = 0, \Exception $previous = null)
+    {
         parent::__construct($defaultHttpCode, $message, $code, $previous);
     }
 }

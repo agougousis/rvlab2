@@ -106,7 +106,7 @@ class cca extends BaseAnalysis implements RAnalysis
             $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;
@@ -193,15 +193,15 @@ class cca extends BaseAnalysis implements RAnalysis
         fwrite($fh, "mat <- read.table(\"$this->remote_job_folder/$this->box\", row.names=1, header = TRUE, sep=\",\");\n");
         fwrite($fh, "ENV <- read.table(\"$this->remote_job_folder/$this->box2\",header = TRUE, sep=\",\",row.names=1);\n");
 
-        if($this->transpose == "transpose"){
+        if ($this->transpose == "transpose") {
             fwrite($fh, "mat <- t(mat);\n");
         }
 
-        if($this->transf_method_select != "none"){
+        if ($this->transf_method_select != "none") {
             fwrite($fh, "mat <- decostand(mat, method = \"$this->transf_method_select\");\n");
         }
 
-        if(empty($this->factor_select3)){
+        if (empty($this->factor_select3)) {
             fwrite($fh, "vare.cca <- cca(mat ~ $this->factor_select1+$this->factor_select2, data=ENV);\n");
         } else {
             fwrite($fh, "vare.cca <- cca(mat ~ $this->factor_select1+$this->factor_select2+$this->factor_select3, data=ENV);\n");

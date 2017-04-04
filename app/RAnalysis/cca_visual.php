@@ -114,7 +114,7 @@ class cca_visual extends BaseAnalysis implements RAnalysis
             $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;
@@ -209,15 +209,15 @@ class cca_visual extends BaseAnalysis implements RAnalysis
         fwrite($fh, "library(vegan);\n");
         fwrite($fh, "x <- read.table(\"$this->remote_job_folder/$this->box\", header = TRUE, sep=\",\",row.names=1);\n");
         fwrite($fh, "ENV <- read.table(\"$this->remote_job_folder/$this->box2\",header = TRUE, sep=\",\",row.names=1);\n");
-        if($this->transpose == "transpose"){
+        if ($this->transpose == "transpose") {
             fwrite($fh, "x <- t(x);\n");
         }
 
-        if($this->transf_method_select != "none"){
+        if ($this->transf_method_select != "none") {
             fwrite($fh, "x <- decostand(x, method = \"$this->transf_method_select\");\n");
         }
         fwrite($fh, "rownames(x) <- gsub(\"\\\.\",\"_\",gsub(\" \",\"_\",rownames(x)));\n");//new
-        if(empty($this->factor_select3)){
+        if (empty($this->factor_select3)) {
             fwrite($fh, "vare.cca <- cca(x ~ $this->factor_select1+$this->factor_select2, data=ENV);\n");
         } else {
             fwrite($fh, "vare.cca <- cca(x ~ $this->factor_select1+$this->factor_select2+$this->factor_select3, data=ENV);\n");

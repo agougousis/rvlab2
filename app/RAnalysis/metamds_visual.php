@@ -106,7 +106,7 @@ class metamds_visual extends BaseAnalysis implements RAnalysis
             $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;
@@ -184,11 +184,11 @@ class metamds_visual extends BaseAnalysis implements RAnalysis
         fwrite($fh, "library(vegan);\n");
         fwrite($fh, "x <- read.table(\"$this->remote_job_folder/$this->box\", header = TRUE, sep=\",\",row.names=1);\n");
 
-        if($this->transpose == "transpose"){
+        if ($this->transpose == "transpose") {
             fwrite($fh, "x <- t(x);\n");
         }
 
-        if($this->transf_method_select != "none"){
+        if ($this->transf_method_select != "none") {
             fwrite($fh, "x <- decostand(x, method = \"$this->transf_method_select\");\n");
         }
 

@@ -13,13 +13,14 @@ use App\Http\Controllers\CommonController;
  */
 class HelpController extends CommonController
 {
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
     }
 
     public function video()
     {
-        return $this->load_view('video', 'RvLab guide on Youtube');
+        return $this->loadView('video', 'RvLab guide on Youtube');
     }
 
     /**
@@ -42,7 +43,7 @@ class HelpController extends CommonController
         if ($this->is_mobile) {
             return Response::json($data, 200);
         } else {
-            return $this->load_view('policy', 'Storage Policy', $data);
+            return $this->loadView('policy', 'Storage Policy', $data);
         }
     }
 
@@ -51,7 +52,7 @@ class HelpController extends CommonController
      *
      * @return View
      */
-    public function technical_docs()
+    public function technicalDocs()
     {
         $links = array(
             'taxa2dist' => 'http://cc.oulu.fi/~jarioksa/softhelp/vegan/html/taxondive.html',
@@ -81,7 +82,7 @@ class HelpController extends CommonController
         );
 
         $data['links'] = $links;
-        return $this->load_view('technical_docs', 'Technical Documentation', $data);
+        return $this->loadView('technical_docs', 'Technical Documentation', $data);
     }
 
     /**
@@ -92,6 +93,6 @@ class HelpController extends CommonController
      */
     public function documentation($function)
     {
-        return $this->load_view('documentation.' . $function, $function . ' documentation');
+        return $this->loadView('documentation.' . $function, $function . ' documentation');
     }
 }

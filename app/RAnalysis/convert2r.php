@@ -70,7 +70,7 @@ class convert2r extends BaseAnalysis implements RAnalysis
             $this->buildRScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;

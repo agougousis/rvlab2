@@ -9,7 +9,8 @@ abstract class CustomException extends \Exception
     private $httpCode;
     private $isMobileRequest = false;
 
-    public function __construct($defaultHttpCode, $message = "", $code = 0, \Exception $previous = null) {
+    public function __construct($defaultHttpCode, $message = "", $code = 0, \Exception $previous = null)
+    {
         parent::__construct($message, $code, $previous);
 
         $this->httpCode = $defaultHttpCode;
@@ -56,4 +57,3 @@ abstract class CustomException extends \Exception
         return $this->isMobileRequest;
     }
 }
-

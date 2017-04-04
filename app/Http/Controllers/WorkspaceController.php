@@ -55,12 +55,12 @@ class WorkspaceController extends CommonController
         $this->conditionChecker = new ConditionsChecker($this->jobs_path, $this->workspace_path);
 
         // Check if cluster storage has been mounted to web server
-        if (!$this->check_storage()) {
+        if (!$this->checkStorage()) {
             if ($this->is_mobile) {
                 $response = array('message', 'Storage not found');
                 return Response::json($response, 500);
             } else {
-                echo $this->load_view('errors/unmounted', 'Storage not found');
+                echo $this->loadView('errors/unmounted', 'Storage not found');
                 die();
             }
         }
@@ -72,11 +72,11 @@ class WorkspaceController extends CommonController
      * @param string $filename
      * @return file|JSON|RedirectResponse
      */
-    public function get_file($filename)
+    public function getFile($filename)
     {
         // INPUT FILTERING: Any workspace file stored in R vLab has gone
         // through the safe_filename() cleaning procedure
-        $safe_filename = safe_filename( basename($filename) );
+        $safe_filename = safe_filename(basename($filename));
 
         // CONDITION: Check if such a file exists for this user
         $filepath = $this->conditionChecker->workspaceFileBelongsToUser($safe_filename, session('user_info.email'));
@@ -90,7 +90,7 @@ class WorkspaceController extends CommonController
      *
      * @return JSON|RedirectResponse
      */
-    public function add_example_data()
+    public function addExampleData()
     {
         $user_email = session('user_info.email');
         $user_workspace_path = $this->workspace_path . '/' . $user_email;
@@ -124,13 +124,13 @@ class WorkspaceController extends CommonController
      *
      * @return View|JSON|RedirectResponse
      */
-    public function add_files(Request $request)
+    public function addFiles(Request $request)
     {
         $user_workspace_path = $this->workspace_path . '/' . session('user_info.email');
 
         // INPUT FILTERING: Validate files has been uploaded correctly and are
         // valid (in terms of type, size etc.)
-        $valid_files = UploadValidator::validate_uploaded_workspace_files($request);
+        $valid_files = UploadValidator::validateUploadedWorkspaceFiles($request);
 
         $name_conflict = false;
 
@@ -146,7 +146,7 @@ class WorkspaceController extends CommonController
 
         try {
             foreach ($valid_files as $file) {
-                $this->add_file_to_workspace($file, $user_workspace_path, $added_files, $name_conflict);
+                $this->addFileToWorkspace($file, $user_workspace_path, $added_files, $name_conflict);
             }
         } catch (\Exception $ex) {
             DB::rollback();
@@ -179,7 +179,7 @@ class WorkspaceController extends CommonController
      * @param array $added_files
      * @param boolean $name_conflict
      */
-    protected function add_file_to_workspace(UploadedFile $file, $user_workspace_path, &$added_files, &$name_conflict)
+    protected function addFileToWorkspace(UploadedFile $file, $user_workspace_path, &$added_files, &$name_conflict)
     {
         // Build the destination file path
         $remote_filename = safe_filename($file->getClientOriginalName());
@@ -201,7 +201,7 @@ class WorkspaceController extends CommonController
      * @param Request $request
      * @return Response
      */
-    public function add_output_file(Request $request)
+    public function addOutputFile(Request $request)
     {
         $form = $request->all();
 
@@ -212,7 +212,7 @@ class WorkspaceController extends CommonController
         ]);
 
         if ($validator->fails()) {
-            $this->log_event("Filename or Job ID is missing.", "illegal");
+            $this->logEvent("Filename or Job ID is missing.", "illegal");
             $response = array('message', 'Filename or Job ID is missing');
             return Response::json($response, 400);
         }
@@ -245,7 +245,6 @@ class WorkspaceController extends CommonController
         DB::beginTransaction();
 
         try {
-
             // Add a record to database
             $workspace_file = new WorkspaceFile();
             $workspace_file->user_email = $user_email;
@@ -257,7 +256,7 @@ class WorkspaceController extends CommonController
             copy($filepath, $new_filepath);
         } catch (\Exception $ex) {
             DB::rollback();
-            $this->log_event($ex->getMessage(), "error");
+            $this->logEvent($ex->getMessage(), "error");
             $response = array('message', 'Unexpected error.');
             return Response::json($response, 500);
         }
@@ -276,12 +275,12 @@ class WorkspaceController extends CommonController
         $data = array();
 
         // List of files that are contained in user's workspace
-        $data['workspace_files'] = WorkspaceFile::getUserFiles( session('user_info.email') );
+        $data['workspace_files'] = WorkspaceFile::getUserFiles(session('user_info.email'));
 
         if ($this->is_mobile) {
             return Response::json($data, 200);
         } else {
-            return $this->load_view('workspace/manage', 'Home Page', $data);
+            return $this->loadView('workspace/manage', 'Home Page', $data);
         }
     }
 
@@ -290,7 +289,7 @@ class WorkspaceController extends CommonController
      *
      * @return ResponseRedirect|JSON
      */
-    public function remove_file(Request $request)
+    public function removeFile(Request $request)
     {
         $user_email = session('user_info.email');
 
@@ -328,7 +327,7 @@ class WorkspaceController extends CommonController
      *
      * @return ResponseRedirect|View|JSON
      */
-    public function remove_files(Request $request)
+    public function removeFiles(Request $request)
     {
         $user_email = session('user_info.email');
 

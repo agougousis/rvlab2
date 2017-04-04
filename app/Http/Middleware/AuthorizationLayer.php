@@ -81,7 +81,7 @@ class AuthorizationLayer
         }
 
         // The user is logged in
-        if (!$this->is_registered_to_rvlab($request)) {
+        if (!$this->isRregisteredToRvlab($request)) {
             // Unregistered users can access only specific URLs
             if (!in_array($request->fullUrl(), $this->urlsAllowedToUnregistered)) {
                 return $this->redirectOrMobile('registration', 403, 'You are not registered to R vLab!');
@@ -125,7 +125,7 @@ class AuthorizationLayer
      *
      * @return Redirect|void
      */
-    protected function is_registered_to_rvlab(Request $request)
+    protected function isRregisteredToRvlab(Request $request)
     {
         if (!session()->has('user_info')) {
             // Just in case the user is not logged in (should not happen normally)

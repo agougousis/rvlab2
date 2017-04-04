@@ -8,5 +8,4 @@ class JobsLog extends Model
 {
     protected $table = 'jobs_logs';
     public $timestamps = false;
-
 }

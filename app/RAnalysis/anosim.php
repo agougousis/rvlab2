@@ -74,7 +74,8 @@ class anosim extends BaseAnalysis implements RAnalysis
     /**
      * Initializes class properties
      */
-    protected function init() {
+    protected function init()
+    {
         $this->formValidationRules = [
             'box' => 'required|string|max:250',
             'box2' => 'required|string|max:250',
@@ -105,7 +106,7 @@ class anosim extends BaseAnalysis implements RAnalysis
             $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;
@@ -188,11 +189,11 @@ class anosim extends BaseAnalysis implements RAnalysis
         fwrite($fh, "ENV <- read.table(\"$this->remote_job_folder/$this->box2\",header = TRUE, sep=\",\",row.names=1);\n");
         fwrite($fh, "mat <- read.table(\"$this->remote_job_folder/$this->box\", header = TRUE, sep=\",\" ,row.names=1);\n");
 
-        if($this->transpose == "transpose"){
+        if ($this->transpose == "transpose") {
             fwrite($fh, "mat <- t(mat);\n");
         }
 
-        if($this->transf_method_select != "none"){
+        if ($this->transf_method_select != "none") {
             fwrite($fh, "mat <- decostand(mat, method = \"$this->transf_method_select\");\n");
         }
 

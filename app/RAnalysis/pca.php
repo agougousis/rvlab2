@@ -90,7 +90,7 @@ class pca extends BaseAnalysis implements RAnalysis
             $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;
@@ -173,20 +173,20 @@ class pca extends BaseAnalysis implements RAnalysis
         fwrite($fh, "library(vegan);\n");
         fwrite($fh, "mat <- read.table(\"$this->remote_job_folder/$this->box\", header = TRUE, sep=\",\",row.names=1);\n");
 
-        if($this->transpose == "transpose"){
+        if ($this->transpose == "transpose") {
             fwrite($fh, "mat <- t(mat);\n");
         }
 
-        if($this->transf_method_select != "none"){
+        if ($this->transf_method_select != "none") {
             fwrite($fh, "mat <- decostand(mat, method = \"$this->transf_method_select\");\n");
         }
 
-        if(empty($this->form['box2'])){
+        if (empty($this->form['box2'])) {
             fwrite($fh, "labels <- as.factor(rownames(mat));\n");
             fwrite($fh, "n<- length(labels);\n");
             fwrite($fh, "rain <- rainbow(n, s = 1, v = 1, start = 0, end = max(1, n - 1)/n, alpha = 0.8);\n");
             fwrite($fh, "labels <- rain;\n");
-        }else{
+        } else {
             fwrite($fh, "ENV <- read.table(\"$this->remote_job_folder/$this->box2\", header = TRUE, sep=\",\" ,row.names=1);\n");
             fwrite($fh, "labels <- as.factor(ENV\$$this->column_select);\n");
         }
@@ -198,9 +198,9 @@ class pca extends BaseAnalysis implements RAnalysis
         fwrite($fh, "abline(h=0,col=\"white\",lty=1,lwd=3);\n");
         fwrite($fh, "abline(v=0,col=\"white\",lty=1,lwd=3);\n");
 
-        if(empty($this->form['box2'])){
+        if (empty($this->form['box2'])) {
             fwrite($fh, "legend(\"topright\", legend=rownames(mat), col=labels, pch = 16);\n");
-        }else{
+        } else {
             fwrite($fh, "legend(\"topright\", legend=unique(ENV\$$this->column_select), col=unique(labels), pch = 16);\n");
         }
 
@@ -217,9 +217,9 @@ class pca extends BaseAnalysis implements RAnalysis
         fwrite($fh, "abline(h=0,col=\"white\",lty=1,lwd=3);\n");
         fwrite($fh, "abline(v=0,col=\"white\",lty=1,lwd=3);\n");
 
-        if(empty($this->form['box2'])){
+        if (empty($this->form['box2'])) {
             fwrite($fh, "legend(\"topright\", legend=rownames(mat), col=labels, pch = 16);\n");
-        }else{
+        } else {
             fwrite($fh, "legend(\"topright\", legend=unique(ENV\$$this->column_select), col=unique(labels), pch = 16);\n");
         }
         fwrite($fh, "dev.off()\n");

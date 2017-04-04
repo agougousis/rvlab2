@@ -22,7 +22,6 @@ use App\RAnalysis\BaseAnalysis;
  */
 class bioenv extends BaseAnalysis implements RAnalysis
 {
-
     /**
      * The input file to be used for the analysis
      *
@@ -107,7 +106,7 @@ class bioenv extends BaseAnalysis implements RAnalysis
             $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;

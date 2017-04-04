@@ -72,7 +72,7 @@ class phylobar extends BaseAnalysis implements RAnalysis
             $this->makeFakeStatus();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;

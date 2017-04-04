@@ -82,7 +82,7 @@ class parallel_taxa2taxon extends BaseAnalysis implements RAnalysis
             $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;
@@ -144,7 +144,7 @@ class parallel_taxa2taxon extends BaseAnalysis implements RAnalysis
     protected function buildRScript()
     {
         $script_source = app_path().'/rvlab/files/taxa2dist_taxondive.r';
-        copy($script_source,"$this->job_folder/".$this->job_id.".R");
+        copy($script_source, "$this->job_folder/".$this->job_id.".R");
     }
 
     /**

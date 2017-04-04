@@ -10,7 +10,8 @@ namespace App\Exceptions;
  */
 class UnexpectedErrorException extends CustomException
 {
-    public function __construct($message = "", $defaultHttpCode = 500, $code = 0, \Exception $previous = null) {
+    public function __construct($message = "", $defaultHttpCode = 500, $code = 0, \Exception $previous = null)
+    {
         parent::__construct($defaultHttpCode, $message, $code, $previous);
     }
 }

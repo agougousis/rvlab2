@@ -22,7 +22,7 @@ class DefaultLoginController extends CommonController
      * @param Request $request
      * @return Response
      */
-    public function login_page(Request $request)
+    public function loginPage(Request $request)
     {
         $userInfo = session('user_info');
 

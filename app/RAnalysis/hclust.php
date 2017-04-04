@@ -82,7 +82,7 @@ class hclust extends BaseAnalysis implements RAnalysis
             $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;
@@ -164,7 +164,7 @@ class hclust extends BaseAnalysis implements RAnalysis
         fwrite($fh, "clust.average <- hclust(dist, method = \"$this->method_select\")\n");
         fwrite($fh, "dend <- as.dendrogram(clust.average);\n");
 
-        if(!empty($this->box2)){
+        if (!empty($this->box2)) {
             fwrite($fh, "Groups <- read.table(\"$this->remote_job_folder/$this->box2\", header = TRUE, sep=\",\" ,row.names=1);\n");
             fwrite($fh, "groupCodes <- Groups\$$this->column_select;\n");
             fwrite($fh, "# Assigning the labels of dendrogram object with new colors:;\n");

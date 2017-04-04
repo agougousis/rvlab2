@@ -12,7 +12,6 @@ function form_function_about($function, $tooltips)
     $teaser_length = 180;
     $html = "";
     if (!empty($tooltips[$function . '-about'])) {
-
         $about = $tooltips[$function . '-about'];
         if (!empty($tooltips[$function . '-function-title'])) {
             $about = "<strong>" . $tooltips[$function . '-function-title'] . ":</strong> " . $about;
@@ -40,7 +39,7 @@ function form_function_about($function, $tooltips)
  */
 function form_radio_files($tooltip_id, $labelText, $tooltips, $workspace_files)
 {
-    If ($workspace_files->count() == 0) {
+    if ($workspace_files->count() == 0) {
         return "<div style='color: red; margin: 20px;'>This function cannot work without files in your workspace!</div>";
     }
 
@@ -197,10 +196,12 @@ function form_checkbox($tooltip_id, $labelText, $value, $checked, $tooltips)
 
     $html = "<div class='checkbox checkbox_wrapper'>
                 <label>";
-    if ($checked)
+    if ($checked) {
         $html .= "<input type='checkbox'  name='$input_id' value='$value' checked=''> $labelText";
-    else
+    } else {
         $html .= "<input type='checkbox'  name='$input_id' value='$value'> $labelText";
+    }
+
     $html .= "</label>
             </div>";
 

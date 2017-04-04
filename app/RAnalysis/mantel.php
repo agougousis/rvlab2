@@ -82,7 +82,7 @@ class mantel extends BaseAnalysis implements RAnalysis
             $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;
@@ -151,7 +151,6 @@ class mantel extends BaseAnalysis implements RAnalysis
         fwrite($fh, "dist1 <- get(load(\"$this->remote_job_folder/$this->box\"));\n");
         fwrite($fh, "dist2 <- get(load(\"$this->remote_job_folder/$this->box2\"));\n");
         fwrite($fh, "print(\"summary\")\n");
-
 
         fwrite($fh, "mantel.out <- mantel(dist1,dist2, method = \"$this->method_select\",permutations = $this->permutations)\n");
         fwrite($fh, "mantel.out\n");

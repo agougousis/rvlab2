@@ -97,8 +97,8 @@ abstract class BaseAnalysis
         $this->params = &$params;
         $this->inputs = &$inputs;
 
-        if(is_array($form['box'])) {
-            $this->inputs = implode(';',$form['box']);
+        if (is_array($form['box'])) {
+            $this->inputs = implode(';', $form['box']);
         } else {
             $this->inputs = $form['box'];
         }
@@ -155,9 +155,8 @@ abstract class BaseAnalysis
      * @param string $message
      * @param string $category
      */
-    protected function log_event($message, $category)
+    protected function logEvent($message, $category)
     {
-
         $db_message = $message;
         $route = explode('@', \Route::currentRouteName());
 

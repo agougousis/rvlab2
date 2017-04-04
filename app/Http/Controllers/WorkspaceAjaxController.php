@@ -19,12 +19,12 @@ class WorkspaceAjaxController extends CommonController
         $this->jobs_path = config('rvlab.jobs_path');
 
         // Check if cluster storage has been mounted to web server
-        if (!$this->check_storage()) {
+        if (!$this->checkStorage()) {
             if ($this->is_mobile) {
                 $response = array('message', 'Storage not found');
                 return Response::json($response, 500);
             } else {
-                echo $this->load_view('errors/unmounted', 'Storage not found');
+                echo $this->loadView('errors/unmounted', 'Storage not found');
                 die();
             }
         }
@@ -35,7 +35,7 @@ class WorkspaceAjaxController extends CommonController
      *
      * @return Response
      */
-    public function user_storage_utilization()
+    public function userStorageUtilization()
     {
         $userInfo = session('user_info');
         $max_users_supported = $this->system_settings['max_users_supported'];
@@ -59,14 +59,15 @@ class WorkspaceAjaxController extends CommonController
      *
      * @return Response
      */
-    public function change_tab_status(Request $request)
+    public function changeTabStatus(Request $request)
     {
         if ($request->has('new_status')) {
             $new_status = $request->input('new_status');
-            if ($new_status == 'open')
+            if ($new_status == 'open') {
                 Session::put('workspace_tab_status', 'open');
-            else
+            } else {
                 Session::put('workspace_tab_status', 'closed');
+            }
         }
 
         return Response::json(array(), 200);
@@ -78,7 +79,7 @@ class WorkspaceAjaxController extends CommonController
      * @param string $filename
      * @return JSON
      */
-    public function convert2r_tool($filename)
+    public function convert2rTool($filename)
     {
         $userInfo = session('user_info');
         $user_workspace_path = $this->workspace_path . '/' . $userInfo['email'];
@@ -100,7 +101,7 @@ class WorkspaceAjaxController extends CommonController
 
             return Response::json($response, 200);
         } else {
-            $this->log_event("File could not be found.", "error");
+            $this->logEvent("File could not be found.", "error");
             $response = array('message', 'File could not be found.');
             return Response::json($response, 500);
         }

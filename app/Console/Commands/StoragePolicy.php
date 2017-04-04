@@ -91,11 +91,11 @@ class StoragePolicy extends Command
                             // Delete job files
                             $job_folder = $jobs_path . '/' . $user_email . '/job' . $job_id;
                             if (!delTree($job_folder)) {
-                                $this->save_log('Folder ' . $job_folder . ' could not be deleted!', "error");
+                                $this->saveLog('Folder ' . $job_folder . ' could not be deleted!', "error");
                             }
-                            $this->save_log('Folder deleted - Job ID: ' . $job_id . ' - User: ' . $user_email, "info");
+                            $this->saveLog('Folder deleted - Job ID: ' . $job_id . ' - User: ' . $user_email, "info");
                         } catch (\Exception $ex) {
-                            $this->save_log("Error occured during deletion of job" . $job_id . ". Message: " . $ex->getMessage(), "error");
+                            $this->saveLog("Error occured during deletion of job" . $job_id . ". Message: " . $ex->getMessage(), "error");
                         }
 
                         // Check if user still exceeds its soft limit
@@ -115,7 +115,7 @@ class StoragePolicy extends Command
      * @param type $message
      * @param type $category
      */
-    private function save_log($message, $category)
+    private function saveLog($message, $category)
     {
         $log = new SystemLog();
         $log->when = date("Y-m-d H:i:s");

@@ -38,7 +38,7 @@ class CommonController extends Controller
      *
      * @return JSON
      */
-    public function get_token()
+    public function getToken()
     {
         $token = csrf_token();
         $response = array(
@@ -54,7 +54,7 @@ class CommonController extends Controller
      * @param string $message
      * @param string $category
      */
-    protected function log_event($message, $category)
+    protected function logEvent($message, $category)
     {
 
         $db_message = $message;
@@ -78,7 +78,7 @@ class CommonController extends Controller
      * @param array $data
      * @return View
      */
-    protected function load_view($the_view, $title, $data = array())
+    protected function loadView($the_view, $title, $data = array())
     {
         $userInfo = session('user_info');
 
@@ -104,7 +104,7 @@ class CommonController extends Controller
      */
     protected function illegalActionResponse($errorMessage, $errorStatus)
     {
-        $this->log_event($errorMessage, "error");
+        $this->logEvent($errorMessage, "error");
         if ($this->is_mobile) {
             $response = array('message', $errorMessage);
             return Response::json($response, $errorStatus);
@@ -122,7 +122,7 @@ class CommonController extends Controller
      */
     protected function unexpectedErrorResponse($logMessage, $userMessage)
     {
-        $this->log_event($logMessage, "error");
+        $this->logEvent($logMessage, "error");
         if ($this->is_mobile) {
             $response = array('message', $userMessage);
             return Response::json($response, 500);
@@ -150,23 +150,13 @@ class CommonController extends Controller
     }
 
     /**
-     * Displays a page with a message about unexpected error.
-     *
-     * @return View
-     */
-    protected function unexpected_error()
-    {
-        return $this->load_view('errors/unexpected', 'Unexpected error');
-    }
-
-    /**
      * Displays a page with a message about an iilegal request.
      *
      * @return View
      */
     protected function illegalAction()
     {
-        return $this->load_view('errors/illegalAction', 'Unexpected error');
+        return $this->loadView('errors/illegalAction', 'Unexpected error');
     }
 
     /**
@@ -174,7 +164,7 @@ class CommonController extends Controller
      *
      * @return boolean
      */
-    protected function check_storage()
+    protected function checkStorage()
     {
         $jobs_path = config('rvlab.jobs_path');
         if (!file_exists($jobs_path)) {

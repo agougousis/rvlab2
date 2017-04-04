@@ -16,7 +16,7 @@ class AuthenticationLayer
 
     public function __construct(Authenticator $authenticator)
     {
-      $this->authenticator = $authenticator;
+        $this->authenticator = $authenticator;
     }
 
     /**

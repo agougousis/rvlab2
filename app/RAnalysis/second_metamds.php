@@ -147,7 +147,7 @@ class second_metamds extends BaseAnalysis implements RAnalysis
             $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;
@@ -167,7 +167,7 @@ class second_metamds extends BaseAnalysis implements RAnalysis
      */
     protected function copyInputFiles()
     {
-        foreach($this->box as $box_file){
+        foreach ($this->box as $box_file) {
             $workspace_filepath = $this->user_workspace . '/' . $box_file;
             $job_filepath = $this->job_folder . '/' . $box_file;
 

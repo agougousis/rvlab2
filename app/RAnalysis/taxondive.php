@@ -114,7 +114,7 @@ class taxondive extends BaseAnalysis implements RAnalysis
             $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;
@@ -216,38 +216,38 @@ class taxondive extends BaseAnalysis implements RAnalysis
         fwrite($fh, "taxdis <- get(load(\"$this->remote_job_folder/$this->box2\"));\n");
         fwrite($fh, "mat <- read.table(\"$this->remote_job_folder/$this->box\", header = TRUE, sep=\",\" ,row.names=1);\n");
 
-        if(!empty($this->transpose)){
+        if (!empty($this->transpose)) {
             fwrite($fh, "mat <- t(mat);\n");
         }
 
-        if($this->transf_method_select != "none"){
+        if ($this->transf_method_select != "none") {
             fwrite($fh, "mat <- decostand(mat, method = \"$this->transf_method_select\");\n");
         }
 
         fwrite($fh, "taxondive <- taxondive(mat,taxdis,match.force=$this->match_force);\n");
         fwrite($fh, "save(taxondive, ascii=TRUE, file = \"$this->remote_job_folder/taxondive.csv\");\n");
 
-        if(empty($this->box3)){
+        if (empty($this->box3)) {
             fwrite($fh, "labels <- as.factor(rownames(mat));\n");
             fwrite($fh, "n<- length(labels);\n");
             fwrite($fh, "rain <- rainbow(n, s = 1, v = 1, start = 0, end = max(1, n - 1)/n, alpha = 0.8);\n");
             fwrite($fh, "labels <- rain;\n");
-        }else{
+        } else {
             fwrite($fh, "ENV <- read.table(\"$this->remote_job_folder/$this->box3\", header = TRUE, sep=\",\" ,row.names=1);\n");
             fwrite($fh, "labels <- as.factor(ENV\$$this->column_select);\n");
         }
         fwrite($fh, "png('legend.png',height = 700, width = 350)\n");
         fwrite($fh, "plot(mat, type = \"n\",ylab=\"\",xlab=\"\",yaxt=\"n\",xaxt=\"n\",bty=\"n\")\n");
 
-        if(empty($this->box3)){
+        if (empty($this->box3)) {
             fwrite($fh, "legend(\"topright\", legend=rownames(mat), col=labels, pch = 16);\n");
-        }else{
+        } else {
             fwrite($fh, "legend(\"topright\", legend=unique(ENV\$$this->column_select), col=unique(labels), pch = 16);\n");
         }
         fwrite($fh, "dev.off()\n");
         fwrite($fh, "png('rplot.png',height = 600, width = 600)\n");
 
-        if($this->deltalamda=="Delta"){
+        if ($this->deltalamda=="Delta") {
             fwrite($fh, "if(min(taxondive\$Dplus) < min(taxondive\$EDplus-taxondive\$sd.Dplus*2)){\n");
             fwrite($fh, "plot(taxondive,pch=19,col=labels,cex = 1.7, ylim = c(min(taxondive\$Dplus),max(taxondive\$sd.Dplus*2+taxondive\$EDplus)), xlim = c(min(taxondive\$Species),max(taxondive\$Species)));\n");
             fwrite($fh, "}else if(max(taxondive\$Dplus) > max(taxondive\$sd.Dplus*2+taxondive\$EDplus)){\n");
@@ -258,7 +258,7 @@ class taxondive extends BaseAnalysis implements RAnalysis
             fwrite($fh, "with(taxondive, text(Species-.3, Dplus-1, as.character(rownames(mat)),pos = 4, cex = 0.9))\n");
             fwrite($fh, "dev.off()\n");
             fwrite($fh, "summary(taxondive);\n");
-        }else{
+        } else {
             fwrite($fh, "lambda1 <- taxondive\$Lambda\n");
             fwrite($fh, "Species1 <- taxondive\$Species\n");
             fwrite($fh, "lambda_dat <- as.matrix(lambda1)\n");

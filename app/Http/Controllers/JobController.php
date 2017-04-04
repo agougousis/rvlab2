@@ -46,13 +46,13 @@ class JobController extends CommonController
         $this->conditionChecker = new ConditionsChecker($this->jobs_path, $this->workspace_path);
 
         // Check if cluster storage has been mounted to web server
-        if (!$this->check_storage()) {
+        if (!$this->checkStorage()) {
             if ($this->is_mobile) {
                 $response = array('message', 'Storage not found');
                 return Response::json($response, 500);
                 die();
             } else {
-                echo $this->load_view('errors/unmounted', 'Storage not found');
+                echo $this->loadView('errors/unmounted', 'Storage not found');
                 die();
             }
         }
@@ -84,7 +84,6 @@ class JobController extends CommonController
             );
             return Response::json($response, 200);
         } else {
-
             $forms = array();
             foreach ($r_functions as $codename => $title) {
                 $forms[$codename] = View::make('forms.' . $codename, $form_data);
@@ -100,7 +99,7 @@ class JobController extends CommonController
             $data['refresh_rate'] = $this->system_settings['status_refresh_rate_page'];
             $data['timezone'] = $userInfo['timezone'];
 
-            // Check if this we load the page after delete_many_jobs() has been called
+            // Check if this we load the page after deleteManyJobs() has been called
             if (Session::has('deletion_info')) {
                 $data['deletion_info'] = Session::get('deletion_info');
             }
@@ -119,7 +118,7 @@ class JobController extends CommonController
                 $data['last_function_used'] = "taxa2dist";
             }
 
-            return $this->load_view('index', 'R vLab Home Page', $data);
+            return $this->loadView('index', 'R vLab Home Page', $data);
         }
     }
 
@@ -129,7 +128,7 @@ class JobController extends CommonController
      *
      * @return RedirectResponse
      */
-    public function delete_many_jobs(Request $request)
+    public function deleteManyJobs(Request $request)
     {
         $form = $request->all();
 
@@ -180,7 +179,7 @@ class JobController extends CommonController
      *
      * @return JSON
      */
-    public function get_user_jobs()
+    public function getUserJobs()
     {
         $userInfo = session('user_info');
 
@@ -206,7 +205,7 @@ class JobController extends CommonController
      * @param int $job_id
      * @return JSON
      */
-    public function get_job_status($job_id)
+    public function getJobStatus($job_id)
     {
         $userInfo = session('user_info');
         $user_email = $userInfo['email'];
@@ -218,7 +217,7 @@ class JobController extends CommonController
                 ->first();
 
         if (empty($result)) {
-            $this->log_event("Trying to retrieve status for a job that does not belong to this user.", "unauthorized");
+            $this->logEvent("Trying to retrieve status for a job that does not belong to this user.", "unauthorized");
             $response = array('message', 'Trying to retrieve status for a job that does not belong to this user!');
             return Response::json($response, 401);
         }
@@ -232,7 +231,7 @@ class JobController extends CommonController
      * @param int $job_id
      * @return JSON
      */
-    public function get_r_script($job_id)
+    public function getRScript($job_id)
     {
         $userInfo = session('user_info');
         $user_email = $userInfo['email'];
@@ -241,7 +240,7 @@ class JobController extends CommonController
 
         // Check if the R script exists
         if (!file_exists($fullpath)) {
-            $this->log_event("Trying to retrieve non existent R script.", "illegal");
+            $this->logEvent("Trying to retrieve non existent R script.", "illegal");
             $response = array('message', 'Trying to retrieve non existent R script!');
             return Response::json($response, 400);
         }
@@ -253,7 +252,7 @@ class JobController extends CommonController
                 ->first();
 
         if (empty($result)) {
-            $this->log_event("Trying to retrieve an R script from a job that does not belong to this user.", "unauthorized");
+            $this->logEvent("Trying to retrieve an R script from a job that does not belong to this user.", "unauthorized");
             $response = array('message', 'Trying to retrieve an R script from a job that does not belong to this user!');
             return Response::json($response, 401);
         }
@@ -269,9 +268,9 @@ class JobController extends CommonController
      * @param string $filename
      * @return View|file|JSON
      */
-    public function get_job_file($job_id, $filename)
+    public function getJobFile($job_id, $filename)
     {
-        $clean_filename = safe_filename( basename($filename) );
+        $clean_filename = safe_filename(basename($filename));
 
         $user_email = session('user_info.email');
 
@@ -385,7 +384,7 @@ class JobController extends CommonController
 
         // Check if there is something to log
         if (!empty($logMessage)) {
-            $this->log_event($logMessage, "error");
+            $this->logEvent($logMessage, "error");
         }
 
         if ($this->is_mobile) {

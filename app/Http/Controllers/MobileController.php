@@ -13,7 +13,8 @@ use App\Http\Controllers\CommonController;
  */
 class MobileController extends CommonController
 {
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
     }
 

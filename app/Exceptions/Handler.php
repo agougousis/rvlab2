@@ -51,7 +51,7 @@ class Handler extends ExceptionHandler
     {
         // Handle UnexpectedErrorException
         if ($exception instanceof UnexpectedErrorException) {
-            $this->log_event($exception->getLogMessage(), "illegal");
+            $this->logEvent($exception->getLogMessage(), "illegal");
 
             if ($exception->isMobileRequest()) {
                 $response = array('message', $exception->getUserMessage());
@@ -64,7 +64,7 @@ class Handler extends ExceptionHandler
 
         // Handle AuthorizationException
         if ($exception instanceof AuthorizationException) {
-            $this->log_event($exception->getLogMessage(), "illegal");
+            $this->logEvent($exception->getLogMessage(), "illegal");
 
             if ($exception->displayToastr()) {
                 Session::flash('toastr', array('error', $exception->getUserMessage()));
@@ -76,7 +76,7 @@ class Handler extends ExceptionHandler
 
         // Handle InvalidRequestException
         if ($exception instanceof InvalidRequestException) {
-            $this->log_event($exception->getLogMessage(), "invalid");
+            $this->logEvent($exception->getLogMessage(), "invalid");
 
             if ($exception->displayToastr()) {
                 Session::flash('toastr', array('error', $exception->getUserMessage()));
@@ -119,9 +119,8 @@ class Handler extends ExceptionHandler
      * @param string $message
      * @param string $category
      */
-    protected function log_event($message, $category)
+    protected function logEvent($message, $category)
     {
-
         $db_message = $message;
         $route = explode('@', Route::currentRouteName());
 

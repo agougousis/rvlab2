@@ -122,7 +122,7 @@ class permanova extends BaseAnalysis implements RAnalysis
             $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;
@@ -210,15 +210,15 @@ class permanova extends BaseAnalysis implements RAnalysis
         fwrite($fh, "library(vegan);\n");
         fwrite($fh, "ENV <- read.table(\"$this->remote_job_folder/$this->box2\",header = TRUE, sep=\",\",row.names=1);\n");
         fwrite($fh, "mat <- read.table(\"$this->remote_job_folder/$this->box\", header = TRUE, sep=\",\" ,row.names=1);\n");
-        if($this->transpose == "transpose"){
+        if ($this->transpose == "transpose") {
             fwrite($fh, "mat <- t(mat);\n");
         }
-        if($this->transf_method_select != "none"){
+        if ($this->transf_method_select != "none") {
             fwrite($fh, "mat <- decostand(mat, method = \"$this->transf_method_select\");\n");
         }
-        if($this->single_or_multi =="single"){
+        if ($this->single_or_multi =="single") {
             fwrite($fh, "otu.ENVFACT.adonis <- adonis(mat ~ ENV\$$this->column_select,data=ENV,permutations = $this->permutations,distance = \"$this->method_select\");\n");
-        }else{
+        } else {
             fwrite($fh, "otu.ENVFACT.adonis <- adonis(mat ~ ENV\$$this->column_select+ENV\$$this->column_select2,data=ENV,permutations = $this->permutations,distance = \"$this->method_select\");\n");
         }
 

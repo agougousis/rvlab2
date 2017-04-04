@@ -23,7 +23,7 @@ class ResultPageController extends JobController
      * @param int $job_id
      * @return View|JSON
      */
-    public function job_page($job_id)
+    public function jobPage($job_id)
     {
         $user_email = session('user_info.email');
 
@@ -39,7 +39,7 @@ class ResultPageController extends JobController
 
         // If job execution has not finished, try to update its status
         if (in_array($job->status, array('submitted', 'running', 'queued'))) {
-            $this->jobHelper->refresh_job_status($job);
+            $this->jobHelper->refreshJobStatus($job);
         }
 
         $data['function'] = $job->function;
@@ -53,7 +53,7 @@ class ResultPageController extends JobController
                 $response = array('message', 'Error occured during submission.');
                 return Response::json($response, 500);
             } else {
-                return $this->load_view('results/failed', 'Job Results', $data);
+                return $this->loadView('results/failed', 'Job Results', $data);
             }
         }
 
@@ -64,14 +64,14 @@ class ResultPageController extends JobController
                 return Response::json($response, 500);
             } else {
                 $data['refresh_rate'] = $this->system_settings['status_refresh_rate_page'];
-                return $this->load_view('results/submitted', 'Job Results', $data);
+                return $this->loadView('results/submitted', 'Job Results', $data);
             }
         }
 
         $job_folder = $this->jobs_path . '/' . $user_email . '/job' . $job_id;
 
         // Build the result page for this job
-        return $this->build_result_page($job, $job_folder, $inputs);
+        return $this->buildResultPage($job, $job_folder, $inputs);
     }
 
     /**
@@ -121,15 +121,15 @@ class ResultPageController extends JobController
 
         // Parse the file
         $parser = new JobOutputParser();
-        $parser->parse_output($job_folder . $fileToParseForErrors);
+        $parser->parseOutput($job_folder . $fileToParseForErrors);
 
         // We should also look for messages in the job's log file
         if ($parser->hasFailed()) {
             $data['errorString'] = implode("<br>", $parser->getOutput());
-            $data['errorString'] .= $parser->parse_log($log_file);
+            $data['errorString'] .= $parser->parseLog($log_file);
         } else {
             $data['errorString'] = "Error occured during submission.";
-            $data['errorString'] .= $parser->parse_log($log_file);
+            $data['errorString'] .= $parser->parseLog($log_file);
         }
     }
 
@@ -175,7 +175,7 @@ class ResultPageController extends JobController
      * @param array $input_files
      * @return mixed
      */
-    private function build_result_page(Job $job, $job_folder, array $input_files)
+    private function buildResultPage(Job $job, $job_folder, array $input_files)
     {
         $data = array();
 
@@ -191,7 +191,7 @@ class ResultPageController extends JobController
             if ($this->is_mobile) {
                 return array('data', $data);
             } else {
-                return $this->load_view('results/failed', 'Job Results', $data);
+                return $this->loadView('results/failed', 'Job Results', $data);
             }
         }
 
@@ -199,7 +199,7 @@ class ResultPageController extends JobController
             unset($data['content']);
             return Response::json(array('data', $data), 200);
         } else {
-            return $this->load_view('results/completed', 'Job Results', $data);
+            return $this->loadView('results/completed', 'Job Results', $data);
         }
     }
 
@@ -338,7 +338,7 @@ class ResultPageController extends JobController
      * @param array $data
      * @return boolean
      */
-    protected function loadResultHtml(Job $job,array &$data)
+    protected function loadResultHtml(Job $job, array &$data)
     {
         switch ($job->function) {
             case 'taxa2dist':
@@ -422,7 +422,7 @@ class ResultPageController extends JobController
     protected function parseOutput($outputFile, array $data)
     {
         $parser = new JobOutputParser();
-        $parser->parse_output($data['job_folder'].'/'.$outputFile);
+        $parser->parseOutput($data['job_folder'].'/'.$outputFile);
 
         if ($parser->hasFailed()) {
             $data['errorString'] = $parser->getOutput();

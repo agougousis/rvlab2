@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\ClassHelpers;
 
 use App\Models\Job;
@@ -36,7 +35,7 @@ class ConditionsChecker
     {
         $job_records = [];
 
-        foreach($jobIdList as $job_id) {
+        foreach ($jobIdList as $job_id) {
             $job = Job::find($job_id);
 
             // Check if this job exists

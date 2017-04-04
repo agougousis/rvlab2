@@ -33,7 +33,8 @@ class JobOutputParser
      */
     private $buffer_string;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->error_string = array();
         $this->output_string = array();
     }
@@ -44,9 +45,10 @@ class JobOutputParser
      * @param string $log_file
      * @return string
      */
-    public function parse_log($log_file){
+    public function parseLog($log_file)
+    {
         $log_text = "";
-        if(file_exists($log_file)){
+        if (file_exists($log_file)) {
             $handle = fopen($log_file, "r");
             if ($handle) {
                 while (($line = fgets($handle)) !== false) {
@@ -67,8 +69,8 @@ class JobOutputParser
      *
      * @param string $filepath
      */
-    public function parse_output($filepath){
-
+    public function parseOutput($filepath)
+    {
         $this->error_string = array();
         $this->output_String = array();
         $this->buffer_string = array();
@@ -79,32 +81,32 @@ class JobOutputParser
             if ($handle) {
                 while (($line = fgets($handle)) !== false) {
                     $this->buffer_string[] = $line;
-                    if (((strpos($line,'Error') !== false)||(strpos($line,'error') != false))&&(strpos($line,'Initializing database from') == false)) {
+                    if (((strpos($line, 'Error') !== false)||(strpos($line, 'error') != false))&&(strpos($line, 'Initializing database from') == false)) {
                         $found_nothing = false;
                         $this->error_string[] = $line;
                         while (($line = fgets($handle)) !== false) {
                             $this->error_string[] = "<br>".$line;
                         }
-                    } elseif(strpos($line,'Primary job') !== false){
+                    } elseif (strpos($line, 'Primary job') !== false) {
                         $found_nothing = false;
                         $this->error_string[] = $line;
                         while (($line = fgets($handle)) !== false) {
                             $this->error_string[] = "<br>".$line;
                         }
-                    } elseif(strpos($line,'unable to launch the specified') !== false){
+                    } elseif (strpos($line, 'unable to launch the specified') !== false) {
                         $found_nothing = false;
                         $this->error_string[] = $line;
                         while (($line = fgets($handle)) !== false) {
                             $this->error_string[] = "<br>".$line;
                         }
-                    } elseif (strpos($line,'summary') !== false){
+                    } elseif (strpos($line, 'summary') !== false) {
                         $found_nothing = false;
                         while (($line = fgets($handle)) !== false) {
                             $this->output_string[] = "<br>".$line;
                         }
                     }
                 }
-                if($found_nothing){
+                if ($found_nothing) {
                     $this->output_string = $this->buffer_string;
                 }
                 fclose($handle);
@@ -123,8 +125,9 @@ class JobOutputParser
      *
      * @return boolean
      */
-    public function hasFailed(){
-        if(!empty($this->error_string)){
+    public function hasFailed()
+    {
+        if (!empty($this->error_string)) {
             return true;
         } else {
             return false;
@@ -136,12 +139,12 @@ class JobOutputParser
      *
      * @return string
      */
-    public function getOutput(){
-        if(!empty($this->error_string)){
+    public function getOutput()
+    {
+        if (!empty($this->error_string)) {
             return $this->error_string;
         } else {
             return $this->output_string;
         }
     }
-
 }

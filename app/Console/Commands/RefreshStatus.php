@@ -52,13 +52,11 @@ class RefreshStatus extends Command
             $counter = 0;
             // Check status flag for each job
             foreach ($pending_jobs as $job) {
-
                 $counter++;
 
                 $jobHelper = new JobHelper();
-                $jobHelper->refresh_job_status($job);
+                $jobHelper->refreshJobStatus($job);
             }
-
         } catch (\Exception $ex) {
             $this->save_log($ex->getMessage(), 'error');
         }
@@ -70,7 +68,7 @@ class RefreshStatus extends Command
      * @param type $message
      * @param type $category
      */
-    private function save_log($message, $category)
+    private function saveLog($message, $category)
     {
         $log = new SystemLog();
         $log->when = date("Y-m-d H:i:s");

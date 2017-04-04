@@ -90,7 +90,7 @@ class anova extends BaseAnalysis implements RAnalysis
             $this->buildBashScript();
         } catch (\Exception $ex) {
             if (!empty($ex->getMessage())) {
-                $this->log_event($ex->getMessage(), "error");
+                $this->logEvent($ex->getMessage(), "error");
             }
 
             return false;
@@ -159,7 +159,7 @@ class anova extends BaseAnalysis implements RAnalysis
         fwrite($fh, "library(stats);\n");
         fwrite($fh, "geo <- read.table(\"$this->remote_job_folder/$this->box\", row.names=1, header = TRUE, sep=\",\");\n");
 
-        if($this->one_or_two_way =="one"){
+        if ($this->one_or_two_way =="one") {
             fwrite($fh, "aov.ex1<-aov($this->factor_select1~$this->factor_select2,geo);\n");
             fwrite($fh, "png('rplot.png')\n");
             fwrite($fh, "boxplot($this->factor_select1~$this->factor_select2,geo,xlab=\"$this->factor_select2\", ylab=\"$this->factor_select1\")\n");
@@ -170,6 +170,7 @@ class anova extends BaseAnalysis implements RAnalysis
             fwrite($fh, "boxplot($this->factor_select1~$this->factor_select2*$this->factor_select3,geo)\n");
             fwrite($fh, "dev.off()\n");
         }
+
         fwrite($fh, "summary(aov.ex1);\n");
         fclose($fh);
     }
