@@ -25,8 +25,25 @@ define("PORTAL_LOGIN", "https://portal.lifewatchgreece.eu");
  */
 class WorkspaceController extends CommonController
 {
+    /**
+     * The directory path to R vLab workspace
+     *
+     * @var string
+     */
     private $workspace_path;
+
+    /**
+     * The directory path to R vLab jobs
+     *
+     * @var string
+     */
     private $jobs_path;
+
+    /**
+     * An helper object that is used to check for necessery conditions
+     *
+     * @var ConditionsChecker
+     */
     private $conditionChecker;
 
     public function __construct()
@@ -238,7 +255,7 @@ class WorkspaceController extends CommonController
 
             // Copy the file to user workspace
             copy($filepath, $new_filepath);
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             DB::rollback();
             $this->log_event($ex->getMessage(), "error");
             $response = array('message', 'Unexpected error.');
@@ -296,7 +313,7 @@ class WorkspaceController extends CommonController
             $file_record->delete();
             $filepath = $this->workspace_path . '/' . $user_email . '/' . $file_record->filename;
             unlink($filepath);
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             DB::rollback();
             return $this->unexpectedErrorResponse($ex->getMessage(), 'Unexpected error!');
         }
@@ -341,7 +358,7 @@ class WorkspaceController extends CommonController
                 $filepath = $this->workspace_path . '/' . $user_email . '/' . $file_record->filename;
 
                 unlink($filepath);
-            } catch (Exception $ex) {
+            } catch (\Exception $ex) {
                 DB::rollback();
                 return $this->unexpectedErrorResponse($ex->getMessage(), 'Some files could not be deleted!');
             }

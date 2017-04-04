@@ -16,7 +16,18 @@ use App\Http\Controllers\CommonController;
  */
 class ExternalController extends CommonController
 {
+    /**
+     * The directory path to R vLab workspace
+     *
+     * @var string
+     */
     private $workspace_path;
+
+    /**
+     * The directory path to R vLab jobs
+     *
+     * @var string
+     */
     private $jobs_path;
 
     public function __construct()
@@ -124,7 +135,7 @@ class ExternalController extends CommonController
                                     ], 200, $cors_headers);
                 }
             }
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             DB::rollBack();
 
             // Log the exception

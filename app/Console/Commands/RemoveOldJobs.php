@@ -61,7 +61,7 @@ class RemoveOldJobs extends Command
                 $job->delete();
 
                 $counter++;
-            } catch (Exception $ex) {
+            } catch (\Exception $ex) {
                 $this->save_log("Error occured during deletion of job" . $job->id . ". Message: " . $ex->getMessage(), "error");
             }
         }

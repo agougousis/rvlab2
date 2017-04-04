@@ -25,7 +25,7 @@ class StoragePolicy extends Command
     /**
      * The console command description.
      *
-     * @var string 
+     * @var string
      */
     protected $description = 'Enforces R vLab storage policy';
 
@@ -94,7 +94,7 @@ class StoragePolicy extends Command
                                 $this->save_log('Folder ' . $job_folder . ' could not be deleted!', "error");
                             }
                             $this->save_log('Folder deleted - Job ID: ' . $job_id . ' - User: ' . $user_email, "info");
-                        } catch (Exception $ex) {
+                        } catch (\Exception $ex) {
                             $this->save_log("Error occured during deletion of job" . $job_id . ". Message: " . $ex->getMessage(), "error");
                         }
 

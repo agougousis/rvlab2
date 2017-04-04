@@ -154,12 +154,11 @@ class JobController extends CommonController
         $count_deleted = 0;
 
         foreach ($job_records as $job) {
-            $result = $this->delete_one_job($job);
-            if ($result['deleted']) {
-                $count_deleted++;
-            } else {
+            if (!$this->jobHelper->deleteJob($job)) {
                 $total_success = false;
-                $error_messages[] = $result['message'];
+                $error_messages[] = 'An unexpected error occured while deleting job' . $job->id . ' .';
+            } else {
+                $count_deleted++;
             }
         }
 
@@ -173,43 +172,6 @@ class JobController extends CommonController
             return Response::json($deletion_info, 200);
         } else {
             return Redirect::to('/')->with('deletion_info', $deletion_info);
-        }
-    }
-
-    /**
-     * Deletes a specific job
-     *
-     * @param Job $job
-     * @return array
-     */
-    protected function delete_one_job($job)
-    {
-        $user_email = session('user_info.email');
-
-        try {
-            // Delete job record
-            $job->delete();
-
-            // Delete job files
-            $job_folder = $this->jobs_path . '/' . $user_email . '/job' . $job->id;
-            if (!delTree($job_folder)) {
-                $this->log_event('Folder ' . $job_folder . ' could not be deleted!', "error");
-                return array(
-                    'deleted' => false,
-                    'message' => 'Unexpected error occured during job folder deletion (' . $job->id . ').'
-                );
-            }
-
-            return array(
-                'deleted' => true,
-                'message' => ''
-            );
-        } catch (Exception $ex) {
-            $this->log_event("Error occured during deletion of job" . $job->id . ". Message: " . $ex->getMessage(), "error");
-            return array(
-                'deleted' => false,
-                'message' => 'Unexpected error occured during deletion of a job (' . $job->id . ').'
-            );
         }
     }
 
@@ -330,22 +292,7 @@ class JobController extends CommonController
         // to the logged in user (and so, it exists!)
         AuthorizationChecker::jobBelongsToUser($job_id, $user_email);
 
-        // Download the file
-        $parts = pathinfo($clean_filename);
-        $new_filename = $parts['filename'] . '_job' . $job_id . '.' . $parts['extension'];
-
-        switch ($parts['extension']) {
-            case 'png':
-                return response()->download($fullpath, $new_filename, ['Content-Type' => 'image/png']);
-                break;
-            case 'csv':
-                return response()->download($fullpath, $new_filename, ['Content-Type' => 'text/plain', 'Content-Disposition' => 'attachment; filename=' . $new_filename]);
-                break;
-            case 'nwk':
-            case 'pdf':
-                return response()->download($fullpath, $new_filename, ['Content-Type' => 'application/octet-stream']);
-                break;
-        }
+        return $this->jobHelper->downloadJobFile($fullpath, $job_id);
     }
 
     /**
@@ -390,12 +337,12 @@ class JobController extends CommonController
             }
 
             $this->updateJobAfterSubmission($job, $job_folder, $inputs, $params);
-        } catch (Exception $ex) {
-            $this->jobHelper->deleteJob($job_id, $job_folder);
+        } catch (\Exception $ex) {
+            $this->jobHelper->deleteJob($job);
 
             $this->errorMessage = 'Job submission failed! ' . $this->errorMessage;
 
-            return $this->responseAfterFailure($ex->getMessage(), $this->errorMessage, $job_id, $job_folder);
+            return $this->responseAfterFailure($ex->getMessage(), $this->errorMessage, $job);
         }
 
         Session::put('last_function_used', $form['function']);
@@ -425,15 +372,15 @@ class JobController extends CommonController
      *
      * @param string $logMessage
      * @param string $flashMessage
-     * @param int $jogId
+     * @param Job $job
      * @param string $job_folder
      * @return mixed
      */
-    protected function responseAfterFailure($logMessage, $flashMessage, $jogId = null, $job_folder = null)
+    protected function responseAfterFailure($logMessage, $flashMessage, $job = null)
     {
         // Delete the job directory, if created
-        if ($jogId) {
-            $this->jobHelper->deleteJob($jogId, $job_folder);
+        if ($job) {
+            $this->jobHelper->deleteJob($job);
         }
 
         // Check if there is something to log

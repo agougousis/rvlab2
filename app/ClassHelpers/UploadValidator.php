@@ -55,7 +55,7 @@ class UploadValidator
                     throw $exception;
                 }
             }
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             $exception = new UnexpectedErrorException($ex->getMessage());
             $exception->setUserMessage('Something went wrong! Please try again!');
             throw $exception;

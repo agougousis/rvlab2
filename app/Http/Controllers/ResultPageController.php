@@ -6,7 +6,7 @@ use Session;
 use Response;
 use App\Models\Job;
 use App\Models\WorkspaceFile;
-use App\ClassHelpers\RvlabParser;
+use App\ClassHelpers\JobOutputParser;
 use App\Http\Controllers\JobController;
 
 /**
@@ -39,7 +39,7 @@ class ResultPageController extends JobController
 
         // If job execution has not finished, try to update its status
         if (in_array($job->status, array('submitted', 'running', 'queued'))) {
-            $this->jobHelper->refresh_job_status($job_id);
+            $this->jobHelper->refresh_job_status($job);
         }
 
         $data['function'] = $job->function;
@@ -120,7 +120,7 @@ class ResultPageController extends JobController
         }
 
         // Parse the file
-        $parser = new RvlabParser();
+        $parser = new JobOutputParser();
         $parser->parse_output($job_folder . $fileToParseForErrors);
 
         // We should also look for messages in the job's log file
@@ -421,7 +421,7 @@ class ResultPageController extends JobController
      */
     protected function parseOutput($outputFile, array $data)
     {
-        $parser = new RvlabParser();
+        $parser = new JobOutputParser();
         $parser->parse_output($data['job_folder'].'/'.$outputFile);
 
         if ($parser->hasFailed()) {
@@ -440,7 +440,7 @@ class ResultPageController extends JobController
      */
     protected function parseBictOutput(array $data)
     {
-        $parser = new RvlabParser();
+        $parser = new JobOutputParser();
         $parser->parse_output($data['job_folder'] . '/cmd_line_output.txt');
 
         if ($parser->hasFailed()) {

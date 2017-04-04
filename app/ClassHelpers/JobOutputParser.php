@@ -3,14 +3,34 @@
 namespace App\ClassHelpers;
 
 /**
- * Description of RvlabParser
+ * Handles the parsing of a job outout file in order to identify potential
+ * execution errors.
  *
+ * @license MIT
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
-class RvlabParser {
-
+class JobOutputParser
+{
+    /**
+     * An array containing error lines from job output or custom descriptions
+     * about errors happened during the parsing procedure.
+     *
+     * @var array
+     */
     private $error_string;
+
+    /**
+     * Contains the text output of a job in case no errors where found
+     *
+     * @var array
+     */
     private $output_string;
+
+    /**
+     * A temporary storage for text output lines during the parsing procedure
+     *
+     * @var array
+     */
     private $buffer_string;
 
     public function __construct() {
@@ -18,6 +38,12 @@ class RvlabParser {
         $this->output_string = array();
     }
 
+    /**
+     * Parses a job log file and looks for errors
+     *
+     * @param string $log_file
+     * @return string
+     */
     public function parse_log($log_file){
         $log_text = "";
         if(file_exists($log_file)){
@@ -36,6 +62,11 @@ class RvlabParser {
         }
     }
 
+    /**
+     * Parses a job output file and looks for errors.
+     *
+     * @param string $filepath
+     */
     public function parse_output($filepath){
 
         $this->error_string = array();
@@ -80,13 +111,18 @@ class RvlabParser {
             } else {
                 $this->error_string[] = "Output of R script could not be opened!";
             }
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             $this->error_string[] = "Unexpected error happened when parsing the output of R script.";
             $this->error_string[] = "<br>Error message: ".$ex->getMessage();
         }
 
     }
 
+    /**
+     * Checks whether the parser has identified any errors to job execution
+     *
+     * @return boolean
+     */
     public function hasFailed(){
         if(!empty($this->error_string)){
             return true;
@@ -95,6 +131,11 @@ class RvlabParser {
         }
     }
 
+    /**
+     * Returns any error line that has been identified during the parsing
+     *
+     * @return string
+     */
     public function getOutput(){
         if(!empty($this->error_string)){
             return $this->error_string;

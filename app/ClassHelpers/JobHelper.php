@@ -8,17 +8,30 @@ use App\Models\Job;
 use App\Models\JobsLog;
 use App\Models\SystemLog;
 use App\Models\WorkspaceFile;
-use App\ClassHelpers\RvlabParser;
+use App\ClassHelpers\JobOutputParser;
+use App\ClassHelpers\JobStatusParser;
 use App\Exceptions\InvalidRequestException;
 
 /**
- * Description of DirectoryManager
+ * Handles subtasks related to R vLab jobs
  *
- * @author Alexandros
+ * @license MIT
+ * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
 class JobHelper
 {
+    /**
+     * The directory path to R vLab workspace
+     *
+     * @var string
+     */
     private $workspace_path;
+
+    /**
+     * The directory path to R vLab jobs
+     *
+     * @var string
+     */
     private $jobs_path;
 
     public function __construct()
@@ -86,25 +99,29 @@ class JobHelper
     /**
      * Deletes a job directory
      *
-     * @param int $jobId
+     * @param Job $jobId
      * @param string $jobFolder
      * @return null
      */
-    public function deleteJob($jobId, $jobFolder)
+    public function deleteJob(Job $job)
     {
-        // Delete the job record
-        $job = Job::where('id', $jobId)->first();
+        $user_email = session('user_info.email');
+        $job_folder = $this->jobs_path . '/' . $user_email . '/job' . $job->id;
 
+        // Delete the job record
         if (!empty($job)) {
             $job->delete();
         }
 
         // Delete folder if created
-        if (file_exists($jobFolder)) {
-            if (!delTree($jobFolder)) {
-                $this->log_event('Folder ' . $jobFolder . ' could not be deleted after failed job submission!', "error");
+        if (file_exists($job_folder)) {
+            if (!delTree($job_folder)) {
+                $this->log_event('Folder ' . $job_folder . ' could not be deleted after failed job submission!', "error");
+                return false;
             }
         }
+
+        return true;
     }
 
     /**
@@ -128,17 +145,17 @@ class JobHelper
     }
 
     /**
+     * Updates the job status
      *
-     * @param int $job_id Refreshes the status of a specific job
+     * This method should never be called for a job with database status
+     * equal to completed.
      *
-     * @param int $job_id
+     * @param Job $job
      * @return void
      */
-    public function refresh_job_status($job_id)
+    public function refresh_job_status(Job $job)
     {
-        $job = Job::find($job_id);
-
-        $job_folder = $this->jobs_path . '/' . $job->user_email . '/job' . $job_id;
+        $job_folder = $this->jobs_path . '/' . $job->user_email . '/job' . $job->id;
         $pbs_filepath = $job_folder . '/job' . $job->id . '.pbs';
         $submitted_filepath = $job_folder . '/job' . $job->id . '.submitted';
 
@@ -147,73 +164,36 @@ class JobHelper
         } else if (!file_exists($submitted_filepath)) {
             $status = 'creating';
         } else {
-            $status_file = $job_folder . '/job' . $job_id . '.jobstatus';
-            $status_info = file($status_file);
-            $status_parts = preg_split('/\s+/', $status_info[0]);
-            $status_message = $status_parts[8];
-            switch ($status_message) {
-                case 'Q':
-                    $status = 'queued';
-                    break;
-                case 'R':
-                    $status = 'running';
-                    $started_at = $status_parts[3] . ' ' . $status_parts[4];
-                    break;
-                case 'ended':
-                    $status = 'completed';
-                    $started_at = $status_parts[3] . ' ' . $status_parts[4];
-                    $completed_at = $status_parts[5] . ' ' . $status_parts[6];
-                    break;
-                case 'ended_PBS_ERROR':
-                    $status = 'failed';
-                    $started_at = $status_parts[3] . ' ' . $status_parts[4];
-                    $completed_at = $status_parts[5] . ' ' . $status_parts[6];
-                    break;
-            }
+            $statusFilePath = $job_folder . '/job' . $job->id . '.jobstatus';
 
-            switch ($job->function) {
-                case 'bict':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                case 'parallel_taxa2dist':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                case 'parallel_postgres_taxa2dist':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                case 'parallel_anosim':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                case 'parallel_mantel':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                case 'parallel_taxa2taxon':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                case 'parallel_permanova':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                case 'parallel_bioenv':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                case 'parallel_simper':
-                    $fileToParse = '/cmd_line_output.txt';
-                    break;
-                default:
-                    $fileToParse = '/job' . $job_id . '.Rout';
-            }
+            // Update the job status parsing the job status file
+            // We assume an initial status of 'submitted' but this should change
+            // under normal conditions.
+            list($status, $started_at, $completed_at) = JobStatusParser::parseStatusFile($statusFilePath, 'submitted');
+
+            // File to parse for errors
+            $outputFileToParse = JobStatusParser::outputFileToParse($job->function, $job->id);
 
             // If job has run, check for R errors
             if ($status == 'completed') {
-                $parser = new RvlabParser();
-                $parser->parse_output($job_folder . $fileToParse);
+                $parser = new JobOutputParser();
+
+                $parser->parse_output($job_folder . $outputFileToParse);
+
                 if ($parser->hasFailed()) {
                     $status = 'failed';
-                    //$this->log_event(implode(' - ',$parser->getOutput()),"info");
                 }
             }
+
+                if (!empty($started_at)) {
+                    $job->started_at = $started_at;
+                }
+                if (!empty($completed_at)) {
+                    $job->completed_at = $completed_at;
+                }
         }
 
+        $job->jobsize = directory_size($job_folder);
         $job->status = $status;
         $job->save();
 
@@ -231,9 +211,31 @@ class JobHelper
             $job_log->inputs = $job->inputs;
             $job_log->parameters = $job->parameters;
             $job_log->save();
-        } else if (($status == 'running') && (empty($job_log->started_at))) {
-            $job_log->started_at = $job->started_at;
-            $job_log->save();
+        }
+    }
+
+    /**
+     * Returns a download response for a job file
+     *
+     * @param string $filepath
+     * @param int $job_id
+     * @return ResponseFactory
+     */
+    public function downloadJobFile($filepath, $job_id)
+    {
+        $parts = pathinfo(basename($filepath));
+
+        // Download the file with a name that contains the job ID
+        $new_filename = $parts['filename'] . '_job' . $job_id . '.' . $parts['extension'];
+
+        switch ($parts['extension']) {
+            case 'png':
+                return response()->download($filepath, $new_filename, ['Content-Type' => 'image/png']);
+            case 'csv':
+                return response()->download($filepath, $new_filename, ['Content-Type' => 'text/plain', 'Content-Disposition' => 'attachment; filename=' . $new_filename]);
+            case 'nwk':
+            case 'pdf':
+                return response()->download($filepath, $new_filename, ['Content-Type' => 'application/octet-stream']);
         }
     }
 
