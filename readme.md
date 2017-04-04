@@ -76,7 +76,7 @@ If each PHP application is executed under a different user (e.g in case PHP-FPM 
 owned by the relevant user. For the same reason, mounting of cluster directories should take place under this user, so that 
 the application can write to the directories.
 
-####Cron jobs
+#### Cron jobs
 
 A single cron job should be added:
 
@@ -92,7 +92,7 @@ and the following three tasks are executed regularly:
 
 These three tasks should be executed by the same user that R vLab web application is executed and so by the user who is owner of the application files.  
 
-####Authentication
+#### Authentication
 
 Authentication mechanism can be substituted by providing an alternative authenticator class. The authenticator class should implement the App\Contracts\Authenticator interface and
 be placed in the app/Authenticators directory. In order to switch between the available authenticators, just change the bind in the app/Providers/AuthenticatorServiceProvider.php file. 
@@ -116,6 +116,6 @@ and 3 relevant routes has been added in the routes/web.php
 Though not necessery, these files and routes can be removed in case your are
 using an alternative authenticator.
 
-##License
+## License
 
 The R vLab is open-sourced software licensed under the MIT license.

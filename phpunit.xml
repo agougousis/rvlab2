@@ -19,7 +19,8 @@
             <directory suffix=".php">./app</directory>
             <exclude> 
                 <directory suffix=".php">./app/Providers</directory>
-                <directory suffix=".php">./app/Exceptions</directory>               
+                <directory suffix=".php">./app/Http/Controllers/Auth</directory>   
+                <file>./app/Authenticators/PortalAuthenticator.php</file>            
             </exclude>
         </whitelist>
     </filter>

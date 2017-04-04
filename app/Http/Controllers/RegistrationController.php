@@ -93,19 +93,19 @@ class RegistrationController extends CommonController
 
         // Decide the registration period dates
         $starts = date('Y-m-d H:i:s');
-        $ends = new DateTime();
+        $ends = new \DateTime();
         switch ($period) {
             case 'day':
-                $ends->add(new DateInterval('P1D')); // add 60 seconds
+                $ends->add(new \DateInterval('P1D')); // add 60 seconds
                 break;
             case 'week':
-                $ends->add(new DateInterval('P7D')); // add 60 seconds
+                $ends->add(new \DateInterval('P7D')); // add 60 seconds
                 break;
             case 'month':
-                $ends->add(new DateInterval('P30D')); // add 60 seconds
+                $ends->add(new \DateInterval('P30D')); // add 60 seconds
                 break;
             case 'semester':
-                $ends->add(new DateInterval('P6M')); // add 60 seconds
+                $ends->add(new \DateInterval('P6M')); // add 60 seconds
                 break;
         }
 
