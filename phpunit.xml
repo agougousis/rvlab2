@@ -16,12 +16,12 @@
             <file>./tests/CommandsTest.php</file>
             <file>./tests/CustomExceptionsTest.php</file>
             <file>./tests/HelpActionsTest.php</file>
-            <file>./tests/LocalAuthenticatorTet.php</file>            
+            <file>./tests/LocalAuthenticatorTest.php</file>            
             <file>./tests/OtherTest.php</file>
             <file>./tests/ParallelJobSubmissionTest.php</file>
             <file>./tests/RecentJobsTest.php</file>
             <file>./tests/RegistrationTest.php</file>
-            <file>./tests/ResultPageTest.php</file>
+            <file>./tests/ResultsPageTest.php</file>
             <file>./tests/SerialJobSubmissionTest.php</file>
             <file>./tests/VisualJobSubmissionTest.php</file>   
             <file>./tests/WorkspaceManagementTest.php</file>  
