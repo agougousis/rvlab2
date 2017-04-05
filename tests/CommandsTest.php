@@ -3,7 +3,6 @@
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use App\Models\WorkspaceFile;
 use App\Models\Setting;
 use App\Models\Job;
 use App\Models\SystemLog;
@@ -13,9 +12,9 @@ use App\Models\SystemLog;
  *
  * @author Alexandros Gougousis <gougousis@teemail.gr>
  */
-class CommandsTest extends TesterBase
+class CommandsTest extends CommonTestBase
 {
-    public function setUp()
+    public function setUp($mockAuthenticator = true)
     {
         parent::setUp();
 

@@ -10,9 +10,9 @@ use App\Models\Setting;
  *
  * @author Alexandros Gougousis <gougousis@teemail.gr>
  */
-class AdminTest extends TesterBase
+class AdminTest extends CommonTestBase
 {
-    public function setUp() {
+    public function setUp($mockAuthenticator = true) {
         parent::setUp();
     }
 

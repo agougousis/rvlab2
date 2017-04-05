@@ -11,9 +11,9 @@ use App\Models\Job;
  *
  * @author Alexandros Gougousis <gougousis@teemail.gr>
  */
-class ParallelJobSubmissionTest extends TesterBase
+class ParallelJobSubmissionTest extends CommonTestBase
 {
-    public function setUp()
+    public function setUp($mockAuthenticator = true)
     {
         parent::setUp();
 

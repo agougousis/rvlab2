@@ -9,9 +9,9 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
  *
  * @author Alexandros Gougousis <gougousis@teemail.gr>
  */
-class RecentJobsTest extends TesterBase
+class RecentJobsTest extends CommonTestBase
 {
-    public function setUp()
+    public function setUp($mockAuthenticator = true)
     {
         parent::setUp();
 

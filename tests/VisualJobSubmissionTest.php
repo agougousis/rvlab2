@@ -11,9 +11,9 @@ use App\Models\WorkspaceFile;
  *
  * @author Alexandros Gougousis <gougousis@teemail.gr>
  */
-class VisualJobSubmissionTest extends TesterBase
+class VisualJobSubmissionTest extends CommonTestBase
 {
-    public function setUp()
+    public function setUp($mockAuthenticator = true)
     {
         parent::setUp();
 

@@ -137,7 +137,6 @@ class ConditionsChecker
             $exception->setUserMessage('File could not be found.');
             throw $exception;
         }
-
         return $filepath;
     }
 

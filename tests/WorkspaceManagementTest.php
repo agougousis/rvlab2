@@ -10,9 +10,9 @@ use App\Models\WorkspaceFile;
  *
  * @author Alexandros Gougousis <gougousis@teemail.gr>
  */
-class WorkspaceManagementTest extends TesterBase
+class WorkspaceManagementTest extends CommonTestBase
 {
-    public function setUp()
+    public function setUp($mockAuthenticator = true)
     {
         parent::setUp();
     }

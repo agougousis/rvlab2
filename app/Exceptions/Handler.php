@@ -64,7 +64,7 @@ class Handler extends ExceptionHandler
 
         // Handle AuthorizationException
         if ($exception instanceof AuthorizationException) {
-            $this->logEvent($exception->getLogMessage(), "illegal");
+            $this->logEvent($exception->getLogMessage(), "unauthorized");
 
             if ($exception->displayToastr()) {
                 Session::flash('toastr', array('error', $exception->getUserMessage()));

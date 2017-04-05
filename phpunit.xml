@@ -10,8 +10,24 @@
          stopOnFailure="true"
          syntaxCheck="false">
     <testsuites>
-        <testsuite name="Application Test Suite">
-            <directory suffix="Test.php">./tests</directory>
+        <testsuite name="MainTestSuite">
+            <file>./tests/AdminTest.php</file>
+            <file>./tests/AuthorizationMiddlewareTest.php</file>
+            <file>./tests/CommandsTest.php</file>
+            <file>./tests/CustomExceptionsTest.php</file>
+            <file>./tests/HelpActionsTest.php</file>
+            <file>./tests/LocalAuthenticatorTet.php</file>            
+            <file>./tests/OtherTest.php</file>
+            <file>./tests/ParallelJobSubmissionTest.php</file>
+            <file>./tests/RecentJobsTest.php</file>
+            <file>./tests/RegistrationTest.php</file>
+            <file>./tests/ResultPageTest.php</file>
+            <file>./tests/SerialJobSubmissionTest.php</file>
+            <file>./tests/VisualJobSubmissionTest.php</file>   
+            <file>./tests/WorkspaceManagementTest.php</file>         
+        </testsuite> 
+        <testsuite name="MobileTestSuite">
+            <file>./tests/MobileCustomExceptionsTest.php</file>
         </testsuite>
     </testsuites>
     <filter>

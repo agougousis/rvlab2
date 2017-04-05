@@ -10,9 +10,9 @@ use App\Models\Registration;
  *
  * @author Alexandros Gougousis <gougousis@teemail.gr>
  */
-class AuthorizationMiddlewareTest extends TesterBase
+class AuthorizationMiddlewareTest extends CommonTestBase
 {
-    public function setUp() {
+    public function setUp($mockAuthenticator = true) {
         parent::setUp();
     }
 

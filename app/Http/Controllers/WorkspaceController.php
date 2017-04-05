@@ -223,14 +223,14 @@ class WorkspaceController extends CommonController
         $user_email = session('user_info.email');
         $user_workspace_path = $this->workspace_path . '/' . $user_email;
 
-        // CONDITION: Check that the jog output file exists
+        // CONDITION: Check that the job output file exists
         $filepath = $this->conditionChecker->outputFilepathExists($user_email, $form['jobid'], $output_filename);
 
         $parts = pathinfo($output_filename);
         $remote_filename = $parts['filename'] . '_job' . $form['jobid'] . '.' . $parts['extension'];
         $new_filepath = $user_workspace_path . '/' . $remote_filename;
 
-        // CONDITION: Check that there is no file win workspace with the same
+        // CONDITION: Check that there is no file in workspace with the same
         // name.
         $this->conditionChecker->workspaceFilenameIsNotTaken($new_filepath);
 

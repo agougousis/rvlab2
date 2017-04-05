@@ -11,13 +11,13 @@ use App\Models\Job;
  *
  * @author Alexandros Gougousis <gougousis@teemail.gr>
  */
-class ResultsPageTest extends TesterBase
+class ResultsPageTest extends CommonTestBase
 {
     protected $mockedAuthenticator;
     protected $loginUrl;
     protected $tempDir = '/home/rvlab2/testing';
 
-    public function setUp(){
+    public function setUp($mockAuthenticator = true){
 	parent::setUp();
 
         $this->clear_workspace();

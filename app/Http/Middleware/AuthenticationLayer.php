@@ -30,7 +30,7 @@ class AuthenticationLayer
     {
         // Retrieve user status
         $authResult = $this->authenticator->authenticate();
-
+        
         // Save user info to session
         session([
             'user_status' => $authResult['status'],

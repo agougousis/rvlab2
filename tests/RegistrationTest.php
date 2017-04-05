@@ -10,9 +10,9 @@ use App\Models\Registration;
  *
  * @author Alexandros Gougousis <gougousis@teemail.gr>
  */
-class RegistrationTest extends TesterBase
+class RegistrationTest extends CommonTestBase
 {
-    public function setUp()
+    public function setUp($mockAuthenticator = true)
     {
         parent::setUp();
     }
@@ -52,7 +52,7 @@ class RegistrationTest extends TesterBase
     }
 
     /**
-     * 
+     *
      * @group registration
      */
     public function mobile_user_checks_if_registered()

@@ -13,7 +13,7 @@ use App\Contracts\Authenticator;
  *
  * @author Alexandros Gougousis <gougousis@teemail.gr>
  */
-class TesterBase extends TestCase {
+abstract class CommonTestBase extends TestCase {
 
     protected $workspacePath;
     protected $jobsPath;
@@ -24,7 +24,7 @@ class TesterBase extends TestCase {
     protected $loginUrl;
     protected $tempDir = '/home/rvlab2/testing';
 
-    public function setUp()
+    public function setUp($mockAuthenticator = true)
     {
         parent::setUp();
         $this->loadSchema();
@@ -40,14 +40,18 @@ class TesterBase extends TestCase {
         $realAuthenticator = app()->make(Authenticator::class);
         $this->loginUrl = $realAuthenticator->getLoginUrl();
 
-        // create a mocked version of the class to be injected
-        $this->mockedAuthenticator = $this->createMock(get_class($realAuthenticator));
-        $this->mockedAuthenticator
-                ->method('getLoginUrl')
-                ->willReturn($this->loginUrl);
+        // There are some cases when we don't want to mock the authenticator
+        // (like when testing the authenticator itself)
+        if ($mockAuthenticator) {
+            // create a mocked version of the class to be injected
+            $this->mockedAuthenticator = $this->createMock(get_class($realAuthenticator));
+            $this->mockedAuthenticator
+                    ->method('getLoginUrl')
+                    ->willReturn($this->loginUrl);
 
-        // Assigne the mocked object to the Service Container as the same name
-        app()->instance(Authenticator::class, $this->mockedAuthenticator);
+            // Assign the mocked object to the Service Container as the same name
+            app()->instance(Authenticator::class, $this->mockedAuthenticator);
+        }
     }
 
     /**
@@ -171,6 +175,24 @@ class TesterBase extends TestCase {
     }
 
     /**
+     * Create an active registration entry for the demo user
+     */
+    protected function register_demo_user()
+    {
+        // Register the demo user
+        $yesterday = (new \DateTime)->sub(new \DateInterval('P1D'))->format('Y-m-d H:i:s');
+        $tomorrow = (new \DateTime)->add(new \DateInterval('P1D'))->format('Y-m-d H:i:s');
+
+        Registration::unguard();
+        Registration::create([
+            'user_email' => $this->demoUser,
+            'starts' => $yesterday,
+            'ends' => $tomorrow
+        ]);
+        Registration::reguard();
+    }
+
+    /**
      * Mocks the authenticator class in order to simulate a user who is logged
      * in and registered to R vLab.
      *
@@ -197,8 +219,8 @@ class TesterBase extends TestCase {
         ]);
 
         // Register the demo user
-        $yesterday = (new DateTime)->sub(new \DateInterval('P1D'))->format('Y-m-d H:i:s');
-        $tomorrow = (new DateTime)->add(new \DateInterval('P1D'))->format('Y-m-d H:i:s');
+        $yesterday = (new \DateTime)->sub(new \DateInterval('P1D'))->format('Y-m-d H:i:s');
+        $tomorrow = (new \DateTime)->add(new \DateInterval('P1D'))->format('Y-m-d H:i:s');
 
         Registration::unguard();
         Registration::create([
