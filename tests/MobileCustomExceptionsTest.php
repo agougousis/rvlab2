@@ -31,8 +31,6 @@ class MobileCustomExceptionstTest extends CommonTestBase
      */
     public function trigger_invalid_request_exception()
     {
-        require __DIR__.'/namespaced_mocks/is_mobile.php';
-
         /** We will try to add to workspace an output file that does not exist **/
 
         $this->clear_workspace();
@@ -71,7 +69,7 @@ class MobileCustomExceptionstTest extends CommonTestBase
             'jobid' =>  '1'
         ];
 
-        $response = $this->call('post', url('workspace/add_output_file'), $post_data);
+        $response = $this->call('post', url('workspace/add_output_file'), $post_data, [], [], ['HTTP_AAAA1'=>'aaa']);
         $this->assertEquals(400, $response->getStatusCode());
 
         // Check the log from InvalidRequestException is there
@@ -87,8 +85,6 @@ class MobileCustomExceptionstTest extends CommonTestBase
      */
     public function trigger_unexpected_request_exception_from_mobile()
     {
-        require __DIR__.'/namespaced_mocks/is_mobile.php';
-
         $this->logged_and_registered();
 
         /** We will try to add to workspace an output file that does not exist **/
@@ -102,7 +98,7 @@ class MobileCustomExceptionstTest extends CommonTestBase
         unlink($this->demoUserWorkspacePath . '/table.csv');
 
         // Request a workspace file that does not exist
-        $response = $this->call('get', 'workspace/get/table.csv');
+        $response = $this->call('get', 'workspace/get/table.csv', [], [], [], ['HTTP_AAAA1'=>'aaa']);
         $this->assertEquals(500, $response->getStatusCode());
 
         // Check the log from InvalidRequestException is there
@@ -118,8 +114,6 @@ class MobileCustomExceptionstTest extends CommonTestBase
      */
     public function trigger_authorization_exception_from_mobile()
     {
-        require __DIR__.'/namespaced_mocks/is_mobile.php';
-
         $this->clear_workspace();
         $this->clear_jobspace();
         $this->logged_and_registered();
@@ -158,7 +152,7 @@ class MobileCustomExceptionstTest extends CommonTestBase
         }
 
         // Request an output file from a job that does not belong to demo user
-        $response = $this->call('get', url("storage/get_job_file/job/$job->id/job1.R"));
+        $response = $this->call('get', url("storage/get_job_file/job/$job->id/job1.R"), [], [], [], ['HTTP_AAAA1'=>'aaa']);
         $this->assertEquals(401, $response->getStatusCode());
 
         // Check the log from InvalidRequestException is there

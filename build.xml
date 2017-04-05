@@ -45,18 +45,8 @@
     <target name="phpunit-coverage"
          unless="phpunit.done"
          depends="prepare"
-         description="Run unit tests with PHPUnit">		
-            <antcall target="phpunit-maintestsuite" inheritall="true"></antcall>
-            <antcall target="phpunit-mobiletestsuite" inheritall="true"></antcall>
-        <property name="phpunit.done" value="true"/>
-    </target>
-    
-    <target name="phpunit-maintestsuite"
-         unless="phpunit-maintestsuite.done"
-         depends="prepare"
-         description="Run unit tests with PHPUnit">
+         description="Run unit tests with PHPUnit (without generating code coverage reports)">
 		<exec executable="${phpunit}" resultproperty="result.phpunit" taskname="phpunit">
-                <arg value="--testsuite=MainTestSuite"/>
 		<arg value="--configuration"/>                
 		<arg path="${basedir}/phpunit.xml"/>  
                 <arg value="--log-junit"/>
@@ -67,20 +57,7 @@
                 <arg path="${basedir}/build/logs/coverage.xml"/>
 	</exec>
 
-        <property name="phpunit-maintestsuite.done" value="true"/>
-    </target>
-    
-    <target name="phpunit-mobiletestsuite"
-         unless="phpunit-mobiletestsuite.done"
-         depends="prepare"
-         description="Run unit tests with PHPUnit">
-		<exec executable="${phpunit}" resultproperty="result.phpunit" taskname="phpunit">
-                <arg value="--testsuite=MobileTestSuite"/>
-		<arg value="--configuration"/>                
-		<arg path="${basedir}/phpunit.xml"/>  
-	</exec>
-
-        <property name="phpunit-mobiletestsuite.done" value="true"/>
+        <property name="phpunit.done" value="true"/>
     </target>
 
     <target name="pdepend"

@@ -3,6 +3,20 @@
 use Illuminate\Http\Request;
 
 /**
+* Checks if the request comes from the mobile version of R vLab
+*
+* @return boolean
+*/
+function is_mobile()
+{
+    if (request()->hasHeader('AAAA1')) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/**
  * Cleans a CSV column name.
  *
  * It removes from column name the new line character and quotes, replaces
@@ -19,7 +33,7 @@ function clean_csv_header($header_value)
     $header_value = trim(preg_replace('/\r\n|\r|\n/', '', $header_value));
     $header_value = trim(preg_replace('/\"/', '', $header_value));
     $header_value = trim(preg_replace('/[^A-Za-z0-9\_]/', '.', $header_value));
-    
+
     // If first character is number, put an "X" in front of everything
     if (is_numeric(substr($header_value, 0, 1))) {
         $header_value = "X" . $header_value;
@@ -46,20 +60,6 @@ function filter_request(Illuminate\Http\Request $request, array $keys)
     }
 
     return $request_data;
-}
-
-/**
- * Checks if the request comes from the mobile version of R vLab
- *
- * @return boolean
- */
-function is_mobile()
-{
-    if (request()->hasHeader('AAAA1')) {
-        return true;
-    } else {
-        return false;
-    }
 }
 
 /**

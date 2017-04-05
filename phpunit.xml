@@ -24,11 +24,9 @@
             <file>./tests/ResultPageTest.php</file>
             <file>./tests/SerialJobSubmissionTest.php</file>
             <file>./tests/VisualJobSubmissionTest.php</file>   
-            <file>./tests/WorkspaceManagementTest.php</file>         
+            <file>./tests/WorkspaceManagementTest.php</file>  
+            <file>./tests/MobileCustomExceptionsTest.php</file>       
         </testsuite> 
-        <testsuite name="MobileTestSuite">
-            <file>./tests/MobileCustomExceptionsTest.php</file>
-        </testsuite>
     </testsuites>
     <filter>
         <whitelist processUncoveredFilesFromWhitelist="true">
