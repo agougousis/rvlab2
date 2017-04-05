@@ -60,11 +60,11 @@
 		<arg value="--configuration"/>                
 		<arg path="${basedir}/phpunit.xml"/>  
                 <arg value="--log-junit"/>
-                <arg path="${basedir}/build/logs/junit-main.xml"/>
+                <arg path="${basedir}/build/logs/junit.xml"/>
                 <arg value="--coverage-html"/>
                 <arg path="${basedir}/build/logs"/>
                 <arg value="--coverage-clover"/>
-                <arg path="${basedir}/build/logs/coverage-main.xml"/>
+                <arg path="${basedir}/build/logs/coverage.xml"/>
 	</exec>
 
         <property name="phpunit-maintestsuite.done" value="true"/>
@@ -78,12 +78,6 @@
                 <arg value="--testsuite=MobileTestSuite"/>
 		<arg value="--configuration"/>                
 		<arg path="${basedir}/phpunit.xml"/>  
-                <arg value="--log-junit"/>
-                <arg path="${basedir}/build/logs/junit-mobile.xml"/>
-                <arg value="--coverage-html"/>
-                <arg path="${basedir}/build/logs"/>
-                <arg value="--coverage-clover"/>
-                <arg path="${basedir}/build/logs/coverage-mobile.xml"/>
 	</exec>
 
         <property name="phpunit-mobiletestsuite.done" value="true"/>
