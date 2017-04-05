@@ -119,3 +119,12 @@ using an alternative authenticator.
 ## License
 
 The R vLab is open-sourced software licensed under the MIT license.
+
+## Current Code Metrics
+
+This section may not be updated for every commit. 
+The following diagrams refer to commit  fcea614fd1206a05b5303aa45d5cd5f312c75d24 (5 April).
+
+![maintainability](https://cloud.githubusercontent.com/assets/5471589/24722833/ddc12126-1a4d-11e7-8b6d-524a1df3ecd3.png)  ![pdepend](https://cloud.githubusercontent.com/assets/5471589/24722845/eac2db62-1a4d-11e7-8d7c-c1422d8d6df4.png)
+
+![coverage](https://cloud.githubusercontent.com/assets/5471589/24722857/f259b062-1a4d-11e7-89a2-e729c64d9080.png)
