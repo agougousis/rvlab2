@@ -45,19 +45,48 @@
     <target name="phpunit-coverage"
          unless="phpunit.done"
          depends="prepare"
-         description="Run unit tests with PHPUnit (without generating code coverage reports)">
+         description="Run unit tests with PHPUnit">		
+            <antcall target="phpunit-maintestsuite" inheritall="true"></antcall>
+            <antcall target="phpunit-mobiletestsuite" inheritall="true"></antcall>
+        <property name="phpunit.done" value="true"/>
+    </target>
+    
+    <target name="phpunit-maintestsuite"
+         unless="phpunit-maintestsuite.done"
+         depends="prepare"
+         description="Run unit tests with PHPUnit">
 		<exec executable="${phpunit}" resultproperty="result.phpunit" taskname="phpunit">
+                <arg value="--testsuite=MainTestSuite"/>
 		<arg value="--configuration"/>                
 		<arg path="${basedir}/phpunit.xml"/>  
                 <arg value="--log-junit"/>
-                <arg path="${basedir}/build/logs/junit.xml"/>
+                <arg path="${basedir}/build/logs/junit-main.xml"/>
                 <arg value="--coverage-html"/>
                 <arg path="${basedir}/build/logs"/>
                 <arg value="--coverage-clover"/>
-                <arg path="${basedir}/build/logs/coverage.xml"/>
+                <arg path="${basedir}/build/logs/coverage-main.xml"/>
 	</exec>
 
-        <property name="phpunit.done" value="true"/>
+        <property name="phpunit-maintestsuite.done" value="true"/>
+    </target>
+    
+    <target name="phpunit-mobiletestsuite"
+         unless="phpunit-mobiletestsuite.done"
+         depends="prepare"
+         description="Run unit tests with PHPUnit">
+		<exec executable="${phpunit}" resultproperty="result.phpunit" taskname="phpunit">
+                <arg value="--testsuite=MobileTestSuite"/>
+		<arg value="--configuration"/>                
+		<arg path="${basedir}/phpunit.xml"/>  
+                <arg value="--log-junit"/>
+                <arg path="${basedir}/build/logs/junit-mobile.xml"/>
+                <arg value="--coverage-html"/>
+                <arg path="${basedir}/build/logs"/>
+                <arg value="--coverage-clover"/>
+                <arg path="${basedir}/build/logs/coverage-mobile.xml"/>
+	</exec>
+
+        <property name="phpunit-mobiletestsuite.done" value="true"/>
     </target>
 
     <target name="pdepend"
