@@ -99,6 +99,91 @@ class ResultsPageTest extends CommonTestBase
     }
 
     /**
+     * Load the result page of a completed job
+     *
+     * @test
+     * @group resultPage
+     */
+    public function load_result_page_basic_test()
+    {
+        $this->clear_workspace();
+        $this->clear_jobspace();
+        $this->logged_and_registered();
+        $this->add_test_files_to_workspace();
+
+        $function_list = [
+            'anosim'    =>  26,
+            'anova'     =>  30,
+            'bioenv'    =>  17,
+            'cca'       =>  42,
+            'cca_visual'=>  45,
+            'hclust'    =>  31,
+            'heatcloud' =>  32,
+            'mantel'    =>  13,
+            'mapping_tools_div_visual'  =>  48,
+            'mapping_tools_visual'      =>  49,
+            'metamds'   =>  35,
+            'metamds_visual'    =>  37,
+            'parallel_anosim'   =>  20,
+            'parallel_bioenv'   =>  21,
+            'parallel_mantel'   =>  22,
+            'parallel_permanova'=>  23,
+            'parallel_simper'   =>  24,
+            'parallel_taxa2dist'=>  19,
+            'pca'               =>  29,
+            'permanova'         =>  15,
+            'phylobar'          =>  60,
+            'radfit'            =>  16,
+            'regression'        =>  34,
+            'second_metamds'    =>  36,
+            'simper'            =>  14,
+            'taxa2dist'          =>  11,
+            'taxondive'         =>  33,
+            'vegdist'           =>  12
+        ];
+
+        $submitted = (new DateTime)->sub(new \DateInterval('P1D'))->format('Y-m-d H:i:s');
+        $started = (new DateTime)->sub(new \DateInterval('PT50M'))->format('Y-m-d H:i:s');
+        $completed = (new DateTime)->sub(new \DateInterval('PT30M'))->format('Y-m-d H:i:s');
+
+        foreach ($function_list as $function => $job_id) {
+            // Add the relevant database record
+            Job::unguard();
+
+            $job = new Job();
+            $job->id = $job_id;
+            $job->user_email = $this->demoUser;
+            $job->function = $function;
+            $job->status = 'completed';
+            $job->submitted_at = $submitted;
+            $job->started_at = $started;
+            $job->completed_at = $completed;
+            $job->jobsize = '44';
+            $job->inputs = '148:softLagoonAggregation.csv';
+            $job->parameters = 'varstep:FALSE;check:TRUE';
+            $job->save();
+
+            $job->reguard();
+
+            // Add the job directory/files
+            $jobDir = $this->demoUserJobsPath.'/job'.$job->id;
+            mkdir($jobDir);
+            foreach (glob(__DIR__."/completed/$function/*") as $filePath) {
+                $filename = basename($filePath);
+                copy($filePath, $jobDir."/$filename");
+            }
+
+            // Load result page
+            $response = $this->call('get', url("job/$job_id"));
+            $this->assertEquals(200, $response->getStatusCode());
+
+            $content = $response->content();
+            $this->assertEquals(1, preg_match("/(.*)Job".$job_id."(.*)/", $content));
+            $this->assertEquals(1, preg_match("/(.*)\($function\)(.*)/", $content));
+        }
+    }
+
+    /**
      * Checks the result page of a (just) submitted job
      *
      * @test
@@ -131,6 +216,7 @@ class ResultsPageTest extends CommonTestBase
         $response = $this->call('POST', url('job'), $post_data, [], [], []);
         $this->assertEquals(302, $response->getStatusCode());
 
+        // Load result page
         $job = Job::where('user_email', $this->demoUser)->orderBy('id', 'desc')->first();
         $resultPageResponse = $this->call('get', url('job/'.$job->id));
         $this->assertEquals(200, $resultPageResponse->getStatusCode());
@@ -139,6 +225,40 @@ class ResultsPageTest extends CommonTestBase
         $this->assertEquals(1, preg_match("/(.*)Job".$job->id."(.*)/", $content));
         $this->assertEquals(1, preg_match('/(.*)\(taxa2dist\)(.*)/', $content));
         $this->assertEquals(1, preg_match('/(.*)This job has not been executed(.*)/', $content));
+    }
+
+    /**
+     * Try to load a job page for a job Id that does not exist
+     *
+     * @test
+     * @group resultPage
+     */
+    public function ask_job_that_does_not_exist()
+    {
+        $this->clear_workspace();
+        $this->clear_jobspace();
+        $this->logged_and_registered();
+
+        // Make a call to job page
+        $resultPageResponse = $this->call('get', url('job/85'));
+        $this->assertEquals(302, $resultPageResponse->getStatusCode());
+    }
+
+    /**
+     * Try to load a job page for a job Id that does not exist from mobile
+     *
+     * @test
+     * @group resultPage
+     */
+    public function ask_job_that_does_not_exist_from_mobile()
+    {
+        $this->clear_workspace();
+        $this->clear_jobspace();
+        $this->logged_and_registered();
+
+        // Make the same call from mobile
+        $response = $this->call('get', url('job/85'), [], [], [], ['HTTP_AAAA1'=>'aaa']);
+        $this->assertEquals(400, $response->getStatusCode());
     }
 
     /**

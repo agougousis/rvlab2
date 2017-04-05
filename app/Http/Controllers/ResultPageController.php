@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Session;
+use Redirect;
 use Response;
 use App\Models\Job;
 use App\Models\WorkspaceFile;

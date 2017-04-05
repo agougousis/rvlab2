@@ -85,8 +85,6 @@ class MobileCustomExceptionstTest extends CommonTestBase
      */
     public function trigger_unexpected_request_exception_from_mobile()
     {
-        $this->logged_and_registered();
-
         /** We will try to add to workspace an output file that does not exist **/
 
         $this->clear_workspace();
