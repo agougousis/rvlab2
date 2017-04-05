@@ -142,7 +142,7 @@ class JobController extends CommonController
 
         // CONDITION: Check the existance and integrity of all jobs related
         // to provided job IDs.
-        $job_records = $this->conditionsChecker->jobsAreDeletable($job_list);
+        $job_records = $this->conditionChecker->jobsAreDeletable($job_list);
 
         // ACCESS CONTROL: Jobs related to provided job IDs should be owned by
         // the logged in user

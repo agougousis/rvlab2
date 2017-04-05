@@ -106,11 +106,6 @@ class ResultsPageTest extends CommonTestBase
      */
     public function load_result_page_basic_test()
     {
-        $this->clear_workspace();
-        $this->clear_jobspace();
-        $this->logged_and_registered();
-        $this->add_test_files_to_workspace();
-
         $function_list = [
             'anosim'    =>  26,
             'anova'     =>  30,
@@ -191,11 +186,6 @@ class ResultsPageTest extends CommonTestBase
      */
     public function submitted_job()
     {
-        $this->clear_workspace();
-        $this->clear_jobspace();
-        $this->logged_and_registered();
-        $this->add_test_files_to_workspace();
-
         $jobConfig = [
             'function'  =>  'taxa2dist',
             'inputs'    =>  [
@@ -213,6 +203,7 @@ class ResultsPageTest extends CommonTestBase
             '_token' => csrf_token()
         ]);
 
+        // Check for successful submission
         $response = $this->call('POST', url('job'), $post_data, [], [], []);
         $this->assertEquals(302, $response->getStatusCode());
 
@@ -221,10 +212,20 @@ class ResultsPageTest extends CommonTestBase
         $resultPageResponse = $this->call('get', url('job/'.$job->id));
         $this->assertEquals(200, $resultPageResponse->getStatusCode());
 
+        // Check basic contents of results page
         $content = $resultPageResponse->content();
         $this->assertEquals(1, preg_match("/(.*)Job".$job->id."(.*)/", $content));
         $this->assertEquals(1, preg_match('/(.*)\(taxa2dist\)(.*)/', $content));
         $this->assertEquals(1, preg_match('/(.*)This job has not been executed(.*)/', $content));
+
+        // Retrieve the R script
+        $response = $this->call('get', url("storage/get_r_script/$job->id"));
+        $this->assertEquals(200, $response->getStatusCode());
+        $rScript = implode('', json_decode($response->getContent()));
+
+        // Compare request response with file contents
+        $jobDir = $this->demoUserJobsPath.'/job'.$job->id;
+        $this->assertEquals($rScript, file_get_contents("$jobDir/job$job->id.R"));
     }
 
     /**
@@ -235,10 +236,6 @@ class ResultsPageTest extends CommonTestBase
      */
     public function ask_job_that_does_not_exist()
     {
-        $this->clear_workspace();
-        $this->clear_jobspace();
-        $this->logged_and_registered();
-
         // Make a call to job page
         $resultPageResponse = $this->call('get', url('job/85'));
         $this->assertEquals(302, $resultPageResponse->getStatusCode());
@@ -252,10 +249,6 @@ class ResultsPageTest extends CommonTestBase
      */
     public function ask_job_that_does_not_exist_from_mobile()
     {
-        $this->clear_workspace();
-        $this->clear_jobspace();
-        $this->logged_and_registered();
-
         // Make the same call from mobile
         $response = $this->call('get', url('job/85'), [], [], [], ['HTTP_AAAA1'=>'aaa']);
         $this->assertEquals(400, $response->getStatusCode());
@@ -269,11 +262,6 @@ class ResultsPageTest extends CommonTestBase
      */
     public function completed_taxa2dist_job()
     {
-        $this->clear_workspace();
-        $this->clear_jobspace();
-        $this->logged_and_registered();
-        $this->add_test_files_to_workspace();
-
         // Add the relevant database record
         $submitted = (new DateTime)->sub(new \DateInterval('P1D'))->format('Y-m-d H:i:s');
         $started = (new DateTime)->sub(new \DateInterval('PT50M'))->format('Y-m-d H:i:s');
@@ -318,11 +306,6 @@ class ResultsPageTest extends CommonTestBase
      */
     public function add_taxa2dist_output_to_workspace()
     {
-        $this->clear_workspace();
-        $this->clear_jobspace();
-        $this->logged_and_registered();
-        $this->add_test_files_to_workspace();
-
         // Add the relevant database record
         $submitted = (new DateTime)->sub(new \DateInterval('P1D'))->format('Y-m-d H:i:s');
         $started = (new DateTime)->sub(new \DateInterval('PT50M'))->format('Y-m-d H:i:s');
@@ -371,11 +354,6 @@ class ResultsPageTest extends CommonTestBase
      */
     public function get_job_file()
     {
-        $this->clear_workspace();
-        $this->clear_jobspace();
-        $this->logged_and_registered();
-        $this->add_test_files_to_workspace();
-
         // Add the relevant database record
         $submitted = (new DateTime)->sub(new \DateInterval('P1D'))->format('Y-m-d H:i:s');
         $started = (new DateTime)->sub(new \DateInterval('PT50M'))->format('Y-m-d H:i:s');

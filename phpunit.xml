@@ -26,6 +26,7 @@
             <file>./tests/VisualJobSubmissionTest.php</file>   
             <file>./tests/WorkspaceManagementTest.php</file>  
             <file>./tests/MobileCustomExceptionsTest.php</file>       
+            <file>./tests/JobRelatedTasksTest.php</file>
         </testsuite> 
     </testsuites>
     <filter>

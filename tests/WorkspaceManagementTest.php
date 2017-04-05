@@ -188,4 +188,31 @@ class WorkspaceManagementTest extends CommonTestBase
         $response = $this->call('GET', '/workspace/manage');
         $this->assertEquals(200, $response->getStatusCode());
     }
+
+    /**
+     * Tests the functionality of retrieving csv headers from a workspace file
+     *
+     * @test
+     * @group workspace
+     */
+    public function get_csv_headers()
+    {
+        $this->clear_workspace();
+        $this->logged_and_registered();
+        $this->add_test_files_to_workspace();
+
+        // Get the headers of softLagoonEnv.csv
+        $response = $this->call('GET', '/workspace/convert2r/softLagoonEnv.csv');
+        $this->assertEquals(200, $response->getStatusCode());
+
+        // Check the returned JSON structure
+        $responseData = json_decode($response->getContent());
+        $this->assertObjectHasAttribute('headers', $responseData);
+        $headers = $responseData->headers;
+
+        // Check that the correct headers have been returned
+        $this->assertTrue(in_array('fieldNumber', $headers));
+        $this->assertTrue(in_array('maximumDepthInMeters', $headers));
+        $this->assertTrue(in_array('Temp', $headers));
+    }
 }
