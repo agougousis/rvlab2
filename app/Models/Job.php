@@ -4,11 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Model to handle database data about jobs
+ *
+ * @license MIT
+ * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
+ */
 class Job extends Model
 {
     protected $table = 'jobs';
     public $timestamps = false;
 
+    /**
+     * Returns a list of old jobs
+     *
+     * A list of jobs that should be deleted because they have being
+     * stored/retained longer than intended by R vLab.
+     *
+     * @return Collection
+     */
     public static function getOldJobs()
     {
         $job_max_storagetime = Setting::where('sname', 'job_max_storagetime')->first(); // should be in days
@@ -21,5 +35,16 @@ class Job extends Model
                 ->get();
 
         return $old_jobs;
+    }
+
+    /**
+     * Returns the last N submitted jobs
+     *
+     * @param int $n
+     * @return Collection
+     */
+    public static function getLastN($n)
+    {
+        return Job::orderBy('submitted_at', 'desc')->take($n)->get();
     }
 }

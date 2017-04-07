@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use DB;
 use Session;
 use Redirect;
 use App\Models\Job;
@@ -11,6 +10,7 @@ use App\Models\Setting;
 use App\Models\SystemLog;
 use App\Models\Registration;
 use App\Models\WorkspaceFile;
+use App\Presenters\StorageUtilization;
 use App\Http\Controllers\CommonController;
 use Illuminate\Http\Request;
 
@@ -81,11 +81,11 @@ class AdminController extends CommonController
             $month--;
         }
 
-        $dateLimit = "$prev_year-$month-$day 00:00:00";
+        $startFromDate = "$prev_year-$month-$day 00:00:00";
 
         $data['registration_counts'] = $this->registrationStats($year, $prev_year, $month, $day);
-        $data['f_stats'] = $this->functionStats($dateLimit);
-        $data['s_stats'] = $this->jobSizeStats($dateLimit);
+        $data['f_stats'] = $this->functionStats($startFromDate);
+        $data['s_stats'] = $this->jobSizeStats($startFromDate);
 
         return $this->loadView('admin.statistics', 'R vLab Usage Statistics', $data);
     }
@@ -93,10 +93,10 @@ class AdminController extends CommonController
     /**
      * Calculates statistics about the size of jobs submitted in the past
      *
-     * @param string $dateLimit
+     * @param string $startFromDate
      * @return array
      */
-    protected function jobSizeStats($dateLimit)
+    protected function jobSizeStats($startFromDate)
     {
         $s_stats = array(
             '1' => 0,
@@ -111,10 +111,8 @@ class AdminController extends CommonController
         );
 
         // We just count how many jobs are there with jobsize of x digits
-        $size_stats = JobsLog::select(DB::raw('count(*) as total, LENGTH(jobsize) AS digits'))
-                        ->where('submitted_at', '>', $dateLimit)
-                        ->groupBy('digits')
-                        ->get()->toArray();
+        // (how many from 1-9 KB, how many from 10-99 KB, etc)
+        $size_stats = JobsLog::countBySizeScale($startFromDate);
 
         foreach ($size_stats as $stat) {
             $s_stats[$stat['digits']] = $stat['total'];
@@ -126,15 +124,12 @@ class AdminController extends CommonController
     /**
      * Calculates statistics about the type of jobs/analysis submitted in the past
      *
-     * @param string $dateLimit
+     * @param string $startFromDate
      * @return array
      */
-    protected function functionStats($dateLimit)
+    protected function functionStats($startFromDate)
     {
-        $f_stats = JobsLog::select(DB::raw('count(*) as total,function'))
-                        ->where('submitted_at', '>', $dateLimit)
-                        ->groupBy('function')
-                        ->get()->toArray();
+        $f_stats = JobsLog::countFunctionUsage($startFromDate);
 
         return $f_stats;
     }
@@ -201,8 +196,7 @@ class AdminController extends CommonController
      */
     public function jobList()
     {
-        $job_list = Job::take(50)->orderBy('submitted_at', 'desc')->get();
-        $data['job_list'] = $job_list;
+        $data['job_list'] = Job::getLastN(50);
         return $this->loadView('admin.job_list', 'Last Jobs List', $data);
     }
 
@@ -214,7 +208,7 @@ class AdminController extends CommonController
     public function lastErrors()
     {
         $last_error_count_setting = Setting::where('sname', 'last_errors_to_display')->first();
-        $error_list = SystemLog::where('category', 'error')->orderBy('when', 'desc')->take($last_error_count_setting->value)->get();
+        $error_list = SystemLog::getLastErrors($last_error_count_setting);
 
         $data['error_list'] = $error_list;
         return $this->loadView('admin.last_errors', 'Last errors list', $data);
@@ -227,26 +221,50 @@ class AdminController extends CommonController
      */
     public function storageUtilization()
     {
+        // Get configuration
         $rvlab_storage_limit = $this->system_settings['rvlab_storage_limit'];
         $max_users_supported = $this->system_settings['max_users_supported'];
+
         $jobs_path = config('rvlab.jobs_path');
         $workspace_path = config('rvlab.workspace_path');
 
-        // Total Storage Utilization
+        // Calculate Total Storage Utilization
         $jobs_size = directory_size($jobs_path); // in KB
         $workspace_size = directory_size($workspace_path); // in KB
-        $used_size = $jobs_size + $workspace_size;
-        $utilization = 100 * $used_size / $rvlab_storage_limit;
 
+        $used_size = $jobs_size + $workspace_size;
+
+        // Calculate per user storage utilization
+        list($workspace_totals, $jobspace_totals, $user_totals) = $this->storageUsedByUsers($workspace_path, $jobs_path);
+
+        // Pass data to presenter
+        $storagePresenter = new StorageUtilization($used_size, $user_totals);
+        $storagePresenter->utilization = 100 * $used_size / $rvlab_storage_limit;
+        $storagePresenter->user_soft_limit = $rvlab_storage_limit / $max_users_supported; // in KB
+        $storagePresenter->rvlab_storage_limit = $rvlab_storage_limit;
+        $storagePresenter->max_users_supported = $max_users_supported;
+
+        return $this->loadView('admin.storage_utilization', 'Storage Utilization', ['storage' => $storagePresenter]);
+    }
+
+    /**
+     * Returns information about the storage that is being used by users (in KB)
+     *
+     * @param string $workspace_path
+     * @param string $jobs_path
+     * @return array
+     */
+    protected function storageUsedByUsers($workspace_path, $jobs_path)
+    {
         // Storage Utilization per User (A - input files)
         $inputs_users = WorkspaceFile::select('user_email')->distinct()->get(); // Get users with a least one input file
 
-        $user_totals = array();
-        $inputs_totals = array();
+        $user_totals = [];
+        $workspace_totals = [];
 
         foreach ($inputs_users as $user) {
-            $inputs_totals[$user->user_email] = directory_size($workspace_path . '/' . $user->user_email); // in KB
-            $user_totals[$user->user_email] = $inputs_totals[$user->user_email];
+            $workspace_totals[$user->user_email] = directory_size($workspace_path . '/' . $user->user_email); // in KB
+            $user_totals[$user->user_email] = $workspace_totals[$user->user_email];
         }
 
         // Storage Utilization per User (B - jobs)
@@ -261,47 +279,6 @@ class AdminController extends CommonController
             }
         }
 
-        // Calculating numbers and strings (related to user utilization) that
-        // will be used in view
-        $user_soft_limit = $rvlab_storage_limit / $max_users_supported; // in KB
-
-        if ($used_size > 1000000) {
-            $utilized_text = number_format($used_size / 1000000, 2) . " GB";
-        } elseif ($used_size > 1000) {
-            $utilized_text = number_format($used_size / 1000, 2) . " MB";
-        } else {
-            $utilized_text = number_format($used_size, 2) . " KB";
-        }
-         
-        $new_user_totals = [];
-        foreach ($user_totals as $email => $size_number) {
-            $sizeInfo = [];
-
-            $progress = number_format(100 * $size_number / $user_soft_limit, 1);
-            if ($size_number > 1000000) {
-                $size_text = number_format($size_number / 1000000, 2) . " GB";
-            } elseif ($size_number > 1000) {
-                $size_text = number_format($size_number / 1000, 2) . " MB";
-            } else {
-                $size_text = number_format($size_number, 2) . " KB";
-            }
-
-            $sizeInfo['size_number'] = $size_number;
-            $sizeInfo['size_text'] = $size_text;
-            $sizeInfo['progress'] = $progress;
-
-            $new_user_totals[$email] = $sizeInfo;
-        }
-
-        // Note: $inputs_totals and $jobspace_totals are not used for the moment.
-        // If they are not going to be used in the future, we don't need to keep them
-        // in separate variables.
-
-        $data['rvlab_storage_limit'] = $rvlab_storage_limit;
-        $data['max_users_supported'] = $max_users_supported;
-        $data['user_totals'] = $new_user_totals;
-        $data['utilized_text'] = $utilized_text;
-        $data['utilization'] = $utilization;
-        return $this->loadView('admin.storage_utilization', 'Storage Utilization', $data);
+        return [$workspace_totals, $jobspace_totals, $user_totals];
     }
 }
