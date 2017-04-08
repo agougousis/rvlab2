@@ -116,44 +116,6 @@
 
 <script type="text/javascript">
 
-    function loadInitialHeaders(headers){
-        var selectElement = $('#header1_id');
-        selectElement.empty();
-        for(var i = 0; i < headers.length; i++) {
-            selectElement.append("<option>"+headers[i]+"</option>");
-        }
-
-        selectElement = $('#header2_id');
-        selectElement.empty();
-        for(var i = 0; i < headers.length; i++) {
-            selectElement.append("<option>"+headers[i]+"</option>");
-        }
-
-        selectElement = $('#header3_id');
-        selectElement.empty();
-        for(var i = 0; i < headers.length; i++) {
-            selectElement.append("<option>"+headers[i]+"</option>");
-        }
-
-        selectElement = $('#header1_fact');
-        selectElement.empty();
-        for(var i = 0; i < headers.length; i++) {
-            selectElement.append("<option>"+headers[i]+"</option>");
-        }
-
-        selectElement = $('#header2_fact');
-        selectElement.empty();
-        for(var i = 0; i < headers.length; i++) {
-            selectElement.append("<option>"+headers[i]+"</option>");
-        }
-
-        selectElement = $('#header3_fact');
-        selectElement.empty();
-        for(var i = 0; i < headers.length; i++) {
-            selectElement.append("<option>"+headers[i]+"</option>");
-        }
-    }
-
     function loadFileHeaders(filename){
 
             $.ajax({

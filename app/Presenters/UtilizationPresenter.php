@@ -12,14 +12,14 @@ namespace App\Presenters;
  * @license MIT
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
-class StorageUtilization
+class UtilizationPresenter
 {
     /**
      * Absolute total storage amount used by users (in KB)
      *
      * @var int
      */
-    private $used_size;
+    private $usedSize;
 
     /**
      * An array containing the absolute amount of storage that is being used
@@ -27,27 +27,14 @@ class StorageUtilization
      *
      * @var array
      */
-    private $user_totals;
-
-    /**
-     *
-     * @var type
-     */
-    public $rvlab_storage_limit;
-
-    /**
-     * Maximum number of users that R vLab supports
-     *
-     * @var int
-     */
-    public $max_users_supported;
+    private $userTotals;
 
     /**
      * Total storage utilization (100% percentage)
      *
      * @var float
      */
-    public $utilization;
+    private $utilization;
 
     /**
      * Storage quota for users. This is a soft limit that is being enforced only
@@ -55,12 +42,47 @@ class StorageUtilization
      *
      * @var float
      */
-    public $user_soft_limit;
+    private $userSoftLimit;
 
     public function __construct($used_size, $user_totals)
     {
-        $this->used_size = $used_size;
-        $this->user_totals = $user_totals;
+        $this->usedSize = $used_size;
+        $this->userTotals = $user_totals;
+    }
+
+    /**
+     * Setter
+     *
+     * @param float $utilization
+     */
+    public function setUtilization($utilization)
+    {
+        $this->utilization = $utilization;
+    }
+
+    /**
+     * Setter
+     *
+     * @param int $userSoftLimit
+     */
+    public function setUserSoftLimit($userSoftLimit)
+    {
+        $this->userSoftLimit = $userSoftLimit;
+    }
+
+    /**
+     * If there is no such method return the property itself
+     *
+     * @param string $name
+     * @param array $arguments
+     * @return mixed
+     */
+    public function __call($name, $arguments) {
+        if (isset($this->{$name})) {
+            return $this->{$name};
+        }
+
+        return null;
     }
 
     /**
@@ -70,12 +92,12 @@ class StorageUtilization
      */
     public function getUtilizedText()
     {
-        if ($this->used_size > 1000000) {
-            $utilized_text = number_format($this->used_size / 1000000, 2) . " GB";
-        } elseif ($this->used_size > 1000) {
-            $utilized_text = number_format($this->used_size / 1000, 2) . " MB";
+        if ($this->usedSize > 1000000) {
+            $utilized_text = number_format($this->usedSize / 1000000, 2) . " GB";
+        } elseif ($this->usedSize > 1000) {
+            $utilized_text = number_format($this->usedSize / 1000, 2) . " MB";
         } else {
-            $utilized_text = number_format($this->used_size, 2) . " KB";
+            $utilized_text = number_format($this->usedSize, 2) . " KB";
         }
 
         return $utilized_text;
@@ -91,10 +113,10 @@ class StorageUtilization
     public function getUserTotals()
     {
         $new_user_totals = [];
-        foreach ($this->user_totals as $email => $size_number) {
+        foreach ($this->userTotals as $email => $size_number) {
             $sizeInfo = [];
 
-            $progress = number_format(100 * $size_number / $this->user_soft_limit, 1);
+            $progress = number_format(100 * $size_number / $this->userSoftLimit, 1);
             if ($size_number > 1000000) {
                 $size_text = number_format($size_number / 1000000, 2) . " GB";
             } elseif ($size_number > 1000) {

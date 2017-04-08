@@ -10,7 +10,7 @@ use App\Models\Setting;
 use App\Models\SystemLog;
 use App\Models\Registration;
 use App\Models\WorkspaceFile;
-use App\Presenters\StorageUtilization;
+use App\Presenters\UtilizationPresenter;
 use App\Http\Controllers\CommonController;
 use Illuminate\Http\Request;
 
@@ -238,13 +238,11 @@ class AdminController extends CommonController
         list($workspace_totals, $jobspace_totals, $user_totals) = $this->storageUsedByUsers($workspace_path, $jobs_path);
 
         // Pass data to presenter
-        $storagePresenter = new StorageUtilization($used_size, $user_totals);
-        $storagePresenter->utilization = 100 * $used_size / $rvlab_storage_limit;
-        $storagePresenter->user_soft_limit = $rvlab_storage_limit / $max_users_supported; // in KB
-        $storagePresenter->rvlab_storage_limit = $rvlab_storage_limit;
-        $storagePresenter->max_users_supported = $max_users_supported;
+        $utilPresenter = new UtilizationPresenter($used_size, $user_totals);
+        $utilPresenter->setUtilization(100 * $used_size / $rvlab_storage_limit);
+        $utilPresenter->setUserSoftLimit($rvlab_storage_limit / $max_users_supported); // in KB
 
-        return $this->loadView('admin.storage_utilization', 'Storage Utilization', ['storage' => $storagePresenter]);
+        return $this->loadView('admin.storage_utilization', 'Storage Utilization', ['utilPresenter' => $utilPresenter]);
     }
 
     /**

@@ -18,11 +18,21 @@ class InvalidRequestException extends CustomException
         parent::__construct($defaultHttpCode, $message, $code, $previous);
     }
 
+    /**
+     * Setter
+     *
+     * @param array $errors
+     */
     public function setErrorsToReturn($errors)
     {
         $this->errorsToReturn = $errors;
     }
 
+    /**
+     * Getter
+     *
+     * @return array
+     */
     public function getErrorsToReturn()
     {
         return $this->errorsToReturn;

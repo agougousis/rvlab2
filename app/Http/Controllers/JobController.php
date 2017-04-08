@@ -66,14 +66,10 @@ class JobController extends CommonController
     public function index()
     {
         $userInfo = session('user_info');
-        $user_email = $userInfo['email'];
 
-        $job_list = DB::table('jobs')->where('user_email', $user_email)->orderBy('id', 'desc')->get();
-        $r_functions = config('r_functions.list');
-        $form_data['workspace_files'] = WorkspaceFile::getUserFiles($user_email);
+        $job_list = DB::table('jobs')->where('user_email', $userInfo['email'])->orderBy('id', 'desc')->get();
 
-        $form_data['user_email'] = $user_email;
-        $form_data['tooltips'] = config('tooltips');
+        $form_data = $this->loadFormData($userInfo['email']);
 
         if ($this->is_mobile) {
             $mobile_functions = config('mobile_functions.list');
@@ -84,42 +80,64 @@ class JobController extends CommonController
             );
             return Response::json($response, 200);
         } else {
-            $forms = array();
-            foreach ($r_functions as $codename => $title) {
-                $forms[$codename] = View::make('forms.' . $codename, $form_data);
-            }
-
-            $data['forms'] = $forms;
-            $data['job_list'] = $job_list;
-            $data['r_functions'] = $r_functions;
-            $data2['workspace_files'] = $form_data['workspace_files'];
-            $data['count_workspace_files'] = $form_data['workspace_files']->count();
-            $data['workspace'] = View::make('workspace.manage', $data2);
-            $data['is_admin'] = session('is_admin');
-            $data['refresh_rate'] = $this->system_settings['status_refresh_rate_page'];
-            $data['timezone'] = $userInfo['timezone'];
-
-            // Check if this we load the page after deleteManyJobs() has been called
-            if (Session::has('deletion_info')) {
-                $data['deletion_info'] = Session::get('deletion_info');
-            }
-
-            //
-            if (Session::has('workspace_tab_status')) {
-                $data['workspace_tab_status'] = Session::get('workspace_tab_status');
-            } else {
-                $data['workspace_tab_status'] = 'closed';
-            }
-
-            //
-            if (Session::has('last_function_used')) {
-                $data['last_function_used'] = Session::get('last_function_used');
-            } else {
-                $data['last_function_used'] = "taxa2dist";
-            }
+            $data = $this->loadIndexViewData($form_data, $job_list, $userInfo);
 
             return $this->loadView('index', 'R vLab Home Page', $data);
         }
+    }
+
+    /**
+     * Load data requird to build the job submission forms
+     *
+     * @param string $user_email
+     * @return array
+     */
+    protected function loadFormData($user_email)
+    {
+        $form_data['workspace_files'] = WorkspaceFile::getUserFiles($user_email);
+        $form_data['user_email'] = $user_email;
+        $form_data['tooltips'] = config('tooltips');
+
+        return $form_data;
+    }
+
+    /**
+     * Load data required for the index page view
+     *
+     * @param array $form_data
+     * @param array $job_list
+     * @param array $userInfo
+     * @return array
+     */
+    protected function loadIndexViewData($form_data, $job_list, $userInfo)
+    {
+        // Load configuration data
+        $r_functions = config('r_functions.list');
+        $data['r_functions'] = $r_functions;
+        $data['refresh_rate'] = $this->system_settings['status_refresh_rate_page'];
+
+        // Load subviews
+        $forms = array();
+        foreach ($r_functions as $codename => $title) {
+            $forms[$codename] = View::make('forms.' . $codename, $form_data);
+        }
+        $data['forms'] = $forms;
+
+        $data2['workspace_files'] = $form_data['workspace_files'];
+        $data['workspace'] = View::make('workspace.manage', $data2);
+
+        // Load session data
+        $data['is_admin'] = session('is_admin');
+        $data['deletion_info'] = Session::get('deletion_info', null);
+        $data['workspace_tab_status'] = Session::get('workspace_tab_status', 'closed');
+        $data['last_function_used'] = Session::get('last_function_used', 'taxa2dist');
+        $data['timezone'] = $userInfo['timezone'];
+
+        // Load database data
+        $data['job_list'] = $job_list;
+        $data['count_workspace_files'] = $form_data['workspace_files']->count();
+
+        return $data;
     }
 
     /**
@@ -148,24 +166,8 @@ class JobController extends CommonController
         // the logged in user
         AuthorizationChecker::jobsBelongToUser($job_records, session('user_info.email', 'delete_many_jobs'));
 
-        $total_success = true;
-        $error_messages = array();
-        $count_deleted = 0;
-
-        foreach ($job_records as $job) {
-            if (!$this->jobHelper->deleteJob($job)) {
-                $total_success = false;
-                $error_messages[] = 'An unexpected error occured while deleting job' . $job->id . ' .';
-            } else {
-                $count_deleted++;
-            }
-        }
-
-        $deletion_info = array(
-            'total' => count($job_list),
-            'deleted' => $count_deleted,
-            'messages' => $error_messages
-        );
+        // Delete the jobs
+        $deletion_info = $this->jobHelper->deleteJobs($job_records);
 
         if ($this->is_mobile) {
             return Response::json($deletion_info, 200);

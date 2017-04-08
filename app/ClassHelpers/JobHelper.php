@@ -97,13 +97,43 @@ class JobHelper
     }
 
     /**
+     * Deletes multiple jobs
+     *
+     * @param array $job_records An array of App\Models\Job
+     * @return array
+     */
+    public function deleteJobs($job_records)
+    {
+        $total_success = true;
+        $error_messages = array();
+        $count_deleted = 0;
+
+        foreach ($job_records as $job) {
+            if (!$this->deleteJob($job)) {
+                $total_success = false;
+                $error_messages[] = 'An unexpected error occured while deleting job' . $job->id . ' .';
+            } else {
+                $count_deleted++;
+            }
+        }
+
+        $deletion_info = array(
+            'total' => count($job_records),
+            'deleted' => $count_deleted,
+            'messages' => $error_messages
+        );
+
+        return $deletion_info;
+    }
+
+    /**
      * Deletes a job directory
      *
      * @param Job $jobId
      * @param string $jobFolder
      * @return null
      */
-    public function deleteJob(Job $job)
+    protected function deleteJob(Job $job)
     {
         $user_email = session('user_info.email');
         $job_folder = $this->jobs_path . '/' . $user_email . '/job' . $job->id;

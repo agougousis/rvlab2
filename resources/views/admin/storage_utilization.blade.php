@@ -15,12 +15,12 @@
                 <td style='text-align: left'><label></label></td>
                 <td style='width: 90%'>
                     <div class="progress">
-                        <div class="progress-bar" role="progressbar" aria-valuenow="{{ $storage->utilization }}" aria-valuemin="0" aria-valuemax="100" style="min-width: 2.5em; width: {{ $storage->utilization }}%">
-                          {{ $storage->utilization }}%
+                        <div class="progress-bar" role="progressbar" aria-valuenow="{{ $utilPresenter->utilization() }}" aria-valuemin="0" aria-valuemax="100" style="min-width: 2.5em; width: {{ $utilPresenter->utilization() }}%">
+                          {{ $utilPresenter->utilization() }}%
                         </div>
                     </div>
                 </td>
-                <td style='min-width: 150px; text-align: left'>{{ $storage->getUtilizedText() }}</td>
+                <td style='min-width: 150px; text-align: left'>{{ $utilPresenter->getUtilizedText() }}</td>
             </tr>
         </tbody>
     </table>
@@ -29,7 +29,7 @@
 
     <table class='table thin-table' id='workspace_util_table'>
         <tbody>
-            @foreach($storage->getUserTotals() as $user_email => $totalInfo)
+            @foreach($utilPresenter->getUserTotals() as $user_email => $totalInfo)
                 @if($totalInfo['progress'] <= 100)
                     <tr>
                         <td style='text-align: left'><label>{{ $user_email }}</label></td>
