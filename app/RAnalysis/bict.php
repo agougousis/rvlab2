@@ -57,33 +57,21 @@ class bict extends BaseAnalysis implements RAnalysis
 
     /**
      * Runs a bict analysis
-     *
-     * @return boolean
      */
     public function run()
     {
-        try {
-            $this->validateForm();
+        $this->validateForm();
 
-            $this->getInputParams();
+        $this->getInputParams();
 
-            $this->copyInputFiles();
+        $this->copyInputFiles();
 
-            $this->buildBashScript();
-        } catch (\Exception $ex) {
-            if (!empty($ex->getMessage())) {
-                $this->logEvent($ex->getMessage(), "error");
-            }
-
-            return false;
-        }
+        $this->buildBashScript();
 
         // Execute the bash script
         system("chmod +x $this->job_folder/$this->job_id.pbs"); // this command may complain that the file does not exist
         system("chmod +x $this->job_folder/indices");
         system("$this->job_folder/$this->job_id.pbs > /dev/null 2>&1 &");
-
-        return true;
     }
 
     /**

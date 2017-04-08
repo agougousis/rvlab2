@@ -133,7 +133,7 @@ class JobHelper
      * @param string $jobFolder
      * @return null
      */
-    protected function deleteJob(Job $job)
+    public function deleteJob(Job $job)
     {
         $user_email = session('user_info.email');
         $job_folder = $this->jobs_path . '/' . $user_email . '/job' . $job->id;

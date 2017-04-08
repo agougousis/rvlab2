@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use Response;
 use Redirect;
-use DateTime;
-use DateInterval;
 use App\Models\Registration;
 use App\Http\Controllers\CommonController;
 use Illuminate\Http\Request;
