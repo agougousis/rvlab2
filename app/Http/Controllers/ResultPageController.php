@@ -8,7 +8,8 @@ use Response;
 use App\Models\Job;
 use App\Models\WorkspaceFile;
 use App\ClassHelpers\JobOutputParser;
-use App\Http\Controllers\JobController;
+use App\ClassHelpers\JobHelper;
+use App\ClassHelpers\ConditionsChecker;
 
 /**
  * ....
@@ -16,8 +17,32 @@ use App\Http\Controllers\JobController;
  * @license MIT
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
-class ResultPageController extends JobController
+class ResultPageController extends CommonController
 {
+    /**
+     * A helper object that handles subtasks related to R vLab job management
+     *
+     * @var JobHelper
+     */
+    protected $jobHelper;
+
+    /**
+     * A helper object that is used to check for necessery conditions
+     *
+     * @var ConditionsChecker
+     */
+    private $conditionChecker;
+
+    public function __construct(JobHelper $directoryManager)
+    {
+        parent::__construct();
+
+        $this->jobHelper = $directoryManager;
+
+        $this->conditionChecker = new ConditionsChecker($this->jobs_path, $this->workspace_path);
+        $this->conditionChecker->checkStorage();
+    }
+
     /**
      * Displays the results page of a job
      *

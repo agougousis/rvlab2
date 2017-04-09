@@ -6,6 +6,7 @@ use Response;
 use Redirect;
 use App\Models\Registration;
 use App\Http\Controllers\CommonController;
+use App\ClassHelpers\ConditionsChecker;
 use Illuminate\Http\Request;
 
 /**
@@ -18,20 +19,19 @@ use Illuminate\Http\Request;
  */
 class RegistrationController extends CommonController
 {
+    /**
+     * An helper object that is used to check for necessery conditions
+     *
+     * @var ConditionsChecker
+     */
+    private $conditionChecker;
+
     public function __construct()
     {
         parent::__construct();
 
-        // Check if cluster storage has been mounted to web server
-        if (!$this->checkStorage()) {
-            if ($this->is_mobile) {
-                $response = array('message', 'Storage not found');
-                return Response::json($response, 500);
-            } else {
-                echo $this->loadView('errors/unmounted', 'Storage not found');
-                die();
-            }
-        }
+        $this->conditionChecker = new ConditionsChecker($this->jobs_path, $this->workspace_path);
+        $this->conditionChecker->checkStorage();
     }
 
     /**

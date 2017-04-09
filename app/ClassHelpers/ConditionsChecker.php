@@ -6,6 +6,7 @@ use App\Models\Job;
 use App\Models\WorkspaceFile;
 use App\Exceptions\InvalidRequestException;
 use App\Exceptions\UnexpectedErrorException;
+use App\Exceptions\StorageNotFoundException;
 
 /**
  * Tests conditions that may be needed by controller methods
@@ -22,6 +23,21 @@ class ConditionsChecker
     {
         $this->workspace_path = $workspace_path;
         $this->jobs_path = $jobs_path;
+    }
+
+    /**
+     * Checks if the remote (cluster) storage has been mounted
+     *
+     * @throws StorageNotFoundException
+     */
+    public static function checkStorage()
+    {
+        $jobs_path = config('rvlab.jobs_path');
+        if (!file_exists($jobs_path)) {
+            $exception = new StorageNotFoundException("Remote/Cluster storage not found!");
+            $exception->setUserMessage('Storage not found!');
+            throw $exception;
+        }
     }
 
     /**

@@ -24,12 +24,18 @@ use Illuminate\Http\Request;
  */
 class JobController extends CommonController
 {
-    protected $errorMessage = '';
-    protected $workspace_path;
-    protected $jobs_path;
-    protected $remote_jobs_path;
-    protected $remote_workspace_path;
+    /**
+     * A helper object that handles subtasks related to R vLab job management
+     *
+     * @var JobHelper
+     */
     protected $jobHelper;
+
+    /**
+     * A helper object that is used to check for necessery conditions
+     *
+     * @var ConditionsChecker
+     */
     private $conditionChecker;
 
     public function __construct(JobHelper $directoryManager)
@@ -38,24 +44,8 @@ class JobController extends CommonController
 
         $this->jobHelper = $directoryManager;
 
-        $this->workspace_path = config('rvlab.workspace_path');
-        $this->jobs_path = config('rvlab.jobs_path');
-        $this->remote_jobs_path = config('rvlab.remote_jobs_path');
-        $this->remote_workspace_path = config('rvlab.remote_workspace_path');
-
         $this->conditionChecker = new ConditionsChecker($this->jobs_path, $this->workspace_path);
-
-        // Check if cluster storage has been mounted to web server
-        if (!$this->checkStorage()) {
-            if ($this->is_mobile) {
-                $response = array('message', 'Storage not found');
-                return Response::json($response, 500);
-                die();
-            } else {
-                echo $this->loadView('errors/unmounted', 'Storage not found');
-                die();
-            }
-        }
+        $this->conditionChecker->checkStorage();
     }
 
     /**
@@ -249,9 +239,7 @@ class JobController extends CommonController
         } catch (\Exception $ex) {
             $this->jobHelper->deleteJob($job);
 
-            $this->errorMessage = 'Job submission failed! ' . $this->errorMessage;
-
-            return $this->responseAfterFailure($ex->getMessage(), $this->errorMessage, $job);
+            return $this->responseAfterFailure($ex->getMessage(), 'Job submission failed!', $job);
         }
 
         Session::put('last_function_used', $form['function']);

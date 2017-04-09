@@ -26,20 +26,6 @@ define("PORTAL_LOGIN", "https://portal.lifewatchgreece.eu");
 class WorkspaceController extends CommonController
 {
     /**
-     * The directory path to R vLab workspace
-     *
-     * @var string
-     */
-    private $workspace_path;
-
-    /**
-     * The directory path to R vLab jobs
-     *
-     * @var string
-     */
-    private $jobs_path;
-
-    /**
      * An helper object that is used to check for necessery conditions
      *
      * @var ConditionsChecker
@@ -49,21 +35,9 @@ class WorkspaceController extends CommonController
     public function __construct()
     {
         parent::__construct();
-        $this->workspace_path = config('rvlab.workspace_path');
-        $this->jobs_path = config('rvlab.jobs_path');
 
         $this->conditionChecker = new ConditionsChecker($this->jobs_path, $this->workspace_path);
-
-        // Check if cluster storage has been mounted to web server
-        if (!$this->checkStorage()) {
-            if ($this->is_mobile) {
-                $response = array('message', 'Storage not found');
-                return Response::json($response, 500);
-            } else {
-                echo $this->loadView('errors/unmounted', 'Storage not found');
-                die();
-            }
-        }
+        $this->conditionChecker->checkStorage();
     }
 
     /**

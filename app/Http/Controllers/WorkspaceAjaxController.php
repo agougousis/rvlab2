@@ -5,29 +5,24 @@ namespace App\Http\Controllers;
 use Session;
 use Response;
 use Illuminate\Http\Request;
+use App\ClassHelpers\ConditionsChecker;
 use App\Http\Controllers\CommonController;
 
 class WorkspaceAjaxController extends CommonController
 {
-    private $workspace_path;
-    private $jobs_path;
+    /**
+     * An helper object that is used to check for necessery conditions
+     *
+     * @var ConditionsChecker
+     */
+    private $conditionChecker;
 
     public function __construct()
     {
         parent::__construct();
-        $this->workspace_path = config('rvlab.workspace_path');
-        $this->jobs_path = config('rvlab.jobs_path');
 
-        // Check if cluster storage has been mounted to web server
-        if (!$this->checkStorage()) {
-            if ($this->is_mobile) {
-                $response = array('message', 'Storage not found');
-                return Response::json($response, 500);
-            } else {
-                echo $this->loadView('errors/unmounted', 'Storage not found');
-                die();
-            }
-        }
+        $this->conditionChecker = new ConditionsChecker($this->jobs_path, $this->workspace_path);
+        $this->conditionChecker->checkStorage();
     }
 
     /**

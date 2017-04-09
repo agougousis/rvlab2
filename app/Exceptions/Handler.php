@@ -49,6 +49,18 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
+        // Handle StorageNotFoundException
+        if ($exception instanceof StorageNotFoundException) {
+            $this->logEvent($exception->getLogMessage(), "storage");
+
+            if ($exception->isMobileRequest()) {
+                $response = array('message', $exception->getUserMessage());
+                return Response::json($response, $exception->getHttpCode());
+            } else {
+                return $this->loadView('errors/unmounted', 'Storage not found');
+            }
+        }
+
         // Handle UnexpectedErrorException
         if ($exception instanceof UnexpectedErrorException) {
             $this->logEvent($exception->getLogMessage(), "illegal");
@@ -132,5 +144,30 @@ class Handler extends ExceptionHandler
         $log->message = $db_message;
         $log->category = $category;
         $log->save();
+    }
+
+    /**
+     * Loads a View using a template file and the HTML wrapper parts provided by the portal.
+     *
+     * @param string $the_view
+     * @param string $title
+     * @param array $data
+     * @return View
+     */
+    protected function loadView($the_view, $title, $data = array())
+    {
+        $userInfo = session('user_info');
+
+        $content = view($the_view, $data);
+
+        $page = view('template')
+                ->with('title', $title)
+                ->with('head', $userInfo['head'])
+                ->with('body_top', $userInfo['body_top'])
+                ->with('body_bottom', $userInfo['body_bottom'])
+                ->with('content', $content);
+
+        $response = Response::make($page);
+        return $response->header('Cache-Control', 'no-cache, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
     }
 }

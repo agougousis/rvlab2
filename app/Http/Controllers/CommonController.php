@@ -18,11 +18,57 @@ use Illuminate\Support\Facades\Route;
  */
 class CommonController extends Controller
 {
+      /**
+     * The directory path to R vLab workspace
+     *
+     * @var string
+     */
+    protected $workspace_path;
+
+    /**
+     * The directory path to R vLab jobs
+     *
+     * @var string
+     */
+    protected $jobs_path;
+
+    /**
+     * The path corresponding the to the jobs directory at the remote/cluster
+     * storage
+     *
+     * @var string
+     */
+    protected $remote_jobs_path;
+
+    /**
+     * The path corresponding the to the workspace directory at the
+     * remote/cluster storage
+     *
+     * @var string
+     */
+    protected $remote_workspace_path;
+
+    /**
+     * A temporal storage for system settings retrieved from database
+     *
+     * @var array
+     */
     protected $system_settings = array();
+
+    /**
+     * Indicates if the request comes from the mobile version of R vLab
+     *
+     * @var boolean
+     */
     protected $is_mobile;
 
     public function __construct()
     {
+        $this->workspace_path = config('rvlab.workspace_path');
+        $this->jobs_path = config('rvlab.jobs_path');
+        $this->remote_jobs_path = config('rvlab.remote_jobs_path');
+        $this->remote_workspace_path = config('rvlab.remote_workspace_path');
+
         // Identify if the request comes from a mobile client
         $this->is_mobile = is_mobile();
 
@@ -157,20 +203,5 @@ class CommonController extends Controller
     protected function illegalAction()
     {
         return $this->loadView('errors/illegalAction', 'Unexpected error');
-    }
-
-    /**
-     * Checks if the remote (cluster) storage has been mounted
-     *
-     * @return boolean
-     */
-    protected function checkStorage()
-    {
-        $jobs_path = config('rvlab.jobs_path');
-        if (!file_exists($jobs_path)) {
-            return false;
-        } else {
-            return true;
-        }
     }
 }
