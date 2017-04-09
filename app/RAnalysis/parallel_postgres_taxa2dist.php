@@ -19,6 +19,7 @@ use App\RAnalysis\BaseAnalysis;
  *   &$params
  *
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
+ * @author Anastasios Oulas <oulas@hcmr.gr>
  */
 class parallel_postgres_taxa2dist extends BaseAnalysis implements RAnalysis
 {

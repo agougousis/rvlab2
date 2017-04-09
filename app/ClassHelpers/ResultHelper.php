@@ -5,6 +5,12 @@ namespace App\ClassHelpers;
 use App\Models\Job;
 use App\ClassHelpers\JobOutputParser;
 
+/**
+ * Handles subtasks related to building a job's results page
+ *
+ * @license MIT
+ * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
+ */
 class ResultHelper
 {
     /**

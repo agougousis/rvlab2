@@ -19,6 +19,7 @@ use App\RAnalysis\BaseAnalysis;
  *   &$params
  *
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
+ * @author Anastasios Oulas <oulas@hcmr.gr>
  */
 class anova extends BaseAnalysis implements RAnalysis
 {

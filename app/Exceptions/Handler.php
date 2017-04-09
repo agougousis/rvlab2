@@ -14,6 +14,18 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 class Handler extends ExceptionHandler
 {
     /**
+     * The list of custom exceptions to be handled
+     *
+     * @var array
+     */
+    protected $customExceptionsToHandle = [
+        'AuthorizationException',
+        'InvalidRequestException',
+        'UnexpectedErrorException',
+        'StorageNotFoundException'
+    ];
+
+    /**
      * A list of the exception types that should not be reported.
      *
      * @var array
@@ -49,64 +61,96 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
-        // Handle StorageNotFoundException
-        if ($exception instanceof StorageNotFoundException) {
-            $this->logEvent($exception->getLogMessage(), "storage");
-
-            if ($exception->isMobileRequest()) {
-                $response = array('message', $exception->getUserMessage());
-                return Response::json($response, $exception->getHttpCode());
-            } else {
-                return $this->loadView('errors/unmounted', 'Storage not found');
-            }
+        // If this is a custom exception type call the relevant method
+        $exceptionClass = (new \ReflectionClass($exception))->getShortName();
+        if (in_array($exceptionClass, $this->customExceptionsToHandle)) {
+            $handlingMethod = 'handle'.$exceptionClass;
+            return $this->$handlingMethod($exception);
         }
 
-        // Handle UnexpectedErrorException
-        if ($exception instanceof UnexpectedErrorException) {
-            $this->logEvent($exception->getLogMessage(), "illegal");
+        // else continue normally
+        return parent::render($request, $exception);
+    }
 
-            if ($exception->isMobileRequest()) {
-                $response = array('message', $exception->getUserMessage());
-                return Response::json($response, $exception->getHttpCode());
-            } else {
-                Session::flash('toastr', array('error', $exception->getUserMessage()));
-                return Redirect::back();
-            }
-        }
+    /**
+     * Handles exceptions of type StorageNotFoundException
+     *
+     * @param Exception $exception
+     * @return mixed
+     */
+    protected function handleStorageNotFoundException(Exception $exception)
+    {
+        $this->logEvent($exception->getLogMessage(), "storage");
 
-        // Handle AuthorizationException
-        if ($exception instanceof AuthorizationException) {
-            $this->logEvent($exception->getLogMessage(), "unauthorized");
-
-            if ($exception->displayToastr()) {
-                Session::flash('toastr', array('error', $exception->getUserMessage()));
-            }
-
+        if ($exception->isMobileRequest()) {
             $response = array('message', $exception->getUserMessage());
             return Response::json($response, $exception->getHttpCode());
+        } else {
+            return $this->loadView('errors/unmounted', 'Storage not found');
+        }
+    }
+
+    /**
+     * Handles exceptions of type UnexpectedErrorException
+     *
+     * @param Exception $exception
+     * @return mixed
+     */
+    protected function handleUnexpectedErrorException(Exception $exception)
+    {
+        $this->logEvent($exception->getLogMessage(), "illegal");
+
+        if ($exception->isMobileRequest()) {
+            $response = array('message', $exception->getUserMessage());
+            return Response::json($response, $exception->getHttpCode());
+        } else {
+            Session::flash('toastr', array('error', $exception->getUserMessage()));
+            return Redirect::back();
+        }
+    }
+
+    /**
+     * Handles exceptions of type AuthorizationException
+     *
+     * @param Exception $exception
+     * @return mixed
+     */
+    protected function handleAuthorizationException(Exception $exception)
+    {
+        $this->logEvent($exception->getLogMessage(), "unauthorized");
+
+        if ($exception->displayToastr()) {
+            Session::flash('toastr', array('error', $exception->getUserMessage()));
         }
 
-        // Handle InvalidRequestException
-        if ($exception instanceof InvalidRequestException) {
-            $this->logEvent($exception->getLogMessage(), "invalid");
+        $response = array('message', $exception->getUserMessage());
+        return Response::json($response, $exception->getHttpCode());
+    }
 
-            if ($exception->displayToastr()) {
-                Session::flash('toastr', array('error', $exception->getUserMessage()));
-            }
+    /**
+     * Handles exceptions of type InvalidRequestException
+     *
+     * @param Exception $exception
+     * @return mixed
+     */
+    protected function handleInvalidRequestException(Exception $exception)
+    {
+        $this->logEvent($exception->getLogMessage(), "invalid");
 
-            if ($exception->isMobileRequest()) {
-                $response = array('message', $exception->getUserMessage());
-                return Response::json($response, $exception->getHttpCode());
-            } else {
-                if (!empty($errors = $exception->getErrorsToReturn())) {
-                    return Redirect::back()->withInput()->withErrors($errors);
-                }
-
-                return Redirect::back();
-            }
+        if ($exception->displayToastr()) {
+            Session::flash('toastr', array('error', $exception->getUserMessage()));
         }
 
-        return parent::render($request, $exception);
+        if ($exception->isMobileRequest()) {
+            $response = array('message', $exception->getUserMessage());
+            return Response::json($response, $exception->getHttpCode());
+        } else {
+            if (!empty($errors = $exception->getErrorsToReturn())) {
+                return Redirect::back()->withInput()->withErrors($errors);
+            }
+
+            return Redirect::back();
+        }
     }
 
     /**
