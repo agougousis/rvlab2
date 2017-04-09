@@ -199,7 +199,7 @@ class JobHelper
             // Update the job status parsing the job status file
             // We assume an initial status of 'submitted' but this should change
             // under normal conditions.
-            list($status, $started_at, $completed_at) = JobStatusParser::parseStatusFile($statusFilePath, 'submitted');
+            list($status, $job->started_at, $job->completed_at) = JobStatusParser::parseStatusFile($statusFilePath, 'submitted');
 
             // File to parse for errors
             $outputFileToParse = JobStatusParser::outputFileToParse($job->function, $job->id);
@@ -214,13 +214,6 @@ class JobHelper
                     $status = 'failed';
                 }
             }
-
-            if (!empty($started_at)) {
-                $job->started_at = $started_at;
-            }
-            if (!empty($completed_at)) {
-                $job->completed_at = $completed_at;
-            }
         }
 
         $job->jobsize = directory_size($job_folder);
@@ -233,7 +226,7 @@ class JobHelper
             $job_log->id = $job->id;
             $job_log->user_email = $job->user_email;
             $job_log->function = $job->function;
-            $job_log->status = $job->status;
+            $job_log->status = 'completed';
             $job_log->submitted_at = $job->submitted_at;
             $job_log->started_at = $job->started_at;
             $job_log->completed_at = $job->completed_at;
