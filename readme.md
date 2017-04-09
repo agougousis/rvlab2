@@ -123,8 +123,18 @@ The R vLab is open-sourced software licensed under the MIT license.
 ## Current Code Metrics
 
 This section may not be updated for every commit. 
-The following diagrams refer to commit  fcea614fd1206a05b5303aa45d5cd5f312c75d24 (5 April).
+The following diagrams refer to commit 733bd9dd9fdeb4bb595ff713aca39e088f8e4803 (9 April 2017).
 
-![maintainability](https://cloud.githubusercontent.com/assets/5471589/24722833/ddc12126-1a4d-11e7-8b6d-524a1df3ecd3.png)  ![pdepend](https://cloud.githubusercontent.com/assets/5471589/24722845/eac2db62-1a4d-11e7-8d7c-c1422d8d6df4.png)
+#### Abstraction Instability Chart & Overview Pyramid (PHP Depend)
 
-![coverage](https://cloud.githubusercontent.com/assets/5471589/24722857/f259b062-1a4d-11e7-89a2-e729c64d9080.png)
+![pdepend](https://cloud.githubusercontent.com/assets/5471589/24837664/ef3dca2a-1d41-11e7-8469-6fd16891e236.png)
+
+#### Code Coverage diagram (PHPUnit & XDebug)
+
+![coverage](https://cloud.githubusercontent.com/assets/5471589/24837663/df6e9de0-1d41-11e7-9f58-27b7aa2bcfd9.png)
+
+#### Maintainability/Complexity diagram (PhpMetrics tool)
+
+![cyclo](https://cloud.githubusercontent.com/assets/5471589/24837665/ff065c42-1d41-11e7-9239-d587161efe23.png)
+
+The worst maintainability index found is 52.65 
