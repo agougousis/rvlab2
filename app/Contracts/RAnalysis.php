@@ -3,8 +3,10 @@
 namespace App\Contracts;
 
 /**
+ * An interface for R analysis implementation classes
  *
- * @author Alexandros
+ * @license MIT
+ * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
 interface RAnalysis
 {

@@ -5,6 +5,7 @@ namespace App\Contracts;
 /**
  * An interface for authenticator classes.
  *
+ * @license MIT
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
 interface Authenticator
