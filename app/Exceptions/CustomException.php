@@ -2,6 +2,9 @@
 
 namespace App\Exceptions;
 
+use Route;
+use App\Models\SystemLog;
+
 /**
  * A base class for defining custom exceptions
  *
@@ -15,27 +18,27 @@ abstract class CustomException extends \Exception
      *
      * @var string
      */
-    private $userMessage;
+    protected $userMessage;
 
     /**
      * Indicates whether a toastr message should be displayed to the user.
      *
      * @var boolean
      */
-    private $toastr = false;
+    protected $toastr = false;
 
     /**
      * The HTTP status code to be used for the response
      * @var type
      */
-    private $httpCode;
+    protected $httpCode;
 
     /**
      * Indicates if the request comes from the mobile version of R vLab
      *
      * @var boolean
      */
-    private $isMobileRequest = false;
+    protected $isMobileRequest = false;
 
     public function __construct($defaultHttpCode, $message = "", $code = 0, \Exception $previous = null)
     {
@@ -121,5 +124,51 @@ abstract class CustomException extends \Exception
     public function isMobileRequest()
     {
         return $this->isMobileRequest;
+    }
+
+    /**
+     * Saves a log to the database
+     *
+     * @param string $message
+     * @param string $category
+     */
+    protected function logEvent($message, $category)
+    {
+        $db_message = $message;
+        $route = explode('@', Route::currentRouteName());
+
+        $log = new SystemLog();
+        $log->when = date("Y-m-d H:i:s");
+        $log->user_email = session('user_info.email');
+        $log->controller = (!empty($route[0])) ? $route[0] : 'unknown';
+        $log->method = (!empty($route[0])) ? $route[1] : 'unknown';
+        $log->message = $db_message;
+        $log->category = $category;
+        $log->save();
+    }
+
+    /**
+     * Loads a View using a template file and the HTML wrapper parts provided by the portal.
+     *
+     * @param string $the_view
+     * @param string $title
+     * @param array $data
+     * @return View
+     */
+    protected function loadView($the_view, $title, $data = array())
+    {
+        $userInfo = session('user_info');
+
+        $content = view($the_view, $data);
+
+        $page = view('template')
+                ->with('title', $title)
+                ->with('head', $userInfo['head'])
+                ->with('body_top', $userInfo['body_top'])
+                ->with('body_bottom', $userInfo['body_bottom'])
+                ->with('content', $content);
+
+        $response = Response::make($page);
+        return $response->header('Cache-Control', 'no-cache, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
     }
 }

@@ -82,26 +82,6 @@ class mapping_tools_div_visual extends BaseAnalysis implements RAnalysis
     }
 
     /**
-     * Runs a mapping_tools_div_visual analysis
-     */
-    public function run()
-    {
-        $this->validateForm();
-
-        $this->getInputParams();
-
-        $this->copyInputFiles();
-
-        $this->buildRScript();
-
-        $this->buildBashScript();
-
-        // Execute the bash script
-        system("chmod +x $this->job_folder/$this->job_id.pbs");
-        system("$this->job_folder/$this->job_id.pbs > /dev/null 2>&1 &");
-    }
-
-    /**
      * Moved input files from workspace to job's folder
      *
      * @throws Exception

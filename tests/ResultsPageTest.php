@@ -80,7 +80,7 @@ class ResultsPageTest extends CommonTestBase
 
         // Check there are 2 jobs in the response
         $responseData = json_decode($response->content());
-        $this->assertEquals(2, count($responseData));
+        $this->assertCount(2, $responseData);
 
         $vegdistJob = $responseData[0];
         $taxa2distJob = $responseData[1];

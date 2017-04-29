@@ -57,25 +57,6 @@ class bict extends BaseAnalysis implements RAnalysis
     }
 
     /**
-     * Runs a bict analysis
-     */
-    public function run()
-    {
-        $this->validateForm();
-
-        $this->getInputParams();
-
-        $this->copyInputFiles();
-
-        $this->buildBashScript();
-
-        // Execute the bash script
-        system("chmod +x $this->job_folder/$this->job_id.pbs"); // this command may complain that the file does not exist
-        system("chmod +x $this->job_folder/indices");
-        system("$this->job_folder/$this->job_id.pbs > /dev/null 2>&1 &");
-    }
-
-    /**
      * Moved input files from workspace to job's folder
      *
      * @throws Exception
@@ -96,11 +77,6 @@ class bict extends BaseAnalysis implements RAnalysis
             if (!copy($workspace_filepath, $job_filepath)) {
                 throw new \Exception('Moving file from workspace to job folder, failed.');
             }
-        }
-
-        $script_source = app_path() . '/rvlab/files/indices';
-        if (!copy($script_source, "$this->job_folder/indices")) {
-            throw new \Exception('Moving file from workspace to job folder, failed.');
         }
 
         $bqi = app_path() . '/rvlab/files/bqi.csv';
@@ -145,6 +121,20 @@ class bict extends BaseAnalysis implements RAnalysis
 
         $this->species_family_select = $this->form['species_family_select'];
         $this->params .= ";species_family_select:" . $this->species_family_select;
+    }
+
+    /**
+     * Builds the required R script for the job execution
+     *
+     * @throws Exception
+     */
+    protected function buildRScript()
+    {
+        $script_source = app_path() . '/rvlab/files/indices';
+        if (!copy($script_source, "$this->job_folder/indices")) {
+            throw new \Exception('Moving file from workspace to job folder, failed.');
+        }
+        system("chmod +x $this->job_folder/indices");
     }
 
     /**

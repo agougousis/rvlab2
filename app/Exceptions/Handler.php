@@ -2,12 +2,7 @@
 
 namespace App\Exceptions;
 
-use Route;
-use Session;
 use Exception;
-use Response;
-use Redirect;
-use App\Models\SystemLog;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 
@@ -57,100 +52,18 @@ class Handler extends ExceptionHandler
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Exception  $exception
-     * @return \Illuminate\Http\Response
+     * @return mixed
      */
     public function render($request, Exception $exception)
     {
-        // If this is a custom exception type call the relevant method
+        // Handling custom exceptions
         $exceptionClass = (new \ReflectionClass($exception))->getShortName();
         if (in_array($exceptionClass, $this->customExceptionsToHandle)) {
-            $handlingMethod = 'handle'.$exceptionClass;
-            return $this->$handlingMethod($exception);
+            return $exception->logAndRespond();
         }
 
         // else continue normally
         return parent::render($request, $exception);
-    }
-
-    /**
-     * Handles exceptions of type StorageNotFoundException
-     *
-     * @param Exception $exception
-     * @return mixed
-     */
-    protected function handleStorageNotFoundException(Exception $exception)
-    {
-        $this->logEvent($exception->getLogMessage(), "storage");
-
-        if ($exception->isMobileRequest()) {
-            $response = array('message', $exception->getUserMessage());
-            return Response::json($response, $exception->getHttpCode());
-        } else {
-            return $this->loadView('errors/unmounted', 'Storage not found');
-        }
-    }
-
-    /**
-     * Handles exceptions of type UnexpectedErrorException
-     *
-     * @param Exception $exception
-     * @return mixed
-     */
-    protected function handleUnexpectedErrorException(Exception $exception)
-    {
-        $this->logEvent($exception->getLogMessage(), "illegal");
-
-        if ($exception->isMobileRequest()) {
-            $response = array('message', $exception->getUserMessage());
-            return Response::json($response, $exception->getHttpCode());
-        } else {
-            Session::flash('toastr', array('error', $exception->getUserMessage()));
-            return Redirect::back();
-        }
-    }
-
-    /**
-     * Handles exceptions of type AuthorizationException
-     *
-     * @param Exception $exception
-     * @return mixed
-     */
-    protected function handleAuthorizationException(Exception $exception)
-    {
-        $this->logEvent($exception->getLogMessage(), "unauthorized");
-
-        if ($exception->displayToastr()) {
-            Session::flash('toastr', array('error', $exception->getUserMessage()));
-        }
-
-        $response = array('message', $exception->getUserMessage());
-        return Response::json($response, $exception->getHttpCode());
-    }
-
-    /**
-     * Handles exceptions of type InvalidRequestException
-     *
-     * @param Exception $exception
-     * @return mixed
-     */
-    protected function handleInvalidRequestException(Exception $exception)
-    {
-        $this->logEvent($exception->getLogMessage(), "invalid");
-
-        if ($exception->displayToastr()) {
-            Session::flash('toastr', array('error', $exception->getUserMessage()));
-        }
-
-        if ($exception->isMobileRequest()) {
-            $response = array('message', $exception->getUserMessage());
-            return Response::json($response, $exception->getHttpCode());
-        } else {
-            if (!empty($errors = $exception->getErrorsToReturn())) {
-                return Redirect::back()->withInput()->withErrors($errors);
-            }
-
-            return Redirect::back();
-        }
     }
 
     /**
@@ -167,51 +80,5 @@ class Handler extends ExceptionHandler
         }
 
         return redirect()->guest('login');
-    }
-
-    /**
-     * Saves a log to the database
-     *
-     * @param string $message
-     * @param string $category
-     */
-    protected function logEvent($message, $category)
-    {
-        $db_message = $message;
-        $route = explode('@', Route::currentRouteName());
-
-        $log = new SystemLog();
-        $log->when = date("Y-m-d H:i:s");
-        $log->user_email = session('user_info.email');
-        $log->controller = (!empty($route[0])) ? $route[0] : 'unknown';
-        $log->method = (!empty($route[0])) ? $route[1] : 'unknown';
-        $log->message = $db_message;
-        $log->category = $category;
-        $log->save();
-    }
-
-    /**
-     * Loads a View using a template file and the HTML wrapper parts provided by the portal.
-     *
-     * @param string $the_view
-     * @param string $title
-     * @param array $data
-     * @return View
-     */
-    protected function loadView($the_view, $title, $data = array())
-    {
-        $userInfo = session('user_info');
-
-        $content = view($the_view, $data);
-
-        $page = view('template')
-                ->with('title', $title)
-                ->with('head', $userInfo['head'])
-                ->with('body_top', $userInfo['body_top'])
-                ->with('body_bottom', $userInfo['body_bottom'])
-                ->with('content', $content);
-
-        $response = Response::make($page);
-        return $response->header('Cache-Control', 'no-cache, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
     }
 }

@@ -31,6 +31,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \App\Http\Middleware\AuthenticationLayer::class,
             \App\Http\Middleware\AuthorizationLayer::class,
+            \App\Http\Middleware\IsRegistered::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class
         ],
         'admin' => [

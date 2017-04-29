@@ -1,13 +1,15 @@
 <!doctype html>
 <html lang="en">
-<head> 
+<head>
 	<meta charset="UTF-8">
 	<title>{{ $title }}</title>
         {!! $head !!}
 
         <link rel="stylesheet" href="{{ asset('css/custom.css') }}" />
+        <link rel="stylesheet" href="{{ asset('css/toastr.css') }}" />
 
         <script type="text/javascript" src="{{ asset('js/custom.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('js/toastr.js') }}"></script>
 </head>
 <body>
         {!! $body_top !!}

@@ -75,7 +75,7 @@ class RecentJobsTest extends CommonTestBase
 
         // Check there are 2 jobs in the response
         $responseData = json_decode($response->content());
-        $this->assertEquals(2, count($responseData));
+        $this->assertCount(2, $responseData);
 
         // Check information of the vegdist/latest job
         $vegdistJob = $responseData[0];

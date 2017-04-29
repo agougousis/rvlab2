@@ -107,16 +107,29 @@ abstract class BaseAnalysis
     }
 
     /**
+     * Runs the designated analysis
+     */
+    public function run()
+    {
+        $this->validateForm();
+
+        $this->getInputParams();
+
+        $this->copyInputFiles();
+
+        $this->buildRScript();
+
+        $this->buildBashScript();
+
+        // Execute the bash script
+        system("chmod +x $this->job_folder/$this->job_id.pbs");
+        system("$this->job_folder/$this->job_id.pbs > /dev/null 2>&1 &");
+    }
+
+    /**
      * Initializes class properties
      */
     abstract protected function init();
-
-    /**
-     * Runs a anova analysis
-     *
-     * @return boolean
-     */
-    abstract public function run();
 
     /**
      * Moved input files from workspace to job's folder
@@ -131,6 +144,17 @@ abstract class BaseAnalysis
      * @throws Exception
      */
     abstract protected function getInputParams();
+
+    /**
+     * Builds the required R script for the job execution
+     *
+     */
+    abstract protected function buildRScript();
+
+    /**
+     * Builds the required bash script for the job execution
+     */
+    abstract protected function buildBashScript();
 
     /**
      * Validates the submitted form

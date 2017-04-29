@@ -131,4 +131,24 @@ class phylobar extends BaseAnalysis implements RAnalysis
         $userEmail = $userInfo['email'];
         file_put_contents($this->job_folder.'/'.$this->job_id.'.jobstatus', "$userEmail job$this->job_id 00000 $now $now NA ended NA");
     }
+
+    /**
+     * Builds the required R script for the job execution
+     *
+     * @throws Exception
+     */
+    protected function buildRScript()
+    {
+        // No R script! This is a Javascript-based analysis.
+    }
+
+    /**
+     * Builds the required bash script for the job execution
+     *
+     * @throws Exception
+     */
+    protected function buildBashScript()
+    {
+        // No bash script! This is a Javascript-based analysis.
+    }
 }

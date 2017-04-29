@@ -7,6 +7,7 @@ use App\Models\WorkspaceFile;
 use App\Exceptions\InvalidRequestException;
 use App\Exceptions\UnexpectedErrorException;
 use App\Exceptions\StorageNotFoundException;
+use App\Exceptions\NotRegisteredException;
 
 /**
  * Tests conditions that may be needed by controller methods

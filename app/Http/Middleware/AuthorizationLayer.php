@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 /**
  * Implements the authorization rules
  *
+ * @license MIT
  * @author Alexandros Gougousis <alexandros.gougousis@gmail.com>
  */
 class AuthorizationLayer
